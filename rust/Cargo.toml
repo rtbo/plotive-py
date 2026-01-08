@@ -1,0 +1,16 @@
+[package]
+name = "plotive-py"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "plotive"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.27.0"
+plotive = { version = "0.1.0", features = ["data-csv", "data-polars", "time"] }
+plotive-iced = { version = "0.1.0", features = ["clipboard", "data-csv", "data-polars", "time"] }
+plotive-pxl = { version = "0.1.0" }
+plotive-svg = { version = "0.1.0" }
