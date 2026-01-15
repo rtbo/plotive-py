@@ -14,3 +14,4 @@ plotive = { version = "0.2.0", features = ["data-csv", "time"] }
 plotive-iced = { version = "0.2.0", features = ["clipboard", "data-csv"] }
 plotive-pxl = { version = "0.2.0" }
 plotive-svg = { version = "0.2.0" }
+numpy = "0.27.1"

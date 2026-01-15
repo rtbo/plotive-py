@@ -1,4 +1,6 @@
 import plotive as plt
+import numpy as np
+import pandas as pd
 
 def get_n_primes(n):
     primes = []
@@ -10,6 +12,13 @@ def get_n_primes(n):
         candidate += 1
     return primes
 
+x = list(range(1, 1001))
+y = get_n_primes(1000)
+
+df = pd.DataFrame({
+    "x": x,
+    "y": y,
+})
 
 fig = plt.Figure(
     title="Line Plot Example",
@@ -17,8 +26,8 @@ fig = plt.Figure(
     plot=plt.Plot(
         series=[
             plt.series.Line(
-                x = list(range(1, 1001)),
-                y = get_n_primes(1000),
+                x = "x",
+                y = "y",
                 name = "1000 Prime Numbers",
                 interpolation = "step",
             )
@@ -28,7 +37,7 @@ fig = plt.Figure(
     )
 )
 
-fig.show()
+fig.show(df)
 
 # figure = plt.Figure(
 #     title="Subplots",

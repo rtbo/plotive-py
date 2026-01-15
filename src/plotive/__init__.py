@@ -10,6 +10,7 @@ from .series import Series
 type Size = tuple[float, float]
 type Padding = float | tuple[float, float] | tuple[float, float, float, float]
 
+type DataSource = object
 
 @dataclass(kw_only=True)
 class Legend:
@@ -70,9 +71,9 @@ class Figure:
         self.fill = fill
         self.legend = legend
 
-    def show(self):
+    def show(self, data_source: None | DataSource = None):
         from ._rs import show as rs_show
-        rs_show(self)
+        rs_show(self, data_source)
 
     def save_png(self, path: str):
         from ._rs import save_png as rs_save_png
