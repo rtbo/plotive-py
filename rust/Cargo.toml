@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.27.0"
-plotive = { version = "0.1.0", features = ["data-csv", "data-polars", "time"] }
-plotive-iced = { version = "0.1.0", features = ["clipboard", "data-csv", "data-polars", "time"] }
-plotive-pxl = { version = "0.1.0" }
-plotive-svg = { version = "0.1.0" }
+plotive = { version = "0.2.0", features = ["data-csv", "time"] }
+plotive-iced = { version = "0.2.0", features = ["clipboard", "data-csv"] }
+plotive-pxl = { version = "0.2.0" }
+plotive-svg = { version = "0.2.0" }

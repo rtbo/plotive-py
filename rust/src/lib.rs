@@ -150,7 +150,7 @@ fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
             let py_style = ser.getattr("linestyle")?;
             let py_color = ser.getattr("color")?;
             if !py_width.is_none() || !py_style.is_none() || !py_color.is_none() {
-                let mut stroke = style::series::Line::default();
+                let mut stroke = style::series::Stroke::default();
                 if !py_width.is_none() {
                     stroke.width = py_width.extract()?;
                 }
@@ -342,8 +342,8 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     Ok(axis)
 }
 
-fn extract_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::Legend> {
-    let mut legend = des::Legend::default();
+fn extract_legend<P: Default>(py_legend: &Bound<'_, PyAny>, pos: P) -> PyResult<des::Legend<P>> {
+    let mut legend = des::Legend::new(pos);
     if let Some(py_columns) = getattr_not_none(py_legend, "columns")? {
         legend = legend.with_columns(py_columns.extract()?);
     }
@@ -370,11 +370,14 @@ fn extract_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::Legend> {
             ));
         }
     }
+    if let Some(py_margin) = getattr_not_none(py_legend, "margin")? {
+        let margin = py_margin.extract::<f32>()?;
+        legend = legend.with_margin(margin);
+    }
     Ok(legend)
 }
 
 fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend> {
-    let legend = extract_legend(py_legend)?;
     let mut pos = des::plot::LegendPos::default();
     if let Some(py_pos) = getattr_not_none(py_legend, "position")? {
         let pos_str: String = py_pos.extract()?;
@@ -399,21 +402,14 @@ fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend
             }
         }
     }
-    let mut plot_leg = des::PlotLegend::new(pos, legend);
-    if let Some(py_margin) = getattr_not_none(py_legend, "margin")? {
-        let margin = py_margin.extract::<f32>()?;
-        plot_leg = plot_leg.with_margin(margin);
-    }
-    Ok(plot_leg)
+    Ok(extract_legend(py_legend, pos)?)
 }
 
 fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegend> {
-    let legend = extract_legend(py_legend)?;
-    let mut fig_leg = des::FigLegend::new(legend);
-
+    let mut pos = des::figure::LegendPos::default();
     if let Some(py_pos) = getattr_not_none(py_legend, "position")? {
         let pos_str: String = py_pos.extract()?;
-        let pos = match pos_str.as_str() {
+        pos = match pos_str.as_str() {
             "top" => des::figure::LegendPos::Top,
             "right" => des::figure::LegendPos::Right,
             "bottom" => des::figure::LegendPos::Bottom,
@@ -425,14 +421,8 @@ fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegen
                 )));
             }
         };
-        fig_leg = fig_leg.with_pos(pos);
     }
-
-    if let Some(py_margin) = getattr_not_none(py_legend, "margin")? {
-        let margin = py_margin.extract::<f32>()?;
-        fig_leg = fig_leg.with_margin(margin);
-    }
-    Ok(fig_leg)
+    Ok(extract_legend(py_legend, pos)?)
 }
 
 fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
@@ -617,17 +607,13 @@ mod plt_rs {
 
     #[pyfunction]
     fn save_png(py_fig: &Bound<'_, PyAny>, path: &str) -> PyResult<()> {
-        use plotive::drawing::Prepare;
         use plotive_pxl::SavePng;
 
         let fig = super::extract_figure(py_fig)?;
-        let prepared = fig.prepare(&(), None).map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!("Failed to prepare figure: {}", e))
-        })?;
-
-        prepared.save_png(path, Default::default()).map_err(|e| {
+        fig.save_png(path, &(), Default::default()).map_err(|e| {
             pyo3::exceptions::PyIOError::new_err(format!("Failed to save PNG: {}", e))
         })?;
+
         Ok(())
     }
 
