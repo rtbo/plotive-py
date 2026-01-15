@@ -37,6 +37,7 @@ class Line(Series):
         linewidth: None | float = None,
         linestyle: None | str | list[float] = None,
         color: None | Color = None,
+        interpolation: None | str = None,
     ):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
@@ -44,3 +45,4 @@ class Line(Series):
         self.linewidth = linewidth
         self.linestyle = linestyle
         self.color = color
+        self.interpolation = interpolation

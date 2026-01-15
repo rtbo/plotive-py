@@ -19,7 +19,8 @@ fig = plt.Figure(
             plt.series.Line(
                 x = list(range(1, 1001)),
                 y = get_n_primes(1000),
-                name = "1000 Prime Numbers"
+                name = "1000 Prime Numbers",
+                interpolation = "step",
             )
         ],
         x_axis = plt.Axis(title="Index", ticks=plt.Ticks()),

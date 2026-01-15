@@ -163,6 +163,24 @@ fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
                 line = line.with_line(stroke);
             }
 
+            if let Some(py_interp) = getattr_not_none(ser, "interpolation")? {
+                let interp_str: &str = py_interp.extract()?;
+                let interp = match interp_str {
+                    "linear" => des::series::Interpolation::Linear,
+                    "step-early" => des::series::Interpolation::StepEarly,
+                    "step-middle" => des::series::Interpolation::StepMiddle,
+                    "step-late" | "step" => des::series::Interpolation::StepLate,
+                    "cubic" | "spline" => des::series::Interpolation::Spline,
+                    _ => {
+                        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                            "Unknown interpolation method: {}",
+                            interp_str
+                        )));
+                    }
+                };
+                line = line.with_interpolation(interp);
+            }
+
             des::Series::Line(line)
         }
         _ => {

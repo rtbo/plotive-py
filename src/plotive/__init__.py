@@ -53,7 +53,7 @@ class Figure:
         size: None | Size = (800, 600),
         padding: None | Padding = 20.0,
         fill: None | Fill = "background",
-        legend: None | Legend = None,
+        legend: None | Legend | str = None,
         plot: None | Plot = None,
         plots: None | list[Plot] = None,
     ):
