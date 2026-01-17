@@ -735,7 +735,6 @@ fn extract_data_source<'py>(obj: &Bound<'py, PyAny>) -> PyResult<Arc<dyn data::S
     }
 }
 
-/// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_rs")]
 mod plt_rs {
@@ -750,8 +749,8 @@ mod plt_rs {
         use plotive_pxl::SavePng;
 
         let fig = super::extract_figure(py_fig)?;
-        let data_src = super::extract_data_source(py_data_src)?.copy();
-        fig.save_png(path, &data_src, Default::default())
+        let data_src = super::extract_data_source(py_data_src)?;
+        fig.save_png(path, &*data_src, Default::default())
             .map_err(|e| {
                 pyo3::exceptions::PyIOError::new_err(format!("Failed to save PNG: {}", e))
             })?;
