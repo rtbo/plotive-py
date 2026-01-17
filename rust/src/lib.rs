@@ -199,14 +199,7 @@ fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
 
 fn extract_axis_range(py_range: &Bound<'_, PyAny>) -> PyResult<des::axis::Range> {
     let (min, max): (Option<f64>, Option<f64>) = py_range.extract()?;
-    match (min, max) {
-        (Some(min), Some(max)) => Ok(des::axis::Range::MinMax(min, max)),
-        (Some(min), None) => Ok(des::axis::Range::MinAuto(min)),
-        (None, Some(max)) => Ok(des::axis::Range::AutoMax(max)),
-        (None, None) => Err(pyo3::exceptions::PyValueError::new_err(
-            "At least one of min or max must be provided for axis range.",
-        )),
-    }
+    Ok(des::axis::Range(min, max))
 }
 
 fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale> {
