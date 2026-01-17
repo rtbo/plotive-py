@@ -752,6 +752,24 @@ mod plt_rs {
     }
 
     #[pyfunction]
+    fn save_svg(
+        py_fig: &Bound<'_, PyAny>,
+        path: &str,
+        py_data_src: &Bound<'_, PyAny>,
+    ) -> PyResult<()> {
+        use plotive_svg::SaveSvg;
+
+        let fig = super::extract_figure(py_fig)?;
+        let data_src = super::extract_data_source(py_data_src)?;
+        fig.save_svg(path, &*data_src, Default::default())
+            .map_err(|e| {
+                pyo3::exceptions::PyIOError::new_err(format!("Failed to save SVG: {}", e))
+            })?;
+
+        Ok(())
+    }
+
+    #[pyfunction]
     fn show(py_fig: &Bound<'_, PyAny>, py_data_src: &Bound<'_, PyAny>) -> PyResult<()> {
         use plotive_iced::Show;
 

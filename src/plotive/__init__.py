@@ -78,3 +78,7 @@ class Figure:
     def save_png(self, path: str):
         from ._rs import save_png as rs_save_png
         rs_save_png(self, path)
+
+    def save_svg(self, path: str):
+        from ._rs import save_png as rs_save_svg
+        rs_save_svg(self, path)
