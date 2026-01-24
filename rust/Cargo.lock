@@ -2786,7 +2786,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "plotive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "plotive-base",
  "plotive-text",
@@ -2796,7 +2796,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-base"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "strict-num 0.2.0",
  "tiny-skia-path",
@@ -2804,7 +2804,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-iced"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "arboard",
  "bytes",
@@ -2819,7 +2819,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-pxl"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2842,7 +2842,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-svg"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2851,7 +2851,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-text"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fontconfig-parser",
  "log",

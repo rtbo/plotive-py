@@ -15,10 +15,10 @@ def get_n_primes(n):
 y = list(range(1, 1001))
 x = get_n_primes(1000)
 
-df = pd.DataFrame({
+data_src = {
     "x": x,
     "y": y,
-})
+}
 
 fig = plt.Figure(
     title="Line Plot Example",
@@ -37,4 +37,4 @@ fig = plt.Figure(
     )
 )
 
-fig.show(df)
+fig.show(data_src)
