@@ -144,11 +144,10 @@ fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
             let x_data = extract_data_col(&x)?;
             let y_data = extract_data_col(&y)?;
             let mut line = des::series::Line::new(x_data, y_data);
-            if let Ok(name) = ser.getattr("name") {
+            if let Some(name) = getattr_not_none(ser, "name")? {
                 let name_str: String = name.extract()?;
                 line = line.with_name(name_str);
             }
-
             let py_width = ser.getattr("linewidth")?;
             let py_style = ser.getattr("linestyle")?;
             let py_color = ser.getattr("color")?;
@@ -514,8 +513,7 @@ fn extract_plots(
 
     for py_plot in py_plots.iter() {
         let plot = extract_plot(&py_plot)?;
-        let subplot = py_plot
-            .getattr_opt("subplot")?
+        let subplot = getattr_not_none(&py_plot, "subplot")?
             .map(|sp| extract_row_col(&sp))
             .transpose()?;
         match (subplot, &mut max_sp) {
