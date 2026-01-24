@@ -12,8 +12,8 @@ def get_n_primes(n):
         candidate += 1
     return primes
 
-x = list(range(1, 1001))
-y = get_n_primes(1000)
+y = list(range(1, 1001))
+x = get_n_primes(1000)
 
 df = pd.DataFrame({
     "x": x,
@@ -38,23 +38,3 @@ fig = plt.Figure(
 )
 
 fig.show(df)
-
-# figure = plt.Figure(
-#     title="Subplots",
-#     space=10,
-#     subplots=(2, 1),
-#     plots=[
-#         plt.Plot(
-#             subplot=(1, 1),
-#             x_axis=["shared(x)", "Grid"],
-#             y_axis=["y1", "Ticks"],
-#             series=plt.Series(type="Line", x_data="x1", y_data="y1"),
-#         ),
-#         plt.Plot(
-#             subplot=(2, 1),
-#             x_axis=["x", "PiMultipleTicks", "Grid", {"id": "x-axis"}],
-#             y_axis=["y2", "Ticks"],
-#             series=plt.Series(type="Line", x_data="x2", y_data="y2"),
-#         ),
-#     ],
-# )
