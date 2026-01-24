@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .color import Color
     from .style import Stroke
+    import numpy as np
 
-type DataCol = str | list[float] | list[str]
+type DataCol = str | list[float] | list[str] | np.ndarray
 type AxisRef = str | int
 
 
