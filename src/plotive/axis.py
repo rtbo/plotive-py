@@ -1,7 +1,4 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .style import Stroke
+from .style import Stroke
 
 type AxisRef = str | int
 """
@@ -158,13 +155,50 @@ class TimeDeltaTicksFormatter(TicksFormatter):
     def __init__(self, fmt: str | None = None):
         self.fmt = fmt
 
+def _ticks_locator_from_str(s: str) -> TicksLocator:
+    s = s.lower()
+    if s == "auto":
+        return TicksLocator.Auto()
+    elif s.startswith("maxn"):
+        bins = int(s[4:]) if len(s) > 4 else 9
+        return TicksLocator.MaxN(bins)
+    elif s.startswith("pimultiple"):
+        bins = int(s[10:]) if len(s) > 10 else 9
+        return TicksLocator.PiMultiple(bins)
+    elif s.startswith("pi"):
+        bins = int(s[2:]) if len(s) > 2 else 9
+        return TicksLocator.PiMultiple(bins)
+    elif s.startswith("log"):
+        base = float(s[3:]) if len(s) > 3 else 10
+        return TicksLocator.Log(base)
+    elif s.startswith("datetime"):
+        period_unit = s[8:].split(",") if len(s) > 8 else []
+        period = int(period_unit[0]) if len(period_unit) > 0 and period_unit[0].isdigit() else 1
+        unit = period_unit[1] if len(period_unit) > 1 else "auto"
+        return TicksLocator.DateTime(period, unit)
+    elif s.startswith("timedelta"):
+        period_unit = s[9:].split(",") if len(s) > 9 else []
+        period = int(period_unit[0]) if len(period_unit) > 0 and period_unit[0].isdigit() else 1
+        unit = period_unit[1] if len(period_unit) > 1 else "auto"
+        return TicksLocator.TimeDelta(period, unit)
+    else:
+        raise ValueError(f"Unknown ticks locator string: {s}")
+
+def _get_ticks_locator(locator: TicksLocator | str) -> TicksLocator:
+    if isinstance(locator, str):
+        return _ticks_locator_from_str(locator)
+    elif isinstance(locator, TicksLocator):
+        return locator
+    else:
+        raise ValueError(f"Invalid ticks locator specification: {locator}")
+
 class Ticks:
     def __init__(
         self,
-        locator: TicksLocator = TicksLocator.Auto(),
+        locator: TicksLocator | str = TicksLocator.Auto(),
         formatter: TicksFormatter = TicksFormatter.Auto(),
     ):
-        self.locator = locator
+        self.locator = _get_ticks_locator(locator)
         self.formatter = formatter
 
 class Axis:
@@ -173,18 +207,52 @@ class Axis:
         *,
         title: str | None = None,
         id: str | None = None,
-        scale: Scale = AutoScale(),
+        scale: Scale | str = AutoScale(),
         opposite_side: bool = False,
-        ticks: Ticks | None = None,
+        ticks: Ticks | str | None = None,
         grid: Stroke | str | None = None,
-        minor_ticks: TicksLocator | None = None,
+        minor_ticks: TicksLocator | str | None = None,
         minor_grid: Stroke | str | None = None,
     ):
         self.title = title
         self.id = id
-        self.scale = scale
+        if isinstance(scale, str):
+            if scale.lower() == "auto":
+                self.scale = AutoScale()
+            elif scale.lower() == "lin":
+                self.scale = LinScale()
+            elif scale.lower() == "log":
+                self.scale = LogScale()
+            else:
+                self.scale = SharedScale(scale)
+        else:
+            self.scale = scale
         self.opposite_side = opposite_side
-        self.ticks = ticks
-        self.grid = grid
-        self.minor_ticks = minor_ticks
-        self.minor_grid = minor_grid
+
+        if isinstance(ticks, str):
+            self.ticks = Ticks(locator=_get_ticks_locator(ticks))
+        elif isinstance(ticks, Ticks):
+            self.ticks = ticks
+        elif ticks is None:
+            self.ticks = None
+
+        if isinstance(grid, str):
+            if grid.lower() == "auto":
+                self.grid = Stroke(color="grid")
+            else:
+                self.grid = Stroke(color=grid)
+        else:
+            self.grid = grid
+
+        if minor_ticks is not None:
+            self.minor_ticks = _get_ticks_locator(minor_ticks)
+        else:
+            self.minor_ticks = None
+
+        if isinstance(minor_grid, str):
+            if minor_grid.lower() == "auto":
+                self.minor_grid = Stroke(color="grid", width=0.5, pattern=[5, 5])
+            else:
+                self.minor_grid = Stroke(color=minor_grid, width=0.5, pattern=[5, 5])
+        else:
+            self.minor_grid = minor_grid

@@ -37,4 +37,4 @@ fig = plt.Figure(
     )
 )
 
-fig.show(data_src)
+fig.show(data_source=data_src, style="mocha")

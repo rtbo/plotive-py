@@ -1,4 +1,3 @@
-use plotive::ColorU8;
 use plotive::{des, geom, style};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -63,39 +62,13 @@ fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePat
     Ok(style::Dash(pattern_vec).into())
 }
 
-fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<ColorU8> {
-    if let Ok(col) = py_col.extract::<&str>() {
-        Ok(col.parse().map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!(
-                "Failed to parse color string '{}': {}",
-                col, e
-            ))
-        })?)
-    } else if let Ok((r, g, b)) = py_col.extract::<(u8, u8, u8)>() {
-        Ok(ColorU8::from_rgb(r, g, b))
-    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, u8)>() {
-        Ok(ColorU8::from_rgba(r, g, b, a))
-    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, f32)>() {
-        if a < 0.0 || a > 1.0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "Alpha value must be between 0.0 and 1.0.",
-            ));
-        }
-        Ok(ColorU8::from_rgba(r, g, b, (a * 255.0) as u8))
-    } else {
-        Err(pyo3::exceptions::PyTypeError::new_err(
-            "Color must be a string.",
-        ))
-    }
-}
-
 fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series::Color> {
     if let Ok(col) = py_col.extract::<&str>() {
         if col == "auto" {
             return Ok(style::series::Color::Auto);
         }
     }
-    let color = extract_color(py_col)?;
+    let color = super::extract_color(py_col)?;
     Ok(color.into())
 }
 
@@ -110,8 +83,39 @@ fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::Colo
             _ => {}
         }
     }
-    let color = extract_color(py_col)?;
+    let color = super::extract_color(py_col)?;
     Ok(color.into())
+}
+
+fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
+    let py_color = py_stroke.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for stroke.",
+        )));
+    }
+    let color = extract_theme_color(&py_color)?;
+    let width = if let Some(w) = getattr_not_none(py_stroke, "width")? {
+        w.extract::<f32>()?
+    } else {
+        1.0
+    };
+    let pattern = if let Some(p) = getattr_not_none(py_stroke, "pattern")? {
+        extract_stroke_pattern(&p)?
+    } else {
+        style::LinePattern::Solid
+    };
+    let opacity = if let Some(o) = getattr_not_none(py_stroke, "opacity")? {
+        Some(o.extract::<f32>()?)
+    } else {
+        None
+    };
+    Ok(style::theme::Stroke {
+        color,
+        width,
+        pattern,
+        opacity,
+    })
 }
 
 fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
@@ -317,21 +321,37 @@ fn extract_axis_ticks(py_ticks: &Bound<'_, PyAny>) -> PyResult<des::axis::Ticks>
 fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     let mut axis = des::Axis::new().with_scale(extract_axis_scale(&py_axis.getattr("scale")?)?);
 
-    let py_title = py_axis.getattr("title")?;
-    if !py_title.is_none() {
+    if let Some(py_title) = getattr_not_none(py_axis, "title")? {
         let title: String = py_title.extract()?;
         axis = axis.with_title(title.into());
     }
-    let py_id = py_axis.getattr("id")?;
-    if !py_id.is_none() {
+
+    if let Some(py_id) = getattr_not_none(py_axis, "id")? {
         let id: String = py_id.extract()?;
         axis = axis.with_id(id);
     }
-    let py_ticks = py_axis.getattr("ticks")?;
-    if !py_ticks.is_none() {
+
+    if let Some(py_ticks) = getattr_not_none(py_axis, "ticks")? {
         let ticks = extract_axis_ticks(&py_ticks)?;
         axis = axis.with_ticks(ticks);
     }
+
+    if let Some(py_grid) = getattr_not_none(py_axis, "grid")? {
+        let stroke = extract_theme_stroke(&py_grid)?;
+        axis = axis.with_grid(stroke.into());
+    }
+
+    if let Some(py_minor_ticks) = getattr_not_none(py_axis, "minor_ticks")? {
+        let locator = extract_ticks_locator(&py_minor_ticks)?;
+        let minor_ticks = des::axis::MinorTicks::new().with_locator(locator);
+        axis = axis.with_minor_ticks(minor_ticks);
+    }
+
+    if let Some(py_minor_grid) = getattr_not_none(py_axis, "minor_grid")? {
+        let stroke = extract_theme_stroke(&py_minor_grid)?;
+        axis = axis.with_minor_grid(stroke.into());
+    }
+
     Ok(axis)
 }
 
@@ -372,7 +392,7 @@ fn extract_legend<P: Default>(py_legend: &Bound<'_, PyAny>, pos: P) -> PyResult<
 
 fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend> {
     let mut pos = des::plot::LegendPos::default();
-    if let Some(py_pos) = getattr_not_none(py_legend, "position")? {
+    if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
             "out-top" => des::plot::LegendPos::OutTop,
@@ -400,7 +420,7 @@ fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend
 
 fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegend> {
     let mut pos = des::figure::LegendPos::default();
-    if let Some(py_pos) = getattr_not_none(py_legend, "position")? {
+    if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
             "top" => des::figure::LegendPos::Top,
