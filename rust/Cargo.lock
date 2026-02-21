@@ -2845,6 +2845,7 @@ dependencies = [
  "plotive-iced",
  "plotive-pxl",
  "plotive-svg",
+ "plotive-text",
  "pyo3",
 ]
 

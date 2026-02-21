@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -6,12 +5,21 @@ if TYPE_CHECKING:
 
 type Fill = Color
 
-@dataclass(kw_only=True)
+
 class Stroke:
-    color: Color
-    width: float = 1.0
-    pattern: None | list[float] = None
-    opacity: float = 1.0
+    def __init__(
+        self,
+        *,
+        color: Color,
+        width: float = 1.0,
+        pattern: None | list[float] | str = None,
+        opacity: float = 1.0,
+    ):
+        self.color = color
+        self.width = width
+        self.pattern = pattern
+        self.opacity = opacity
+
 
 class ThemePalette:
     def __init__(
@@ -33,6 +41,7 @@ class ThemePalette:
 type Theme = ThemePalette | str
 
 type SeriesPalette = list[Color] | str
+
 
 class Style:
     def __init__(

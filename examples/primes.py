@@ -1,4 +1,4 @@
-import plotive as plt
+import plotive as pv
 import numpy as np
 import pandas as pd
 
@@ -20,20 +20,20 @@ data_src = {
     "y": y,
 }
 
-fig = plt.Figure(
+fig = pv.Figure(
     title="Line Plot Example",
     legend="bottom",
-    plot=plt.Plot(
+    plot=pv.Plot(
         series=[
-            plt.series.Line(
+            pv.series.Line(
                 x = "x",
                 y = "y",
                 name = "1000 Prime Numbers",
                 interpolation = "step",
             )
         ],
-        x_axis = plt.Axis(title="Index", ticks=plt.Ticks()),
-        y_axis = plt.Axis(title="Prime Numbers", ticks=plt.Ticks()),
+        x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),
+        y_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
     )
 )
 

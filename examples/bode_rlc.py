@@ -3,7 +3,8 @@ import plotive as pv
 
 L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
-TITLE = "RLC Circuit Bode Plot"
+TITLE = "Bode diagram of RLC circuit\n" + \
+        "[size=18;italic;font=serif]L = 0.1 mH / C = 1 µF[/size;italic;font]"
 
 
 def rlc_freq_response(freq, R, L, C):
@@ -47,6 +48,10 @@ if __name__ == "__main__":
             )
         )
 
+    cutoff_freq = 1 / (2 * np.pi * np.sqrt(L * C))
+    # compute slope two decades after cutoff frequency for better accuracy
+    slope = rlc_freq_response(cutoff_freq * 100, R_values[0], L, C)[0] / 2
+
     fig = pv.Figure(
         title=TITLE,
         plots=[
@@ -56,6 +61,27 @@ if __name__ == "__main__":
                     scale="Frequency (Hz)", ticks="auto", minor_ticks="auto"
                 ),  # references the x-axis scale of the second plot
                 y_axis=pv.Axis(title="Magnitude (dB)", ticks="auto", grid="auto"),
+                annotations=[
+                    pv.annot.Line(
+                        vertical=cutoff_freq,
+                        stroke=pv.style.Stroke(color="foreground", pattern=[5, 5]),
+                    ),
+                    pv.annot.Label(
+                        xy=(cutoff_freq, -60),
+                        text=f"{cutoff_freq/1000:.2f} kHz",
+                        anchor="bottom-left",
+                        angle=90,
+                    ),
+                    pv.annot.Line(
+                        two_points=((cutoff_freq, 0), (cutoff_freq * 10, slope)),
+                        stroke=pv.style.Stroke(color="foreground", pattern=[5, 5]),
+                    ),
+                    pv.annot.Label(
+                        xy=(cutoff_freq * 10, slope),
+                        text=f"{slope:.1f} dB/decade",
+                        anchor="bottom-left",
+                    ),
+                ],
             ),
             pv.Plot(
                 series=ph_series,

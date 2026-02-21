@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .style import Stroke, Fill, Style
 
+from .annot import Annotation
 from .axis import *
 from .series import Series
 
@@ -34,10 +35,12 @@ class Plot:
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
         title: None | str = None,
+        annotations: list[Annotation] = [],
     ):
         self.title = title
         self.subplot = subplot
         self.series = series
+        self.annotations = annotations
 
         if x_axis is not None and x_axes is not None:
             raise ValueError("Cannot provide both 'x_axis' and 'x_axes'.")

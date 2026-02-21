@@ -1,6 +1,7 @@
 use plotive::ColorU8;
 use pyo3::prelude::*;
 
+mod py_annot;
 mod py_data;
 mod py_des;
 mod py_style;

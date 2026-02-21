@@ -1,0 +1,4 @@
+maturin
+numpy
+pandas
+sphinx

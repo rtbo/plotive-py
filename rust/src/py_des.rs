@@ -2,6 +2,8 @@ use plotive::{des, geom, style};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
+use crate::{py_annot::extract_annot, py_style::{extract_series_color, extract_stroke_pattern, extract_theme_color, extract_theme_stroke}};
+
 use super::{extract_class_name, getattr_not_none};
 
 fn extract_padding(py_padding: &Bound<'_, PyAny>) -> PyResult<geom::Padding> {
@@ -42,80 +44,6 @@ fn extract_axis_ref(rf: &Bound<'_, PyAny>) -> PyResult<des::axis::Ref> {
             "Axis reference must be either a string (axis id or title) or an integer (axis index).",
         ))
     }
-}
-
-fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePattern> {
-    if let Ok(s) = pattern.extract::<String>() {
-        match s.as_str() {
-            "solid" => return Ok(style::LinePattern::Solid),
-            "dashed" => return Ok(style::Dash::default().into()),
-            "dotted" => return Ok(style::LinePattern::Dot),
-            _ => {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "Unknown line pattern string: {}",
-                    s
-                )));
-            }
-        }
-    }
-    let pattern_vec: Vec<f32> = pattern.extract()?;
-    Ok(style::Dash(pattern_vec).into())
-}
-
-fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series::Color> {
-    if let Ok(col) = py_col.extract::<&str>() {
-        if col == "auto" {
-            return Ok(style::series::Color::Auto);
-        }
-    }
-    let color = super::extract_color(py_col)?;
-    Ok(color.into())
-}
-
-fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::Color> {
-    if let Ok(col) = py_col.extract::<&str>() {
-        match col {
-            "background" => return Ok(style::theme::Col::Background.into()),
-            "foreground" => return Ok(style::theme::Col::Foreground.into()),
-            "grid" => return Ok(style::theme::Col::Grid.into()),
-            "legend-fill" => return Ok(style::theme::Col::LegendFill.into()),
-            "legend-border" => return Ok(style::theme::Col::LegendBorder.into()),
-            _ => {}
-        }
-    }
-    let color = super::extract_color(py_col)?;
-    Ok(color.into())
-}
-
-fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
-    let py_color = py_stroke.getattr("color")?;
-    if py_color.is_none() {
-        return Err(pyo3::exceptions::PyValueError::new_err(format!(
-            "\"color\" attribute is required for stroke.",
-        )));
-    }
-    let color = extract_theme_color(&py_color)?;
-    let width = if let Some(w) = getattr_not_none(py_stroke, "width")? {
-        w.extract::<f32>()?
-    } else {
-        1.0
-    };
-    let pattern = if let Some(p) = getattr_not_none(py_stroke, "pattern")? {
-        extract_stroke_pattern(&p)?
-    } else {
-        style::LinePattern::Solid
-    };
-    let opacity = if let Some(o) = getattr_not_none(py_stroke, "opacity")? {
-        Some(o.extract::<f32>()?)
-    } else {
-        None
-    };
-    Ok(style::theme::Stroke {
-        color,
-        width,
-        pattern,
-        opacity,
-    })
 }
 
 fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
@@ -474,6 +402,13 @@ fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
         plot = plot.with_y_axis(y_axis);
     }
 
+    let py_annots = py_plot.getattr("annotations")?;
+    let py_annots = py_annots.cast::<PyList>()?;
+    for py_annot in py_annots.iter() {
+        let annot = extract_annot(&py_annot)?;
+        plot = plot.with_annotation(annot);
+    }
+
     Ok(plot)
 }
 
@@ -598,7 +533,10 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
     let mut fig = des::Figure::new(plots).with_fill(fill);
 
     if let Some(py_title) = getattr_not_none(py_fig, "title")? {
-        let title: String = py_title.extract()?;
+        let title_fmt: String = py_title.extract()?;
+        let title = plotive_text::parse_rich_text(&title_fmt).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Failed to parse plot title: {}", e))
+        })?;
         fig = fig.with_title(title.into());
     }
 

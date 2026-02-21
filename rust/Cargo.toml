@@ -11,7 +11,16 @@ crate-type = ["cdylib"]
 [dependencies]
 numpy = "0.27.1"
 pyo3 = "0.27.1"
-plotive = { version="0.3.0", features = ["data-csv", "time"] }
-plotive-iced = { version="0.3.0", features = ["clipboard", "data-csv"] }
-plotive-pxl = { version="0.3.0" }
-plotive-svg = { version="0.3.0" }
+plotive = { version = "0.3.0", features = [
+    "data-csv",
+    "noto-mono",
+    "noto-sans",
+    "noto-sans-italic",
+    "noto-serif",
+    "noto-serif-italic",
+    "time",
+] }
+plotive-iced = { version = "0.3.0", features = ["clipboard", "data-csv"] }
+plotive-text = { version = "0.3.0" }
+plotive-pxl = { version = "0.3.0" }
+plotive-svg = { version = "0.3.0" }
