@@ -1,7 +1,4 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .color import Color
+from .color import Color
 
 type Fill = Color
 

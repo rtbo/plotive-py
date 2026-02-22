@@ -1,4 +1,7 @@
 maturin
 numpy
 pandas
+
+# documentation
 sphinx
+sphinx_rtd_theme

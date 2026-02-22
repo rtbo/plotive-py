@@ -1,14 +1,12 @@
 from abc import ABC
 from typing import TYPE_CHECKING
+import numpy as np
 
 if TYPE_CHECKING:
     from .color import Color
-    from .style import Stroke
-    import numpy as np
 
 type DataCol = str | list[float] | list[str] | np.ndarray
 type AxisRef = str | int
-
 
 class Series(ABC):
     def __init__(
