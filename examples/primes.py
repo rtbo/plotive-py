@@ -12,29 +12,31 @@ def get_n_primes(n):
         candidate += 1
     return primes
 
-y = list(range(1, 1001))
-x = get_n_primes(1000)
+if __name__ == "__main__":
+    y = list(range(1, 1001))
+    x = get_n_primes(1000)
 
-data_src = {
-    "x": x,
-    "y": y,
-}
+    data_src = {
+        "x": x,
+        "y": y,
+    }
 
-fig = pv.Figure(
-    title="Line Plot Example",
-    legend="bottom",
-    plot=pv.Plot(
-        series=[
-            pv.series.Line(
-                x = "x",
-                y = "y",
-                name = "1000 Prime Numbers",
-                interpolation = "step",
-            )
-        ],
-        x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),
-        y_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
+    fig = pv.Figure(
+        title="Line Plot Example",
+        legend="bottom",
+        plot=pv.Plot(
+            series=[
+                pv.series.Line(
+                    x = "x",
+                    y = "y",
+                    name = "1000 Prime Numbers",
+                    interpolation = "step",
+                )
+            ],
+            x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),
+            y_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
+        )
     )
-)
 
-fig.show(data_source=data_src, style="mocha")
+    import _common
+    _common.process_figure(fig, data_src)

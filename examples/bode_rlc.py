@@ -26,14 +26,14 @@ if __name__ == "__main__":
     phs = ["ph1", "ph2", "ph3"]
     R_values = [1, 10, 100]  # Ohms
 
-    data_source = {"freq": freq}
+    data_src = {"freq": freq}
     mag_series = []
     ph_series = []
 
     for R, mag_col, ph_col in zip(R_values, mags, phs):
         mag, ph = rlc_freq_response(freq, R, L, C)
-        data_source[mag_col] = mag
-        data_source[ph_col] = ph
+        data_src[mag_col] = mag
+        data_src[ph_col] = ph
         mag_series.append(
             pv.series.Line(
                 x="freq",
@@ -96,4 +96,6 @@ if __name__ == "__main__":
         ],
         legend="right",
     )
-    fig.show(data_source=data_source, style="macchiato")
+
+    import _common
+    _common.process_figure(fig, data_src)
