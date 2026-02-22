@@ -87,6 +87,8 @@ Annotations
    :maxdepth: 2
    :caption: Contents:
 
+   gallery
+
    tuto
 
    api_ref
