@@ -35,11 +35,16 @@ class Plot:
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
         title: None | str = None,
+        legend: None | Legend | str = None,
         annotations: list[Annotation] = [],
     ):
         self.title = title
         self.subplot = subplot
         self.series = series
+        if isinstance(legend, str):
+            self.legend = Legend(pos=legend)
+        else:
+            self.legend = legend
         self.annotations = annotations
 
         if x_axis is not None and x_axes is not None:
