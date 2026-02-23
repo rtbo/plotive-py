@@ -208,7 +208,8 @@ class Axis:
         title: str | None = None,
         id: str | None = None,
         scale: Scale | str = AutoScale(),
-        opposite_side: bool = False,
+        opposite_side: bool | None = None,
+        side: str | None = None,
         ticks: Ticks | str | None = None,
         grid: Stroke | str | None = None,
         minor_ticks: TicksLocator | str | None = None,
@@ -227,7 +228,19 @@ class Axis:
                 self.scale = SharedScale(scale)
         else:
             self.scale = scale
-        self.opposite_side = opposite_side
+
+        if opposite_side is not None and side is not None:
+            raise ValueError("Cannot specify both 'opposite_side' and 'side'.")
+        if side is not None:
+            if side.lower() in ["left", "right", "top", "bottom"]:
+                self._side = side.lower()
+            else:
+                raise ValueError(f"Invalid side value: {side}. Must be 'left', 'right', 'top' or 'bottom'.")
+            self.opposite_side = (side == "right" or side == "top")
+        elif opposite_side is not None:
+            self.opposite_side = opposite_side
+        else:
+            self.opposite_side = False
 
         if isinstance(ticks, str):
             self.ticks = Ticks(locator=_get_ticks_locator(ticks))

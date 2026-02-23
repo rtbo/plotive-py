@@ -81,6 +81,52 @@ Annotations
 - Annotate your figures, with labels, infinite lines, markers etc.
 - Annotations are placed using data space coordinates
 
+Code example for a simple figure
+--------------------------------
+
+.. code-block:: python
+
+    import plotive as pv
+    import numpy as np
+
+    # We first create the figure design
+    # A figure must have at least one plot
+
+    fig = pv.Figure(
+        title="Sine Wave",
+        # A figure must have at least one plot
+        # Multiple plots can be provided with `plots` list property
+        plot=pv.Plot(
+            series=[
+                pv.series.Line(
+                    # Data is referred to by column name in the data source
+                    # They can also be inline in the figure object
+                    x="x",
+                    y="y",
+                    name="sin(x)",
+                )
+            ],
+            # By default, axis have no tick, no title.
+            # Here is how to customize them.
+            x_axis=pv.Axis(title="x", ticks="pimultiple", grid="auto"),
+            y_axis=pv.Axis(title="sin(x)", ticks="auto", grid="auto"),
+            # Legend can be at plot level or figure level.
+            # They automatically gather all series that have a name property
+            legend="in-top-right",
+        ),
+    )
+
+    # Now we define the data source
+    x = np.linspace(0, 2 * np.pi, 500)
+    y = np.sin(x)
+    data_src = {"x": x, "y": y}
+
+    # and we can finally show the figure.
+    fig.show(data_source=data_src)
+
+The following window should show
+
+.. image:: img/index_sine.png
 
 .. toctree::
    :hidden:

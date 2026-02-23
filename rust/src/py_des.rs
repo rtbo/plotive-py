@@ -55,10 +55,19 @@ fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
             let y = ser.getattr("y")?;
             let x_data = extract_data_col(&x)?;
             let y_data = extract_data_col(&y)?;
+
             let mut line = des::series::Line::new(x_data, y_data);
             if let Some(name) = getattr_not_none(ser, "name")? {
                 let name_str: String = name.extract()?;
                 line = line.with_name(name_str);
+            }
+            if let Some(py_x_axis) = getattr_not_none(ser, "x_axis")? {
+                let x_axis = extract_axis_ref(&py_x_axis)?;
+                line = line.with_x_axis(x_axis);
+            }
+            if let Some(py_y_axis) = getattr_not_none(ser, "y_axis")? {
+                let y_axis = extract_axis_ref(&py_y_axis)?;
+                line = line.with_y_axis(y_axis);
             }
             let py_width = ser.getattr("linewidth")?;
             let py_style = ser.getattr("linestyle")?;
@@ -257,6 +266,13 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     if let Some(py_id) = getattr_not_none(py_axis, "id")? {
         let id: String = py_id.extract()?;
         axis = axis.with_id(id);
+    }
+
+    if let Some(py_opposite_side) = getattr_not_none(py_axis, "opposite_side")? {
+        let opposite_side: bool = py_opposite_side.extract()?;
+        if opposite_side {
+            axis = axis.with_opposite_side();
+        }
     }
 
     if let Some(py_ticks) = getattr_not_none(py_axis, "ticks")? {

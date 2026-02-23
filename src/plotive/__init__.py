@@ -63,6 +63,14 @@ class Plot:
             else ([y_axis] if y_axis is not None else [Axis()])
         )
 
+        # Sanity check
+        for ax in self.x_axes:
+            if hasattr(ax, "_side") and (ax._side == "left" or ax._side == "right"):
+                raise ValueError("X-axis cannot be on the left or right side.")
+        for ax in self.y_axes:
+            if hasattr(ax, "_side") and (ax._side == "top" or ax._side == "bottom"):
+                raise ValueError("Y-axis cannot be on the top or bottom side.")
+
 
 class Figure:
     def __init__(

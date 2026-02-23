@@ -48,6 +48,7 @@ if __name__ == "__main__":
             )
         )
 
+    # compute cutoff frequency of the filter
     cutoff_freq = 1 / (2 * np.pi * np.sqrt(L * C))
     # compute slope two decades after cutoff frequency for better accuracy
     slope = rlc_freq_response(cutoff_freq * 100, R_values[0], L, C)[0] / 2
