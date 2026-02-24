@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath("../src"))
 project = "plotive-py"
 copyright = "2026, Rémi THEBAULT"
 author = "Rémi THEBAULT"
-release = "0.1.0"
+release = "0.1.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
