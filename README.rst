@@ -5,6 +5,10 @@ plotive-py
 Plotive is a data plotting library, versatile and simple to use.
 The main concept is to enable purely declarative construction of figures, abstracted from the data and from rendering surfaces.
 
+Latest documentation is available on `Read The Docs`_.
+
+.. _Read The Docs: https://plotive-py.readthedocs.io/en/latest/
+
 `plotive-py` are the python bindings to the Rust `plotive`_ library.
 
 .. _plotive: https://github.com/rtbo/plotive
