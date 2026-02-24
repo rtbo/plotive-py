@@ -69,8 +69,8 @@ fn extract_theme(py_theme: &Bound<'_, PyAny>) -> PyResult<style::theme::Theme> {
     let background = get_color_attr("background")?;
     let foreground = get_color_attr("foreground")?;
     let grid = get_color_attr("grid")?;
-    let legend_fill = get_color_attr("legend_fill")?;
-    let legend_border = get_color_attr("legend_border")?;
+    let legend_fill = get_color_attr("legend-fill")?;
+    let legend_border = get_color_attr("legend-border")?;
 
     Ok(style::theme::Theme::Custom(style::theme::ThemePalette {
         background,

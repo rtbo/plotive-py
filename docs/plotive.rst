@@ -1,6 +1,14 @@
 plotive package
 ===============
 
+Module contents
+---------------
+
+.. automodule:: plotive
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
@@ -40,14 +48,6 @@ plotive.style module
 --------------------
 
 .. automodule:: plotive.style
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: plotive
    :members:
    :show-inheritance:
    :undoc-members:
