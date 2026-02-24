@@ -2787,6 +2787,8 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 [[package]]
 name = "plotive"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eabea136a0692cb9cd2aeb46de5c249066a52c72181ade31f600b799ec03b07d"
 dependencies = [
  "plotive-base",
  "plotive-text",
@@ -2797,6 +2799,8 @@ dependencies = [
 [[package]]
 name = "plotive-base"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cc20db5a8927dd64434205f8a6c1c46730bd983d2a71e0508e5f60844b09fba"
 dependencies = [
  "strict-num 0.2.0",
  "tiny-skia-path",
@@ -2805,6 +2809,8 @@ dependencies = [
 [[package]]
 name = "plotive-iced"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41fe2302bcdb8b422a5d40774a6564f365cd4076e98d03c384972f3eb90a9e9e"
 dependencies = [
  "arboard",
  "bytes",
@@ -2820,6 +2826,8 @@ dependencies = [
 [[package]]
 name = "plotive-pxl"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "134370f895e554fd040f82d56838f55e0d5db682ce32d39ed98a44597bd6af7c"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2844,6 +2852,8 @@ dependencies = [
 [[package]]
 name = "plotive-svg"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fb4da6a3f3493ab79d27a008a82e73f9677144139b7bfcdf7aeea6fecca2a8a"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2853,6 +2863,8 @@ dependencies = [
 [[package]]
 name = "plotive-text"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b1294f1943b409046a93887765bc1853b367648ee9395c1a4a5aab6240fe1c3"
 dependencies = [
  "fontconfig-parser",
  "log",
