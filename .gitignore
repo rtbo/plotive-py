@@ -2,9 +2,6 @@
 target/
 rust/target/
 
-# Documentation
-doc/_build/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 .pytest_cache/
