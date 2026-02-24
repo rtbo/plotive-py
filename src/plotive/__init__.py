@@ -223,7 +223,7 @@ class Figure:
         style : Style | str | None, default=None
             Rendering style object or style name.
         """
-        from ._rs import save_png as rs_save_svg
+        from ._rs import save_svg as rs_save_svg
 
         rs_save_svg(self, path, data_source, style)
 
