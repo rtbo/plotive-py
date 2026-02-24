@@ -7,6 +7,10 @@ module-name = "plotive._rs"
 
 [project]
 name = "plotive"
+description = "a data plotting library"
+readme = "README.rst"
+license = "MIT"
+keywords = ["plot", "science", "chart", "data", "visualization"]
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Rust",
