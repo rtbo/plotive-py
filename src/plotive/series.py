@@ -4,6 +4,7 @@ import numpy as np
 
 if TYPE_CHECKING:
     from .color import Color
+    from .style import Fill, Stroke
 
 type DataCol = str | list[float] | list[str] | np.ndarray
 type AxisRef = str | int
@@ -45,3 +46,28 @@ class Line(Series):
         self.linestyle = linestyle
         self.color = color
         self.interpolation = interpolation
+
+class Histogram(Series):
+    def __init__(
+        self,
+        data: DataCol,
+        *,
+        name: None | str = None,
+        x_axis: None | AxisRef = None,
+        y_axis: None | AxisRef = None,
+        
+        fill: None | Fill = None,
+        linewidth: None | float = None,
+        linestyle: None | str | list[float] = None,
+        linecolor: None | Color = None,
+        bins: int = 10,
+        density: bool = False,
+    ):
+        super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
+        self.data = data
+        self.fill = fill
+        self.linewidth = linewidth
+        self.linestyle = linestyle
+        self.linecolor = linecolor
+        self.bins = bins
+        self.density = density
