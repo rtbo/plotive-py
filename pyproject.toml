@@ -4,6 +4,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 module-name = "plotive._rs"
+include = [{ path = "LICENSE", format = "sdist" }]
 
 [project]
 name = "plotive"
