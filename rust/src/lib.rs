@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 mod py_annot;
 mod py_data;
 mod py_des;
+mod py_series;
 mod py_style;
 
 fn getattr_not_none<'py>(

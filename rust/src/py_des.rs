@@ -2,7 +2,11 @@ use plotive::{des, geom, style};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
-use crate::{py_annot::extract_annot, py_style::{extract_series_color, extract_stroke_pattern, extract_theme_color, extract_theme_stroke}};
+use crate::py_annot::extract_annot;
+use crate::py_series::extract_series;
+use crate::py_style::{
+    extract_theme_color, extract_theme_stroke,
+};
 
 use super::{extract_class_name, getattr_not_none};
 
@@ -20,20 +24,6 @@ fn extract_padding(py_padding: &Bound<'_, PyAny>) -> PyResult<geom::Padding> {
     }
 }
 
-fn extract_data_col(col: &Bound<'_, PyAny>) -> PyResult<des::DataCol> {
-    if let Ok(src_ref) = col.extract::<String>() {
-        Ok(des::DataCol::SrcRef(src_ref))
-    } else if let Ok(values) = col.extract::<Vec<f64>>() {
-        Ok(des::DataCol::Inline(values.into()))
-    } else if let Ok(values) = col.extract::<Vec<String>>() {
-        Ok(des::DataCol::Inline(values.into()))
-    } else {
-        Err(pyo3::exceptions::PyTypeError::new_err(
-            "DataCol must be either a string (source reference) or a list of values.",
-        ))
-    }
-}
-
 fn extract_axis_ref(rf: &Bound<'_, PyAny>) -> PyResult<des::axis::Ref> {
     if let Ok(src_ref) = rf.extract::<String>() {
         Ok(des::axis::Ref::Id(src_ref))
@@ -44,77 +34,6 @@ fn extract_axis_ref(rf: &Bound<'_, PyAny>) -> PyResult<des::axis::Ref> {
             "Axis reference must be either a string (axis id or title) or an integer (axis index).",
         ))
     }
-}
-
-fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
-    // check subtype of series
-    let cls_name = extract_class_name(ser)?;
-    let series = match cls_name.as_str() {
-        "Line" => {
-            let x = ser.getattr("x")?;
-            let y = ser.getattr("y")?;
-            let x_data = extract_data_col(&x)?;
-            let y_data = extract_data_col(&y)?;
-
-            let mut line = des::series::Line::new(x_data, y_data);
-            if let Some(name) = getattr_not_none(ser, "name")? {
-                let name_str: String = name.extract()?;
-                line = line.with_name(name_str);
-            }
-            if let Some(py_x_axis) = getattr_not_none(ser, "x_axis")? {
-                let x_axis = extract_axis_ref(&py_x_axis)?;
-                line = line.with_x_axis(x_axis);
-            }
-            if let Some(py_y_axis) = getattr_not_none(ser, "y_axis")? {
-                let y_axis = extract_axis_ref(&py_y_axis)?;
-                line = line.with_y_axis(y_axis);
-            }
-            let py_width = ser.getattr("linewidth")?;
-            let py_style = ser.getattr("linestyle")?;
-            let py_color = ser.getattr("color")?;
-            if !py_width.is_none() || !py_style.is_none() || !py_color.is_none() {
-                let mut stroke = style::series::Stroke::default();
-                if !py_width.is_none() {
-                    stroke.width = py_width.extract()?;
-                }
-                if !py_style.is_none() {
-                    stroke.pattern = extract_stroke_pattern(&py_style)?;
-                }
-                if !py_color.is_none() {
-                    stroke.color = extract_series_color(&py_color)?;
-                }
-                line = line.with_line(stroke);
-            }
-
-            if let Some(py_interp) = getattr_not_none(ser, "interpolation")? {
-                let interp_str: &str = py_interp.extract()?;
-                let interp = match interp_str {
-                    "linear" => des::series::Interpolation::Linear,
-                    "step-early" => des::series::Interpolation::StepEarly,
-                    "step-middle" => des::series::Interpolation::StepMiddle,
-                    "step-late" | "step" => des::series::Interpolation::StepLate,
-                    "cubic" | "spline" => des::series::Interpolation::Spline,
-                    _ => {
-                        return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                            "Unknown interpolation method: {}",
-                            interp_str
-                        )));
-                    }
-                };
-                line = line.with_interpolation(interp);
-            }
-
-            des::Series::Line(line)
-        }
-        _ => {
-            return Err(pyo3::exceptions::PyTypeError::new_err(format!(
-                "Unsupported series type: {}",
-                cls_name
-            )));
-        }
-    };
-
-    Ok(series)
 }
 
 fn extract_axis_range(py_range: &Bound<'_, PyAny>) -> PyResult<des::axis::Range> {
