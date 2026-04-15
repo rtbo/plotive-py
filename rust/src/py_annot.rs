@@ -59,7 +59,7 @@ fn extract_line_annot(py_line: &Bound<'_, PyAny>) -> PyResult<des::annot::Line> 
 
     if let Some(py_stroke) = super::getattr_not_none(py_line, "stroke")? {
         let stroke = extract_theme_stroke(&py_stroke)?;
-        line = line.with_line(stroke);
+        line = line.with_stroke(stroke);
     }
 
     Ok(line)
@@ -77,7 +77,7 @@ fn extract_arrow_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Arro
     }
     if let Some(py_stroke) = super::getattr_not_none(py_annot, "stroke")? {
         let stroke = extract_theme_stroke(&py_stroke)?;
-        arrow = arrow.with_line(stroke);
+        arrow = arrow.with_stroke(stroke);
     }
     Ok(arrow)
 }
