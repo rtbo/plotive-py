@@ -6,7 +6,9 @@ import numpy as np
 
 if TYPE_CHECKING:
     from .color import Color
-    from .style import Fill, Stroke
+    from .style import Fill
+
+from .style import Marker
 
 type DataCol = str | list[float] | list[str] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
@@ -91,6 +93,41 @@ class Line(Series):
         self.color = color
         self.interpolation = interpolation
 
+class Scatter(Series):
+    """Scatter series defined by x/y coordinates."""
+
+    def __init__(
+        self,
+        x: DataCol,
+        y: DataCol,
+        *,
+        name: None | str = None,
+        x_axis: None | AxisRef = None,
+        y_axis: None | AxisRef = None,
+        marker: None | Marker = None, 
+    ):
+        """Initialize a scatter series.
+
+        Parameters
+        ----------
+        x : DataCol
+            X values or x data source reference.
+        y : DataCol
+            Y values or y data source reference.
+        name : str | None, default=None
+            Legend/display name of the series.
+        x_axis : AxisRef | None, default=None
+            Target x-axis reference.
+        y_axis : AxisRef | None, default=None
+            Target y-axis reference.
+        marker : Marker | None, default=None
+            Marker style. If None, the marker will be automatically assigned based on the series palette.
+        """
+        super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
+        self.x = x
+        self.y = y
+        self.marker = marker
+
 class Histogram(Series):
     def __init__(
         self,
@@ -99,7 +136,6 @@ class Histogram(Series):
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
-        
         fill: None | Fill = None,
         linewidth: None | float = None,
         linestyle: None | str | list[float] = None,

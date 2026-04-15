@@ -4,7 +4,7 @@ use plotive::style;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
-use super::{getattr_not_none, extract_color};
+use super::{extract_color, getattr_not_none};
 
 pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
     if let Ok(py_str) = py_style.extract::<&str>() {
@@ -136,6 +136,9 @@ pub fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series
             return Ok(style::series::Color::Auto);
         }
     }
+    if let Ok(col) = py_col.extract::<usize>() {
+        return Ok(style::series::Color::Index(style::series::IndexColor(col)));
+    }
     let color = super::extract_color(py_col)?;
     Ok(color.into())
 }
@@ -155,14 +158,10 @@ pub fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::
     Ok(color.into())
 }
 
-pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
-    let py_color = py_stroke.getattr("color")?;
-    if py_color.is_none() {
-        return Err(pyo3::exceptions::PyValueError::new_err(format!(
-            "\"color\" attribute is required for stroke.",
-        )));
-    }
-    let color = extract_theme_color(&py_color)?;
+fn extract_stroke<C: plotive::Color>(
+    py_stroke: &Bound<'_, PyAny>,
+    color: C,
+) -> PyResult<style::Stroke<C>> {
     let width = if let Some(w) = getattr_not_none(py_stroke, "width")? {
         w.extract::<f32>()?
     } else {
@@ -178,10 +177,82 @@ pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::the
     } else {
         None
     };
-    Ok(style::theme::Stroke {
+    Ok(style::Stroke {
         color,
         width,
         pattern,
         opacity,
     })
+}
+
+pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
+    let py_color = py_stroke.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for stroke.",
+        )));
+    }
+    let color = extract_theme_color(&py_color)?;
+    extract_stroke(py_stroke, color)
+}
+
+pub fn extract_series_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::series::Stroke> {
+    let py_color = py_stroke.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for stroke.",
+        )));
+    }
+    let color = extract_series_color(&py_color)?;
+    extract_stroke(py_stroke, color)
+}
+
+pub fn extract_series_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::series::Marker> {
+    let mut marker = style::series::Marker::default();
+
+    if let Some(s) = getattr_not_none(py_marker, "shape")? {
+        let s_str = s.extract::<&str>()?;
+        let shape = match s_str {
+            "circle" => style::MarkerShape::Circle,
+            "square" => style::MarkerShape::Square,
+            "cross" => style::MarkerShape::Cross,
+            "plus" => style::MarkerShape::Plus,
+            "triangle-up" => style::MarkerShape::TriangleUp,
+            "triangle-down" => style::MarkerShape::TriangleDown,
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Unknown marker shape: {}",
+                    s_str
+                )));
+            }
+        };
+        marker.shape = shape;
+    }
+
+    if let Some(s) = getattr_not_none(py_marker, "size")? {
+        marker.size = s.extract::<f32>()?.into();
+    }
+
+    if let Some(py_fill) = py_marker.getattr_opt("fill")? {
+        if py_fill.is_none() {
+            marker.fill = None;
+        } else {
+            let fill_color = extract_series_color(&py_fill)?;
+            marker.fill = Some(style::Fill::Solid {
+                color: fill_color,
+                opacity: None,
+            })
+        }
+    }
+
+    if let Some(py_stroke) = py_marker.getattr_opt("stroke")? {
+        if py_stroke.is_none() {
+            marker.stroke = None;
+        } else {
+            let stroke = extract_series_stroke(&py_stroke)?;
+            marker.stroke = Some(stroke);
+        }
+    }
+
+    Ok(marker)
 }

@@ -2,16 +2,16 @@
 
 from .color import Color
 
-type Fill = Color
+type Fill[C=Color] = C
 """Type alias for fill colors."""
 
 
-class Stroke:
+class Stroke[C=Color]:
     """Line stroke style.
 
     Parameters
     ----------
-    color : Color
+    color : Color or ThemeColor or SeriesColor (depending on context)
         Stroke color.
     width : float, default=1.0
         Stroke width in pixels.
@@ -24,7 +24,7 @@ class Stroke:
     def __init__(
         self,
         *,
-        color: Color,
+        color: C,
         width: float = 1.0,
         pattern: None | list[float] | str = None,
         opacity: float = 1.0,
@@ -35,6 +35,34 @@ class Stroke:
         self.pattern = pattern
         self.opacity = opacity
 
+class Marker[C]:
+    """Marker style for scatter series.
+
+    Parameters
+    ----------
+    shape : str
+        Marker shape. One of "circle", "square", "cross", "plus", "triangle-up", "triangle-down".
+    size : float, default=10.0
+        Marker size in pixels.
+    fill : Fill[C] | None, default=None
+        Marker fill color.
+    stroke : Stroke[C] | None, default=None
+        Marker stroke style.
+    """
+
+    def __init__(
+        self,
+        *,
+        shape: str = "circle",
+        size: float = 10.0,
+        fill: None | Fill[C] = "auto",
+        stroke: None | Stroke[C] = None,
+    ):
+        """Initialize a marker style."""
+        self.shape = shape
+        self.size = size
+        self.fill = fill
+        self.stroke = stroke
 
 class ThemePalette:
     """Theme palette for structural chart colors.

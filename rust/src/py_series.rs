@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 use plotive::{des, style};
 
-use crate::py_style::{extract_series_color, extract_stroke_pattern};
+use crate::py_style::{extract_series_color, extract_series_marker, extract_stroke_pattern};
 use crate::{extract_class_name, getattr_not_none};
 
 fn extract_data_col(col: &Bound<'_, PyAny>) -> PyResult<des::DataCol> {
@@ -67,6 +67,22 @@ fn extract_line_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     Ok(des::Series::Line(line))
 }
 
+fn extract_scatter_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let x = ser.getattr("x")?;
+    let y = ser.getattr("y")?;
+    let x_data = extract_data_col(&x)?;
+    let y_data = extract_data_col(&y)?;
+    let mut scatter = des::series::Scatter::new(x_data, y_data);
+    if let Some(name) = getattr_not_none(ser, "name")? {
+        let name_str: String = name.extract()?;
+        scatter = scatter.with_name(name_str);
+    }
+    if let Some(py_marker) = getattr_not_none(ser, "marker")? {
+        scatter = scatter.with_marker(extract_series_marker(&py_marker)?);
+    }
+    Ok(des::Series::Scatter(scatter))
+}
+
 pub fn extract_histogram_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     let py_data = ser.getattr("data")?;
     let data = extract_data_col(&py_data)?;
@@ -116,6 +132,7 @@ pub fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     let cls_name = extract_class_name(ser)?;
     let series = match cls_name.as_str() {
         "Line" => extract_line_series(ser)?,
+        "Scatter" => extract_scatter_series(ser)?,
         "Histogram" => extract_histogram_series(ser)?,
         _ => {
             return Err(pyo3::exceptions::PyTypeError::new_err(format!(
