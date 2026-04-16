@@ -43,7 +43,7 @@ Here is a simple yet complete example:
 
 This example shows the following interactive window:
 
-.. image:: docs/img/index_sine.png
+.. image:: https://raw.githubusercontent.com/rtbo/plotive-py/main/docs/img/index_sine.png
 
 
 Supported figure types
