@@ -1,6 +1,7 @@
 """Axis configuration primitives, tick locators, and formatters."""
 
 from .style import Stroke
+from .color import ThemeColor
 
 type AxisRef = str | int
 """
@@ -37,10 +38,12 @@ class Scale:
         """Create a scale shared with another axis."""
         return SharedScale(ref)
 
+
 class AutoScale(Scale):
     """Scale whose bounds are fully determined automatically."""
 
     pass
+
 
 class LinScale(Scale):
     """Linear scale with optional bounds."""
@@ -96,7 +99,9 @@ class TicksLocator:
         return AutoTicksLocator()
 
     @classmethod
-    def MaxN(cls, bins: int = 9, steps: list[float] = [1, 2, 2.5, 5]) -> "MaxNTicksLocator":
+    def MaxN(
+        cls, bins: int = 9, steps: list[float] = [1, 2, 2.5, 5]
+    ) -> "MaxNTicksLocator":
         """Create a locator capped to a maximum number of major ticks."""
         return MaxNTicksLocator(bins, steps)
 
@@ -120,10 +125,12 @@ class TicksLocator:
         """Create a locator for time durations."""
         return TimeDeltaTicksLocator(period, unit)
 
+
 class AutoTicksLocator(TicksLocator):
     """Automatically selected tick locator."""
 
     pass
+
 
 class MaxNTicksLocator(TicksLocator):
     """Tick locator limiting the number of major ticks."""
@@ -141,6 +148,7 @@ class MaxNTicksLocator(TicksLocator):
         self.bins = bins
         self.steps = steps
 
+
 class PiMultipleTicksLocator(TicksLocator):
     """Tick locator using multiples of pi."""
 
@@ -154,6 +162,7 @@ class PiMultipleTicksLocator(TicksLocator):
         """
         self.bins = bins
 
+
 class LogTicksLocator(TicksLocator):
     """Tick locator for logarithmic scales."""
 
@@ -166,6 +175,7 @@ class LogTicksLocator(TicksLocator):
             Logarithm base.
         """
         self.base = base
+
 
 class DateTimeTicksLocator(TicksLocator):
     """Tick locator for date/time values."""
@@ -183,6 +193,7 @@ class DateTimeTicksLocator(TicksLocator):
         """
         self.period = period
         self.unit = unit
+
 
 class TimeDeltaTicksLocator(TicksLocator):
     """Tick locator for duration values."""
@@ -235,15 +246,18 @@ class TicksFormatter:
         """Create a timedelta formatter."""
         return TimeDeltaTicksFormatter(fmt)
 
+
 class AutoTicksFormatter(TicksFormatter):
     """Default automatically selected tick formatter."""
 
     pass
 
+
 class SharedAutoTicksFormatter(TicksFormatter):
     """Automatic formatter synchronized with a shared axis."""
 
     pass
+
 
 class DecimalTicksFormatter(TicksFormatter):
     """Decimal tick formatter with fixed precision."""
@@ -258,6 +272,7 @@ class DecimalTicksFormatter(TicksFormatter):
         """
         self.precision = precision
 
+
 class PercentTicksFormatter(TicksFormatter):
     """Percentage tick formatter."""
 
@@ -270,6 +285,7 @@ class PercentTicksFormatter(TicksFormatter):
             Optional number of decimal digits.
         """
         self.decimals = decimals
+
 
 class DateTimeTicksFormatter(TicksFormatter):
     """Tick formatter for calendar datetime labels."""
@@ -284,6 +300,7 @@ class DateTimeTicksFormatter(TicksFormatter):
         """
         self.fmt = fmt
 
+
 class TimeDeltaTicksFormatter(TicksFormatter):
     """Tick formatter for duration labels."""
 
@@ -296,6 +313,7 @@ class TimeDeltaTicksFormatter(TicksFormatter):
             Timedelta formatting string.
         """
         self.fmt = fmt
+
 
 def _ticks_locator_from_str(s: str) -> TicksLocator:
     """Convert a string shortcut into a tick locator instance."""
@@ -316,16 +334,25 @@ def _ticks_locator_from_str(s: str) -> TicksLocator:
         return TicksLocator.Log(base)
     elif s.startswith("datetime"):
         period_unit = s[8:].split(",") if len(s) > 8 else []
-        period = int(period_unit[0]) if len(period_unit) > 0 and period_unit[0].isdigit() else 1
+        period = (
+            int(period_unit[0])
+            if len(period_unit) > 0 and period_unit[0].isdigit()
+            else 1
+        )
         unit = period_unit[1] if len(period_unit) > 1 else "auto"
         return TicksLocator.DateTime(period, unit)
     elif s.startswith("timedelta"):
         period_unit = s[9:].split(",") if len(s) > 9 else []
-        period = int(period_unit[0]) if len(period_unit) > 0 and period_unit[0].isdigit() else 1
+        period = (
+            int(period_unit[0])
+            if len(period_unit) > 0 and period_unit[0].isdigit()
+            else 1
+        )
         unit = period_unit[1] if len(period_unit) > 1 else "auto"
         return TicksLocator.TimeDelta(period, unit)
     else:
         raise ValueError(f"Unknown ticks locator string: {s}")
+
 
 def _get_ticks_locator(locator: TicksLocator | str) -> TicksLocator:
     """Normalize a tick locator from string or locator instance."""
@@ -335,6 +362,7 @@ def _get_ticks_locator(locator: TicksLocator | str) -> TicksLocator:
         return locator
     else:
         raise ValueError(f"Invalid ticks locator specification: {locator}")
+
 
 class Ticks:
     """Major tick configuration for an axis."""
@@ -356,6 +384,36 @@ class Ticks:
         self.locator = _get_ticks_locator(locator)
         self.formatter = formatter
 
+
+class Grid(Stroke[ThemeColor]):
+    """Major grid configuration for an axis"""
+
+    def __init__(
+        self,
+        *,
+        color: ThemeColor="grid",
+        width: float = 1.0,
+        pattern: None | list[float] | str = None,
+        opacity: float = 0.6,
+    ):
+        """Initialize a grid style."""
+        super().__init__(color=color, width=width, pattern=pattern, opacity=opacity)
+
+class MinorGrid(Stroke[ThemeColor]):
+    """Minor grid configuration for an axis"""
+
+    def __init__(
+        self,
+        *,
+        color: ThemeColor="grid",
+        width: float = 0.5,
+        pattern: None | list[float] | str = [5, 5],
+        opacity: float = 0.6,
+    ):
+        """Initialize a grid style."""
+        super().__init__(color=color, width=width, pattern=pattern, opacity=opacity)
+
+
 class Axis:
     """Full axis definition for a plot."""
 
@@ -368,9 +426,9 @@ class Axis:
         opposite_side: bool | None = None,
         side: str | None = None,
         ticks: Ticks | str | None = None,
-        grid: Stroke | str | None = None,
+        grid: Grid | str | None = None,
         minor_ticks: TicksLocator | str | None = None,
-        minor_grid: Stroke | str | None = None,
+        minor_grid: MinorGrid | str | None = None,
     ):
         """Initialize an axis and normalize rendering options.
 
@@ -420,8 +478,10 @@ class Axis:
             if side.lower() in ["left", "right", "top", "bottom"]:
                 self._side = side.lower()
             else:
-                raise ValueError(f"Invalid side value: {side}. Must be 'left', 'right', 'top' or 'bottom'.")
-            self.opposite_side = (side == "right" or side == "top")
+                raise ValueError(
+                    f"Invalid side value: {side}. Must be 'left', 'right', 'top' or 'bottom'."
+                )
+            self.opposite_side = side == "right" or side == "top"
         elif opposite_side is not None:
             self.opposite_side = opposite_side
         else:
@@ -436,9 +496,9 @@ class Axis:
 
         if isinstance(grid, str):
             if grid.lower() == "auto":
-                self.grid = Stroke(color="grid")
+                self.grid = Grid()
             else:
-                self.grid = Stroke(color=grid)
+                self.grid = Grid(color=grid)
         else:
             self.grid = grid
 
@@ -449,8 +509,8 @@ class Axis:
 
         if isinstance(minor_grid, str):
             if minor_grid.lower() == "auto":
-                self.minor_grid = Stroke(color="grid", width=0.5, pattern=[5, 5])
+                self.minor_grid = MinorGrid()
             else:
-                self.minor_grid = Stroke(color=minor_grid, width=0.5, pattern=[5, 5])
+                self.minor_grid = MinorGrid(color=minor_grid)
         else:
             self.minor_grid = minor_grid

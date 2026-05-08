@@ -43,7 +43,7 @@ fn extract_line_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         if !py_color.is_none() {
             stroke.color = extract_series_color(&py_color)?;
         }
-        line = line.with_line(stroke);
+        line = line.with_stroke(stroke);
     }
 
     if let Some(py_interp) = getattr_not_none(ser, "interpolation")? {
@@ -109,7 +109,7 @@ pub fn extract_histogram_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series>
         if !py_color.is_none() {
             stroke.color = extract_series_color(&py_color)?;
         }
-        hist = hist.with_line(stroke);
+        hist = hist.with_outline(stroke);
     }
 
     if ser.getattr("bins").is_ok() {

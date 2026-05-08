@@ -467,6 +467,11 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
 
     let mut fig = des::Figure::new(plots).with_fill(fill);
 
+    if let Some(py_size) = getattr_not_none(py_fig, "size")? {
+        let size = py_size.extract::<(f32, f32)>()?;
+        fig = fig.with_size(geom::Size::new(size.0, size.1));
+    }
+
     if let Some(py_title) = getattr_not_none(py_fig, "title")? {
         let title_fmt: String = py_title.extract()?;
         let title = plotive_text::parse_rich_text(&title_fmt).map_err(|e| {

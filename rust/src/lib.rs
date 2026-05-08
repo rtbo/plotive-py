@@ -1,4 +1,4 @@
-use plotive::ColorU8;
+use plotive::{Rgba8, Rgb8};
 use pyo3::prelude::*;
 
 mod py_annot;
@@ -28,7 +28,7 @@ fn extract_class_name(obj: &Bound<'_, PyAny>) -> PyResult<String> {
     Ok(name.to_str()?.to_owned())
 }
 
-fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<ColorU8> {
+fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<Rgba8> {
     if let Ok(col) = py_col.extract::<&str>() {
         Ok(col.parse().map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!(
@@ -37,16 +37,16 @@ fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<ColorU8> {
             ))
         })?)
     } else if let Ok((r, g, b)) = py_col.extract::<(u8, u8, u8)>() {
-        Ok(ColorU8::from_rgb(r, g, b))
+        Ok(Rgb8::new(r, g, b).opaque())
     } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, u8)>() {
-        Ok(ColorU8::from_rgba(r, g, b, a))
+        Ok(Rgba8::new(r, g, b, a))
     } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, f32)>() {
         if a < 0.0 || a > 1.0 {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "Alpha value must be between 0.0 and 1.0.",
             ));
         }
-        Ok(ColorU8::from_rgba(r, g, b, (a * 255.0) as u8))
+        Ok(Rgba8::new(r, g, b, (a * 255.0) as u8))
     } else {
         Err(pyo3::exceptions::PyTypeError::new_err(
             "Color must be a string.",
@@ -57,11 +57,36 @@ fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<ColorU8> {
 #[pymodule]
 #[pyo3(name = "_rs")]
 mod plt_rs {
-    use pyo3::prelude::*;
+    use plotive_pxl::ToPixmap;
+use pyo3::prelude::*;
 
     use super::py_data;
     use super::py_des;
     use super::py_style;
+
+    #[pyfunction]
+    fn render_pxl(py_fig: &Bound<'_, PyAny>,
+        py_data_src: &Bound<'_, PyAny>,
+        py_style: &Bound<'_, PyAny>,
+    ) -> PyResult<(Vec<u8>, u32, u32)>
+    {
+        let fig = py_des::extract_figure(py_fig)?;
+        let data_src = py_data::extract_data_source(py_data_src)?;
+        let mut params: plotive_pxl::Params = Default::default();
+        if !py_style.is_none() {
+            let style = py_style::extract_style(py_style)?;
+            params.style = style;
+        }
+        let pixmap = fig.to_pixmap(&*data_src, params).map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to render figure: {}", e))
+        })?;
+
+        let width = pixmap.width();
+        let height = pixmap.height();
+        let bytes = pixmap.take();
+
+        Ok((bytes, width, height))
+    }
 
     #[pyfunction]
     fn save_png(

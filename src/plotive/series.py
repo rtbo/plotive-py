@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from .color import Color
+    from .color import Color, SeriesColor
     from .style import Fill
 
-from .style import Marker
+from .style import Marker, Stroke
 
 type DataCol = str | list[float] | list[str] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
@@ -104,7 +104,7 @@ class Scatter(Series):
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
-        marker: None | Marker = None, 
+        marker: None | Marker = None,
     ):
         """Initialize a scatter series.
 

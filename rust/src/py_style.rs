@@ -1,4 +1,4 @@
-use plotive::ColorU8;
+use plotive::Rgba8;
 use plotive::style;
 
 use pyo3::prelude::*;
@@ -9,7 +9,7 @@ use super::{extract_color, getattr_not_none};
 pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
     if let Ok(py_str) = py_style.extract::<&str>() {
         return match py_str {
-            "black_white" | "monochrome" | "black" => Ok(plotive::Style::black_white()),
+            "black_white" | "monochrome" | "black" | "bw" => Ok(plotive::Style::black_white()),
             "light" => Ok(plotive::Style::light()),
             "dark" => Ok(plotive::Style::dark()),
             "okabe_ito" | "okabe" => Ok(plotive::Style::okabe_ito()),
@@ -55,7 +55,7 @@ fn extract_theme(py_theme: &Bound<'_, PyAny>) -> PyResult<style::theme::Theme> {
         };
     }
 
-    let get_color_attr = |attr: &str| -> PyResult<ColorU8> {
+    let get_color_attr = |attr: &str| -> PyResult<Rgba8> {
         if let Some(py_str) = getattr_not_none(py_theme, attr)? {
             Ok(extract_color(&py_str)?)
         } else {

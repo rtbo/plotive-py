@@ -22,6 +22,7 @@ User-provided data source resolved at render time.
 Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas DataFrames
 """
 
+
 @dataclass(kw_only=True)
 class Legend:
     """Legend display settings."""
@@ -128,6 +129,30 @@ class Plot:
                 raise ValueError("Y-axis cannot be on the top or bottom side.")
 
 
+class PxlArray:
+    """Array of pixels returned by the renderer.
+
+    The data contains raw RGBA premultiplied pixel data, with 8 bits per channel.
+    """
+
+    def __init__(self, data: bytearray, width: int, height: int):
+        self.data = data
+        self.width = width
+        self.height = height
+
+    def depremultiply(self) -> bytes:
+        """Return non-premultiplied pixel data."""
+
+        for i in range(0, len(self.data), 4):
+            r, g, b, a = self.data[i : i + 4]
+            if a > 0 and a < 255:
+                r = int(r * 255 / a)
+                g = int(g * 255 / a)
+                b = int(b * 255 / a)
+                self.data[i : i + 4] = bytes([r, g, b, a])
+        return self.data
+
+
 class Figure:
     """Top-level container for one or more plots."""
 
@@ -182,6 +207,23 @@ class Figure:
             self.legend = Legend(pos=legend)
         else:
             self.legend = legend
+
+    def render_pxl(
+        self, *, data_source: None | DataSource = None, style: None | Style | str = None
+    ) -> PxlArray:
+        """Render the figure as an array of pixels
+
+        Parameters
+        ----------
+        data_source : DataSource | None, default=None
+            Runtime data source.
+        style : Style | str | None, default=None
+            Rendering style object or style name.
+        """
+        from ._rs import render_pxl as rs_render_pxl
+
+        (data, width, height) = rs_render_pxl(self, data_source, style)
+        return PxlArray(data, width, height)
 
     def save_png(
         self,
