@@ -1,10 +1,214 @@
-use plotive::Rgba8;
 use plotive::style;
+use plotive::{Rgb8, Rgba8};
 
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
-use super::{extract_color, getattr_not_none};
+use super::getattr_not_none;
+
+pub fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<Rgba8> {
+    if let Ok(col) = py_col.extract::<&str>() {
+        Ok(col.parse().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Failed to parse color string '{}': {}",
+                col, e
+            ))
+        })?)
+    } else if let Ok((r, g, b)) = py_col.extract::<(u8, u8, u8)>() {
+        Ok(Rgb8::new(r, g, b).opaque())
+    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, u8)>() {
+        Ok(Rgba8::new(r, g, b, a))
+    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, f32)>() {
+        if a < 0.0 || a > 1.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Alpha value must be between 0.0 and 1.0.",
+            ));
+        }
+        Ok(Rgba8::new(r, g, b, (a * 255.0) as u8))
+    } else {
+        Err(pyo3::exceptions::PyTypeError::new_err(format!(
+            "Color must be a string (got {py_col:?})"
+        )))
+    }
+}
+
+pub fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series::Color> {
+    if let Ok(col) = py_col.extract::<&str>() {
+        if col == "auto" {
+            return Ok(style::series::Color::Auto);
+        }
+    }
+    if let Ok(col) = py_col.extract::<usize>() {
+        return Ok(style::series::Color::Index(style::series::IndexColor(col)));
+    }
+    let color = extract_color(py_col)?;
+    Ok(color.into())
+}
+
+pub fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::Color> {
+    if let Ok(col) = py_col.extract::<&str>() {
+        match col {
+            "background" => return Ok(style::theme::Col::Background.into()),
+            "foreground" => return Ok(style::theme::Col::Foreground.into()),
+            "grid" => return Ok(style::theme::Col::Grid.into()),
+            "legend-fill" => return Ok(style::theme::Col::LegendFill.into()),
+            "legend-border" => return Ok(style::theme::Col::LegendBorder.into()),
+            _ => {}
+        }
+    }
+    let color = extract_color(py_col)?;
+    Ok(color.into())
+}
+
+fn extract_fill<C: plotive::Color>(
+    py_fill: &Bound<'_, PyAny>,
+    color: C,
+) -> PyResult<style::Fill<C>> {
+    let opacity = getattr_not_none(py_fill, "opacity")?
+        .map(|o| o.extract::<f32>())
+        .transpose()?;
+
+    Ok(style::Fill::Solid { color, opacity })
+}
+
+pub fn extract_theme_fill(py_fill: &Bound<'_, PyAny>) -> PyResult<style::theme::Fill> {
+    let py_color = py_fill.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for fill.",
+        )));
+    }
+    let color = extract_theme_color(&py_color)?;
+    extract_fill(py_fill, color)
+}
+
+pub fn extract_series_fill(py_fill: &Bound<'_, PyAny>) -> PyResult<style::series::Fill> {
+    let py_color = py_fill.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for fill.",
+        )));
+    }
+    let color = extract_series_color(&py_color)?;
+    extract_fill(py_fill, color)
+}
+
+fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePattern> {
+    if let Ok(s) = pattern.extract::<String>() {
+        match s.as_str() {
+            "solid" => return Ok(style::LinePattern::Solid),
+            "dashed" => return Ok(style::Dash::default().into()),
+            "dotted" => return Ok(style::LinePattern::Dot),
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Unknown line pattern string: {}",
+                    s
+                )));
+            }
+        }
+    }
+    let pattern_vec: Vec<f32> = pattern.extract()?;
+    Ok(style::Dash(pattern_vec).into())
+}
+
+fn extract_stroke<C: plotive::Color>(
+    py_stroke: &Bound<'_, PyAny>,
+    color: C,
+) -> PyResult<style::Stroke<C>> {
+    let width = if let Some(w) = getattr_not_none(py_stroke, "width")? {
+        w.extract::<f32>()?
+    } else {
+        1.0
+    };
+    let pattern = if let Some(p) = getattr_not_none(py_stroke, "pattern")? {
+        extract_stroke_pattern(&p)?
+    } else {
+        style::LinePattern::Solid
+    };
+    let opacity = if let Some(o) = getattr_not_none(py_stroke, "opacity")? {
+        Some(o.extract::<f32>()?)
+    } else {
+        None
+    };
+    Ok(style::Stroke {
+        color,
+        width,
+        pattern,
+        opacity,
+    })
+}
+
+pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
+    let py_color = py_stroke.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for stroke.",
+        )));
+    }
+    let color = extract_theme_color(&py_color)?;
+    extract_stroke(py_stroke, color)
+}
+
+pub fn extract_series_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::series::Stroke> {
+    let py_color = py_stroke.getattr("color")?;
+    if py_color.is_none() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "\"color\" attribute is required for stroke.",
+        )));
+    }
+    let color = extract_series_color(&py_color)?;
+    extract_stroke(py_stroke, color)
+}
+
+pub fn extract_series_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::series::Marker> {
+    let mut marker = style::series::Marker::default();
+
+    if let Some(s) = getattr_not_none(py_marker, "shape")? {
+        let s_str = s.extract::<&str>()?;
+        let shape = match s_str {
+            "circle" => style::MarkerShape::Circle,
+            "square" => style::MarkerShape::Square,
+            "diamond" => style::MarkerShape::Diamond,
+            "cross" => style::MarkerShape::Cross,
+            "plus" => style::MarkerShape::Plus,
+            "triangle-up" => style::MarkerShape::TriangleUp,
+            "triangle-down" => style::MarkerShape::TriangleDown,
+            "triangle-left" => style::MarkerShape::TriangleLeft,
+            "triangle-right" => style::MarkerShape::TriangleRight,
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Unknown marker shape: {}",
+                    s_str
+                )));
+            }
+        };
+        marker.shape = shape;
+    }
+
+    if let Some(s) = getattr_not_none(py_marker, "size")? {
+        marker.size = s.extract::<f32>()?.into();
+    }
+
+    if let Some(py_fill) = py_marker.getattr_opt("fill")? {
+        if py_fill.is_none() {
+            marker.fill = None;
+        } else {
+            let fill = extract_series_fill(&py_fill)?;
+            marker.fill = Some(fill);
+        }
+    }
+
+    if let Some(py_stroke) = py_marker.getattr_opt("stroke")? {
+        if py_stroke.is_none() {
+            marker.stroke = None;
+        } else {
+            let stroke = extract_series_stroke(&py_stroke)?;
+            marker.stroke = Some(stroke);
+        }
+    }
+
+    Ok(marker)
+}
 
 pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
     if let Ok(py_str) = py_style.extract::<&str>() {
@@ -110,149 +314,4 @@ fn extract_palette(py_palette: &Bound<'_, PyAny>) -> PyResult<style::series::Pal
     Err(pyo3::exceptions::PyTypeError::new_err(
         "Palette must be a string or a list of colors.",
     ))
-}
-
-pub fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePattern> {
-    if let Ok(s) = pattern.extract::<String>() {
-        match s.as_str() {
-            "solid" => return Ok(style::LinePattern::Solid),
-            "dashed" => return Ok(style::Dash::default().into()),
-            "dotted" => return Ok(style::LinePattern::Dot),
-            _ => {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "Unknown line pattern string: {}",
-                    s
-                )));
-            }
-        }
-    }
-    let pattern_vec: Vec<f32> = pattern.extract()?;
-    Ok(style::Dash(pattern_vec).into())
-}
-
-pub fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series::Color> {
-    if let Ok(col) = py_col.extract::<&str>() {
-        if col == "auto" {
-            return Ok(style::series::Color::Auto);
-        }
-    }
-    if let Ok(col) = py_col.extract::<usize>() {
-        return Ok(style::series::Color::Index(style::series::IndexColor(col)));
-    }
-    let color = super::extract_color(py_col)?;
-    Ok(color.into())
-}
-
-pub fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::Color> {
-    if let Ok(col) = py_col.extract::<&str>() {
-        match col {
-            "background" => return Ok(style::theme::Col::Background.into()),
-            "foreground" => return Ok(style::theme::Col::Foreground.into()),
-            "grid" => return Ok(style::theme::Col::Grid.into()),
-            "legend-fill" => return Ok(style::theme::Col::LegendFill.into()),
-            "legend-border" => return Ok(style::theme::Col::LegendBorder.into()),
-            _ => {}
-        }
-    }
-    let color = super::extract_color(py_col)?;
-    Ok(color.into())
-}
-
-fn extract_stroke<C: plotive::Color>(
-    py_stroke: &Bound<'_, PyAny>,
-    color: C,
-) -> PyResult<style::Stroke<C>> {
-    let width = if let Some(w) = getattr_not_none(py_stroke, "width")? {
-        w.extract::<f32>()?
-    } else {
-        1.0
-    };
-    let pattern = if let Some(p) = getattr_not_none(py_stroke, "pattern")? {
-        extract_stroke_pattern(&p)?
-    } else {
-        style::LinePattern::Solid
-    };
-    let opacity = if let Some(o) = getattr_not_none(py_stroke, "opacity")? {
-        Some(o.extract::<f32>()?)
-    } else {
-        None
-    };
-    Ok(style::Stroke {
-        color,
-        width,
-        pattern,
-        opacity,
-    })
-}
-
-pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
-    let py_color = py_stroke.getattr("color")?;
-    if py_color.is_none() {
-        return Err(pyo3::exceptions::PyValueError::new_err(format!(
-            "\"color\" attribute is required for stroke.",
-        )));
-    }
-    let color = extract_theme_color(&py_color)?;
-    extract_stroke(py_stroke, color)
-}
-
-pub fn extract_series_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::series::Stroke> {
-    let py_color = py_stroke.getattr("color")?;
-    if py_color.is_none() {
-        return Err(pyo3::exceptions::PyValueError::new_err(format!(
-            "\"color\" attribute is required for stroke.",
-        )));
-    }
-    let color = extract_series_color(&py_color)?;
-    extract_stroke(py_stroke, color)
-}
-
-pub fn extract_series_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::series::Marker> {
-    let mut marker = style::series::Marker::default();
-
-    if let Some(s) = getattr_not_none(py_marker, "shape")? {
-        let s_str = s.extract::<&str>()?;
-        let shape = match s_str {
-            "circle" => style::MarkerShape::Circle,
-            "square" => style::MarkerShape::Square,
-            "cross" => style::MarkerShape::Cross,
-            "plus" => style::MarkerShape::Plus,
-            "triangle-up" => style::MarkerShape::TriangleUp,
-            "triangle-down" => style::MarkerShape::TriangleDown,
-            _ => {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "Unknown marker shape: {}",
-                    s_str
-                )));
-            }
-        };
-        marker.shape = shape;
-    }
-
-    if let Some(s) = getattr_not_none(py_marker, "size")? {
-        marker.size = s.extract::<f32>()?.into();
-    }
-
-    if let Some(py_fill) = py_marker.getattr_opt("fill")? {
-        if py_fill.is_none() {
-            marker.fill = None;
-        } else {
-            let fill_color = extract_series_color(&py_fill)?;
-            marker.fill = Some(style::Fill::Solid {
-                color: fill_color,
-                opacity: None,
-            })
-        }
-    }
-
-    if let Some(py_stroke) = py_marker.getattr_opt("stroke")? {
-        if py_stroke.is_none() {
-            marker.stroke = None;
-        } else {
-            let stroke = extract_series_stroke(&py_stroke)?;
-            marker.stroke = Some(stroke);
-        }
-    }
-
-    Ok(marker)
 }

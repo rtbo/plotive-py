@@ -1,12 +1,10 @@
 use plotive::des::series::BarsPosition;
 use pyo3::prelude::*;
 
-use plotive::{des, style};
+use plotive::des;
 use pyo3::types::{PyDateAccess, PyDateTime, PyList, PyTimeAccess};
 
-use crate::py_style::{
-    extract_series_color, extract_series_marker, extract_series_stroke, extract_stroke_pattern,
-};
+use crate::py_style::{extract_series_fill, extract_series_marker, extract_series_stroke};
 use crate::{extract_class_name, getattr_not_none};
 
 fn datetime_conv(dt: &Bound<'_, PyDateTime>) -> PyResult<plotive::time::DateTime> {
@@ -107,14 +105,28 @@ fn extract_base(
     Ok((name, x_axis, y_axis))
 }
 
-fn extract_line_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
-    let x = ser.getattr("x")?;
-    let y = ser.getattr("y")?;
+fn interpolation_from_str(interp_str: &str) -> PyResult<des::series::Interpolation> {
+    match interp_str {
+        "linear" => Ok(des::series::Interpolation::Linear),
+        "step-early" => Ok(des::series::Interpolation::StepEarly),
+        "step-middle" => Ok(des::series::Interpolation::StepMiddle),
+        "step-late" | "step" => Ok(des::series::Interpolation::StepLate),
+        "cubic" | "spline" => Ok(des::series::Interpolation::Spline),
+        _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "Unknown interpolation method: {}",
+            interp_str
+        ))),
+    }
+}
+
+fn extract_line_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let x = py_ser.getattr("x")?;
+    let y = py_ser.getattr("y")?;
     let x_data = extract_data_col(&x)?;
     let y_data = extract_data_col(&y)?;
     let mut line = des::series::Line::new(x_data, y_data);
 
-    let (name, x_axis, y_axis) = extract_base(ser)?;
+    let (name, x_axis, y_axis) = extract_base(py_ser)?;
     if let Some(name) = name {
         line = line.with_name(name);
     }
@@ -125,52 +137,30 @@ fn extract_line_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         line = line.with_y_axis(y_axis);
     }
 
-    let py_width = ser.getattr("linewidth")?;
-    let py_style = ser.getattr("linestyle")?;
-    let py_color = ser.getattr("color")?;
-    if !py_width.is_none() || !py_style.is_none() || !py_color.is_none() {
-        let mut stroke = style::series::Stroke::default();
-        if !py_width.is_none() {
-            stroke.width = py_width.extract()?;
-        }
-        if !py_style.is_none() {
-            stroke.pattern = extract_stroke_pattern(&py_style)?;
-        }
-        if !py_color.is_none() {
-            stroke.color = extract_series_color(&py_color)?;
-        }
-        line = line.with_stroke(stroke);
+    if let Some(line_style) = getattr_not_none(py_ser, "line")? {
+        line = line.with_line(extract_series_stroke(&line_style)?);
     }
 
-    if let Some(py_interp) = getattr_not_none(ser, "interpolation")? {
-        let interp_str: &str = py_interp.extract()?;
-        let interp = match interp_str {
-            "linear" => des::series::Interpolation::Linear,
-            "step-early" => des::series::Interpolation::StepEarly,
-            "step-middle" => des::series::Interpolation::StepMiddle,
-            "step-late" | "step" => des::series::Interpolation::StepLate,
-            "cubic" | "spline" => des::series::Interpolation::Spline,
-            _ => {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "Unknown interpolation method: {}",
-                    interp_str
-                )));
-            }
-        };
+    if let Some(marker) = getattr_not_none(py_ser, "marker")? {
+        line = line.with_marker(extract_series_marker(&marker)?);
+    }
+
+    if let Some(py_interp) = getattr_not_none(py_ser, "interpolation")? {
+        let interp = interpolation_from_str(py_interp.extract()?)?;
         line = line.with_interpolation(interp);
     }
 
     Ok(des::Series::Line(line))
 }
 
-fn extract_scatter_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
-    let x = ser.getattr("x")?;
-    let y = ser.getattr("y")?;
+fn extract_scatter_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let x = py_ser.getattr("x")?;
+    let y = py_ser.getattr("y")?;
     let x_data = extract_data_col(&x)?;
     let y_data = extract_data_col(&y)?;
     let mut scatter = des::series::Scatter::new(x_data, y_data);
 
-    let (name, x_axis, y_axis) = extract_base(ser)?;
+    let (name, x_axis, y_axis) = extract_base(py_ser)?;
     if let Some(name) = name {
         scatter = scatter.with_name(name);
     }
@@ -181,18 +171,69 @@ fn extract_scatter_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         scatter = scatter.with_y_axis(y_axis);
     }
 
-    if let Some(py_marker) = getattr_not_none(ser, "marker")? {
+    if let Some(py_marker) = getattr_not_none(py_ser, "marker")? {
         scatter = scatter.with_marker(extract_series_marker(&py_marker)?);
     }
     Ok(des::Series::Scatter(scatter))
 }
 
-pub fn extract_histogram_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
-    let py_data = ser.getattr("data")?;
+pub fn extract_area_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let x = py_ser.getattr("x")?;
+    let y1 = py_ser.getattr("y1")?;
+    let y2 = py_ser.getattr("y2")?;
+    let x_data = extract_data_col(&x)?;
+    let y1_data = extract_data_col(&y1)?;
+    let y2_data = if let Ok(baseline) = y2.extract::<f64>() {
+        des::series::AreaY2::Baseline(baseline)
+    } else {
+        let y2_data = extract_data_col(&y2)?;
+        let y2_interp = getattr_not_none(py_ser, "y2_interpolation")?
+            .map(|py_interp| interpolation_from_str(py_interp.extract()?))
+            .transpose()?
+            .unwrap_or_default();
+        des::series::AreaY2::DataCol(y2_data, y2_interp)
+    };
+
+    let mut area = des::series::Area::new(x_data, y1_data, y2_data);
+
+    let (name, x_axis, y_axis) = extract_base(py_ser)?;
+    if let Some(name) = name {
+        area = area.with_name(name);
+    }
+    if let Some(x_axis) = x_axis {
+        area = area.with_x_axis(x_axis);
+    }
+    if let Some(y_axis) = y_axis {
+        area = area.with_y_axis(y_axis);
+    }
+
+    if let Some(py_fill) = py_ser.getattr_opt("fill")? {
+        if py_fill.is_none() {
+            area = area.with_fill(None);
+        } else {
+            area = area.with_fill(Some(extract_series_fill(&py_fill)?));
+        }
+    }
+    if let Some(py_stroke) = getattr_not_none(py_ser, "y1_line")? {
+        area = area.with_y1_line(extract_series_stroke(&py_stroke)?);
+    }
+    if let Some(py_stroke) = getattr_not_none(py_ser, "y2_line")? {
+        area = area.with_y2_line(extract_series_stroke(&py_stroke)?);
+    }
+    if let Some(py_interp) = getattr_not_none(py_ser, "y1_interpolation")? {
+        let interp = interpolation_from_str(py_interp.extract()?)?;
+        area = area.with_y1_interpolation(interp);
+    }
+
+    Ok(area.into())
+}
+
+pub fn extract_histogram_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let py_data = py_ser.getattr("data")?;
     let data = extract_data_col(&py_data)?;
     let mut hist = des::series::Histogram::new(data);
 
-    let (name, x_axis, y_axis) = extract_base(ser)?;
+    let (name, x_axis, y_axis) = extract_base(py_ser)?;
     if let Some(name) = name {
         hist = hist.with_name(name);
     }
@@ -203,34 +244,21 @@ pub fn extract_histogram_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series>
         hist = hist.with_y_axis(y_axis);
     }
 
-    if let Some(py_color) = getattr_not_none(ser, "fill")? {
-        hist = hist.with_fill(extract_series_color(&py_color)?.into());
+    if let Some(py_fill) = getattr_not_none(py_ser, "fill")? {
+        hist = hist.with_fill(extract_series_fill(&py_fill)?);
     }
 
-    let py_width = ser.getattr("linewidth")?;
-    let py_style = ser.getattr("linestyle")?;
-    let py_color = ser.getattr("linecolor")?;
-    if !py_width.is_none() || !py_style.is_none() || !py_color.is_none() {
-        let mut stroke = style::series::Stroke::default();
-        if !py_width.is_none() {
-            stroke.width = py_width.extract()?;
-        }
-        if !py_style.is_none() {
-            stroke.pattern = extract_stroke_pattern(&py_style)?;
-        }
-        if !py_color.is_none() {
-            stroke.color = extract_series_color(&py_color)?;
-        }
-        hist = hist.with_outline(stroke);
+    if let Some(py_stroke) = getattr_not_none(py_ser, "outline")? {
+        hist = hist.with_outline(extract_series_stroke(&py_stroke)?);
     }
 
-    if ser.getattr("bins").is_ok() {
-        let bins = ser.getattr("bins")?.extract()?;
+    if py_ser.getattr("bins").is_ok() {
+        let bins = py_ser.getattr("bins")?.extract()?;
         hist = hist.with_bins(bins);
     }
 
-    if ser.getattr("density").is_ok() {
-        let density: bool = ser.getattr("density")?.extract()?;
+    if py_ser.getattr("density").is_ok() {
+        let density: bool = py_ser.getattr("density")?.extract()?;
         if density {
             hist = hist.with_density();
         }
@@ -239,14 +267,14 @@ pub fn extract_histogram_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series>
     Ok(des::Series::Histogram(hist))
 }
 
-pub fn extract_bars_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
-    let py_x = ser.getattr("x")?;
+pub fn extract_bars_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+    let py_x = py_ser.getattr("x")?;
     let x_data = extract_data_col(&py_x)?;
-    let py_y = ser.getattr("y")?;
+    let py_y = py_ser.getattr("y")?;
     let y_data = extract_data_col(&py_y)?;
     let mut bars = des::series::Bars::new(x_data, y_data);
 
-    let (name, x_axis, y_axis) = extract_base(ser)?;
+    let (name, x_axis, y_axis) = extract_base(py_ser)?;
     if let Some(name) = name {
         bars = bars.with_name(name);
     }
@@ -257,21 +285,21 @@ pub fn extract_bars_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         bars = bars.with_y_axis(y_axis);
     }
 
-    if let Some(py_color) = getattr_not_none(ser, "fill")? {
-        bars = bars.with_fill(extract_series_color(&py_color)?.into());
+    if let Some(py_color) = getattr_not_none(py_ser, "fill")? {
+        bars = bars.with_fill(extract_series_fill(&py_color)?);
     }
 
-    if let Some(py_outline) = getattr_not_none(ser, "outline")? {
+    if let Some(py_outline) = getattr_not_none(py_ser, "outline")? {
         let stroke = extract_series_stroke(&py_outline)?;
         bars = bars.with_outline(stroke);
     }
 
     let mut offset: Option<f32> = None;
     let mut width: Option<f32> = None;
-    if let Some(py_offset) = getattr_not_none(ser, "bars_offset")? {
+    if let Some(py_offset) = getattr_not_none(py_ser, "bars_offset")? {
         offset = Some(py_offset.extract()?);
     }
-    if let Some(py_width) = getattr_not_none(ser, "bars_width")? {
+    if let Some(py_width) = getattr_not_none(py_ser, "bars_width")? {
         width = Some(py_width.extract()?);
     }
     match (offset, width) {
@@ -296,14 +324,15 @@ pub fn extract_bars_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     Ok(bars.into())
 }
 
-pub fn extract_series(ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
+pub fn extract_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     // check subtype of series
-    let cls_name = extract_class_name(ser)?;
+    let cls_name = extract_class_name(py_ser)?;
     let series = match cls_name.as_str() {
-        "Line" => extract_line_series(ser)?,
-        "Scatter" => extract_scatter_series(ser)?,
-        "Histogram" => extract_histogram_series(ser)?,
-        "Bars" => extract_bars_series(ser)?,
+        "Line" => extract_line_series(py_ser)?,
+        "Scatter" => extract_scatter_series(py_ser)?,
+        "Area" => extract_area_series(py_ser)?,
+        "Histogram" => extract_histogram_series(py_ser)?,
+        "Bars" => extract_bars_series(py_ser)?,
         _ => {
             return Err(pyo3::exceptions::PyTypeError::new_err(format!(
                 "Unsupported series type: {}",

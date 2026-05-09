@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from plotive.style import ThemeFill
+
 if TYPE_CHECKING:
     from .style import Stroke, Fill, Style
 
@@ -31,6 +33,7 @@ class Legend:
             self,
             pos: str,
             *,
+            fill: ThemeFill | ThemeColor | None = ThemeFill("legend-fill", opacity=0.5),
             border: Stroke | str = "foreground",
             columns: None | int = None,
             margin: float = 12,
@@ -46,6 +49,8 @@ class Legend:
             Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
             "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
             "in-top", "in-bottom", "in-left" and "in-right".
+        fill: ThemeFill | ThemeColor | None, default=ThemeFill("legend-fill", opacity=0.5)
+            Legend background fill.
         border : Stroke | str, default="foreground"
             Stroke style of the legend border.
         columns : int | None, default=None
@@ -59,6 +64,7 @@ class Legend:
             Spacing between legend entries (horizontal, vertical).
         """
         self.pos = pos
+        self.fill = fill and ThemeFill._normalize(fill)
         self.border = border
         self.columns = columns
         self.margin = margin
@@ -188,7 +194,7 @@ class Figure:
         title: None | str = None,
         size: None | Size = (800, 600),
         padding: None | Padding = 20.0,
-        fill: None | Fill = "background",
+        fill: None | ThemeFill | ThemeColor = "background",
         legend: None | Legend | str = None,
         plot: None | Plot = None,
         plots: None | list[Plot] = None,
@@ -203,7 +209,7 @@ class Figure:
             Output size in pixels.
         padding : Padding | None, default=20.0
             Figure inner padding.
-        fill : Fill | None, default="background"
+        fill : ThemeFill | ThemeColor | None, default="background"
             Figure background fill.
         legend : Legend | str | None, default=None
             Figure-level legend config or shortcut position.
@@ -227,7 +233,7 @@ class Figure:
         self.title = title
         self.size = size
         self.padding = padding
-        self.fill = fill
+        self.fill = fill and ThemeFill._normalize(fill)
         if isinstance(legend, str):
             self.legend = Legend(pos=legend)
         else:

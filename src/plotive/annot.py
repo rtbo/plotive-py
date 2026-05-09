@@ -4,8 +4,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .style import Fill
-    from .color import Color
+    from .style import Fill, Color
 
 from .style import Stroke
 

@@ -1,12 +1,10 @@
-use plotive::{des, geom, style};
+use plotive::{des, geom};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
 use crate::py_annot::extract_annot;
 use crate::py_series::extract_series;
-use crate::py_style::{
-    extract_theme_color, extract_theme_stroke,
-};
+use crate::py_style::{extract_theme_fill, extract_theme_stroke};
 
 use super::{extract_class_name, getattr_not_none};
 
@@ -227,14 +225,12 @@ fn extract_legend<P: Default>(py_legend: &Bound<'_, PyAny>, pos: P) -> PyResult<
         let padding = extract_padding(&py_padding)?;
         legend = legend.with_padding(padding);
     }
-    if let Some(py_fill) = py_legend.getattr_opt("fill")? {
-        if py_fill.is_none() {
-            legend = legend.with_fill(None);
-        } else {
-            let fill = extract_theme_color(&py_fill)?;
-            legend = legend.with_fill(Some(fill.into()));
-        }
-    }
+    let fill = py_legend
+        .getattr_opt("fill")?
+        .map(|f| extract_theme_fill(&f))
+        .transpose()?;
+    legend = legend.with_fill(fill);
+
     if let Some(py_spacing) = getattr_not_none(py_legend, "spacing")? {
         if let Ok(spacing) = py_spacing.extract::<f32>() {
             legend = legend.with_spacing(geom::Size::new(spacing, spacing));
@@ -453,17 +449,10 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
     let py_plots = py_fig.getattr("plots")?;
     let plots = extract_plots(&py_plots, subplots, space)?;
 
-    let py_fill = py_fig.getattr_opt("fill")?;
-    let fill = py_fill
-        .map(|f| extract_theme_color(&f))
-        .transpose()?
-        .and_then(|c| {
-            style::theme::Fill::Solid {
-                color: c,
-                opacity: None,
-            }
-            .into()
-        });
+    let fill = py_fig
+        .getattr_opt("fill")?
+        .map(|f| extract_theme_fill(&f))
+        .transpose()?;
 
     let mut fig = des::Figure::new(plots).with_fill(fill);
 

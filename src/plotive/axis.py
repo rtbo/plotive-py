@@ -1,7 +1,6 @@
 """Axis configuration primitives, tick locators, and formatters."""
 
-from .style import Stroke
-from .color import ThemeColor
+from .style import ThemeStroke, ThemeColor
 
 type AxisRef = str | int
 """
@@ -385,7 +384,7 @@ class Ticks:
         self.formatter = formatter
 
 
-class Grid(Stroke[ThemeColor]):
+class Grid(ThemeStroke):
     """Major grid configuration for an axis"""
 
     def __init__(
@@ -399,7 +398,8 @@ class Grid(Stroke[ThemeColor]):
         """Initialize a grid style."""
         super().__init__(color=color, width=width, pattern=pattern, opacity=opacity)
 
-class MinorGrid(Stroke[ThemeColor]):
+
+class MinorGrid(ThemeStroke):
     """Minor grid configuration for an axis"""
 
     def __init__(
