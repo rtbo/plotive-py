@@ -54,8 +54,8 @@ class Plot:
 
     def __init__(
         self,
+        series: list[Series] | Series,
         *,
-        series: list[Series],
         x_axis: None | Axis = None,
         y_axis: None | Axis = None,
         x_axes: None | list[Axis] = None,
@@ -97,7 +97,10 @@ class Plot:
         """
         self.title = title
         self.subplot = subplot
-        self.series = series
+        if isinstance(series, list):
+            self.series = series
+        else:
+            self.series = [series]
         if isinstance(legend, str):
             self.legend = Legend(pos=legend)
         else:

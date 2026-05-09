@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
+    from datetime import datetime
     from .color import Color, SeriesColor
     from .style import Fill
 
 from .style import Marker, Stroke
 
-type DataCol = str | list[float] | list[str] | np.ndarray
+type DataCol = str | list[float] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
 
 type AxisRef = str | int
@@ -151,3 +152,25 @@ class Histogram(Series):
         self.linecolor = linecolor
         self.bins = bins
         self.density = density
+
+class Bars(Series):
+    def __init__(
+        self,
+        x: DataCol,
+        y: DataCol,
+        *,
+        name: None | str = None,
+        x_axis: None | AxisRef = None,
+        y_axis: None | AxisRef = None,
+        fill: None | Fill = None,
+        outline: None | Stroke[SeriesColor] | str,
+        bars_offset = 0.3,
+        bars_width = 0.4,
+    ):
+        super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
+        self.x = x
+        self.y = y
+        self.fill = fill
+        self.outline = outline
+        self.bars_offset = bars_offset
+        self.bars_width = bars_width

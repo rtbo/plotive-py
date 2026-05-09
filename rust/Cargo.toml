@@ -19,6 +19,7 @@ plotive = { path = "../../plotive", features = [
     "noto-serif",
     "noto-serif-italic",
     "time",
+    "utils",
 ] }
 plotive-iced = { path = "../../plotive/iced", features = ["clipboard", "data-csv"] }
 plotive-text = { path = "../../plotive/text" }

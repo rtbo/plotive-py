@@ -1,6 +1,6 @@
 """Global styling primitives for figures and series."""
 
-from .color import Color
+from .color import Color, SeriesColor
 
 type Fill[C=Color] = C
 """Type alias for fill colors."""
@@ -26,6 +26,35 @@ class Stroke[C=Color]:
         *,
         color: C,
         width: float = 1.0,
+        pattern: None | list[float] | str = None,
+        opacity: float = 1.0,
+    ):
+        """Initialize a stroke style."""
+        self.color = color
+        self.width = width
+        self.pattern = pattern
+        self.opacity = opacity
+
+class SeriesStroke(Stroke[SeriesColor]):
+    """Line stroke style for series.
+
+    Parameters
+    ----------
+    color : SeriesColor
+        Stroke color.
+    width : float, default=1.5
+        Stroke width in pixels.
+    pattern : list[float] | str | None, default=None
+        Dash pattern specification.
+    opacity : float, default=1.0
+        Stroke opacity in the ``[0, 1]`` interval.
+    """
+
+    def __init__(
+        self,
+        *,
+        color: SeriesColor = "auto",
+        width: float = 1.5,
         pattern: None | list[float] | str = None,
         opacity: float = 1.0,
     ):

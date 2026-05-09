@@ -2,5 +2,6 @@ maturin
 numpy
 pandas
 pytest
+pytest-xdist
 pillow
 pixelmatch

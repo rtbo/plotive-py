@@ -79,6 +79,7 @@ def test_axes_x_title_major_ticks():
 
     assert_fig_eq_ref(fig, "axes/x-title-major-ticks")
 
+
 def test_axes_y_title_major_ticks():
     series = line()
     plot = pv.Plot(
@@ -88,6 +89,7 @@ def test_axes_y_title_major_ticks():
     fig = fig_small(plot)
 
     assert_fig_eq_ref(fig, "axes/y-title-major-ticks")
+
 
 def test_axes_titles_major_ticks():
     series = line()
@@ -160,206 +162,137 @@ def test_axes_minor_grid():
     assert_fig_eq_ref(fig, "axes/minor-grid")
 
 
-# def test_axes_categories():
-#     x = ["a", "b", "c"]
-#     y = [1, 1.4, 3]
+def test_axes_categories():
+    x = ["a", "b", "c"]
+    y = [1, 1.4, 3]
+    series = pv.series.Bars(x, y, fill="transparent", outline=pv.style.SeriesStroke())
+    plot = pv.Plot(series=[series], x_axis=pv.Axis(ticks=pv.axis.Ticks()))
+    fig = fig_small(plot)
 
-# #[test]
-# fn axes_categories() {
-#     let x = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-#     let y = vec![1.0, 1.4, 3.0];
-#     let series = des::series::Bars::new(x.into(), y.into())
-#         .with_fill(color::TRANSPARENT.into())
-#         .with_outline(Default::default());
+    assert_fig_eq_ref(fig, "axes/categories")
 
-#     let plot = des::Plot::new(vec![series.into()])
-#         .with_x_axis(des::Axis::new().with_ticks(Default::default()));
-#     let fig = fig_small(plot);
 
-#     assert_fig_eq_ref!(&fig, "axes/categories");
-# }
+def test_axes_pi_locator():
+    from math import pi
 
-# #[test]
-# fn axes_pi_locator() {
-#     use std::f64::consts::PI;
-#     let x = vec![PI, 2.0 * PI, 3.0 * PI];
-#     let y = vec![1.0, 1.4, 3.0];
-#     let series = des::series::Line::new(x.into(), y.into());
+    x = [pi, 2 * pi, 3 * pi]
+    y = [1, 1.4, 3]
+    series = pv.series.Line(x, y)
+    plot = pv.Plot(
+        series,
+        x_axis=pv.Axis(ticks=pv.axis.Ticks(locator=pv.axis.PiMultipleTicksLocator(5))),
+    )
+    fig = fig_small(plot)
 
-#     let plot = des::Plot::new(vec![series.into()]).with_x_axis(
-#         des::Axis::new().with_ticks(
-#             des::axis::Ticks::new()
-#                 .with_locator(des::axis::ticks::PiMultipleLocator { bins: 5 }.into()),
-#         ),
-#     );
-#     let fig = fig_small(plot);
+    assert_fig_eq_ref(fig, "axes/pi-locator")
 
-#     assert_fig_eq_ref!(&fig, "axes/pi-locator");
-# }
 
-# #[test]
-# fn axes_pi_locator_minor() {
-#     use std::f64::consts::PI;
-#     let x = vec![PI, 2.0 * PI, 3.0 * PI];
-#     let y = vec![1.0, 1.4, 3.0];
-#     let series = des::series::Line::new(x.into(), y.into());
+def test_axes_pi_locator_minor():
+    from math import pi
 
-#     let plot = des::Plot::new(vec![series.into()]).with_x_axis(
-#         des::Axis::new()
-#             .with_ticks(
-#                 des::axis::Ticks::new()
-#                     .with_locator(des::axis::ticks::PiMultipleLocator { bins: 5 }.into()),
-#             )
-#             .with_minor_ticks(
-#                 des::axis::MinorTicks::new()
-#                     .with_locator(des::axis::ticks::PiMultipleLocator { bins: 30 }.into()),
-#             ),
-#     );
-#     let fig = fig_small(plot);
+    x = [pi, 2 * pi, 3 * pi]
+    y = [1, 1.4, 3]
+    series = pv.series.Line(x, y)
+    plot = pv.Plot(
+        series,
+        x_axis=pv.Axis(
+            ticks=pv.axis.Ticks(locator=pv.axis.PiMultipleTicksLocator(5)),
+            minor_ticks=pv.axis.PiMultipleTicksLocator(30),
+        ),
+    )
+    fig = fig_small(plot)
 
-#     assert_fig_eq_ref!(&fig, "axes/pi-locator-minor");
-# }
+    assert_fig_eq_ref(fig, "axes/pi-locator-minor")
 
-# #[test]
-# fn axes_top_right() {
-#     let s1 = line();
-#     let plot = des::Plot::new(vec![s1.into()])
-#         .with_x_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_opposite_side(),
-#         )
-#         .with_y_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_opposite_side(),
-#         );
-#     let fig = fig_small(plot);
 
-#     assert_fig_eq_ref!(&fig, "axes/top-right");
-# }
+def test_axes_top_right():
+    series = line()
+    plot = pv.Plot(
+        series=[series],
+        x_axis=pv.Axis(ticks="auto", side="top"),
+        y_axis=pv.Axis(ticks="auto", side="right"),
+    )
+    fig = fig_small(plot)
 
-# #[test]
-# fn axes_multiple_bl() {
-#     let s1 = line();
-#     let s2 = line2(&[4.0, 5.0, 6.0], &[6.0, 5.0, 4.0])
-#         .with_x_axis(des::axis::Ref::Id("x2".to_string()))
-#         .with_y_axis(des::axis::Ref::Id("y2".to_string()));
-#     let plot = des::Plot::new(vec![s1.into(), s2.into()])
-#         .with_x_axis(des::Axis::new().with_ticks(Default::default()))
-#         .with_y_axis(des::Axis::new().with_ticks(Default::default()))
-#         .with_x_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_id("x2"),
-#         )
-#         .with_y_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_id("y2"),
-#         );
-#     let fig = fig_small(plot);
+    assert_fig_eq_ref(fig, "axes/top-right")
 
-#     assert_fig_eq_ref!(&fig, "axes/multiple-bl");
-# }
 
-# #[test]
-# fn axes_multiple_trbl() {
-#     let s1 = line();
-#     let s2 = line2(&[4.0, 5.0, 6.0], &[6.0, 5.0, 4.0])
-#         .with_x_axis(des::axis::Ref::Id("x2".to_string()))
-#         .with_y_axis(des::axis::Ref::Id("y2".to_string()));
-#     let plot = des::Plot::new(vec![s1.into(), s2.into()])
-#         .with_x_axis(des::Axis::new().with_ticks(Default::default()))
-#         .with_y_axis(des::Axis::new().with_ticks(Default::default()))
-#         .with_x_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_id("x2")
-#                 .with_opposite_side(),
-#         )
-#         .with_y_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_id("y2")
-#                 .with_opposite_side(),
-#         );
-#     let fig = fig_small(plot);
+def test_axes_multiple_bl():
+    s1 = line()
+    s2 = pv.series.Line([4.0, 5.0, 6.0], [6.0, 5.0, 4.0], x_axis="x2", y_axis="y2")
+    plot = pv.Plot(
+        series=[s1, s2],
+        x_axes=[pv.Axis(ticks="auto"), pv.Axis(id="x2", ticks="auto")],
+        y_axes=[pv.Axis(ticks="auto"), pv.Axis(id="y2", ticks="auto")],
+    )
+    fig = fig_small(plot)
 
-#     assert_fig_eq_ref!(&fig, "axes/multiple-trbl");
-# }
+    assert_fig_eq_ref(fig, "axes/multiple-bl")
 
-# #[test]
-# fn axes_multiple_trbl_titles() {
-#     let s1 = line();
-#     let s2 = line2(&[4.0, 5.0, 6.0], &[6.0, 5.0, 4.0])
-#         .with_x_axis(des::axis::Ref::Id("x2".to_string()))
-#         .with_y_axis(des::axis::Ref::Id("y2".to_string()));
-#     let plot = des::Plot::new(vec![s1.into(), s2.into()])
-#         .with_x_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_title("x1".into()),
-#         )
-#         .with_y_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_title("y1".into()),
-#         )
-#         .with_x_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_title("x2".into())
-#                 .with_opposite_side(),
-#         )
-#         .with_y_axis(
-#             des::Axis::new()
-#                 .with_ticks(Default::default())
-#                 .with_title("y2".into())
-#                 .with_opposite_side(),
-#         );
-#     let fig = fig_mid(plot);
 
-#     assert_fig_eq_ref!(&fig, "axes/multiple-trbl-titles");
-# }
+def test_axes_multiple_trbl():
+    s1 = line()
+    s2 = pv.series.Line([4.0, 5.0, 6.0], [6.0, 5.0, 4.0], x_axis="x2", y_axis="y2")
+    plot = pv.Plot(
+        series=[s1, s2],
+        x_axes=[
+            pv.Axis(ticks="auto"),
+            pv.Axis(id="x2", ticks="auto", side="top"),
+        ],
+        y_axes=[
+            pv.Axis(ticks="auto"),
+            pv.Axis(id="y2", ticks="auto", side="right"),
+        ],
+    )
+    fig = fig_small(plot)
 
-# #[test]
-# fn axes_datetime_locator() {
-#     use plotive::time;
+    assert_fig_eq_ref(fig, "axes/multiple-trbl")
 
-#     let start = time::DateTime::fmt_parse("2020-01-01", "%Y-%m-%d").unwrap();
-#     let x = (0..10)
-#         .map(|i| start + time::TimeDelta::from_days(i as f64))
-#         .collect::<Vec<_>>();
-#     let y = (0..10).map(|i| 1.0 / (i as f64 + 1.0)).collect::<Vec<_>>();
 
-#     let series = des::series::Line::new(x.into(), y.into());
+def test_axes_multiple_trbl_titles():
+    s1 = line()
+    s2 = pv.series.Line([4.0, 5.0, 6.0], [6.0, 5.0, 4.0], x_axis="x2", y_axis="y2")
+    plot = pv.Plot(
+        series=[s1, s2],
+        x_axes=[
+            pv.Axis(ticks="auto", title="x1"),
+            pv.Axis(ticks="auto", title="x2", side="top"),
+        ],
+        y_axes=[
+            pv.Axis(ticks="auto", title="y1"),
+            pv.Axis(ticks="auto", title="y2", side="right"),
+        ],
+    )
+    fig = fig_mid(plot)
 
-#     let plot = des::Plot::new(vec![series.into()]).with_x_axis(des::Axis::new().with_ticks(
-#         des::axis::Ticks::new().with_locator(des::axis::ticks::DateTimeLocator::Days(2).into()),
-#     ));
-#     let fig = fig_small(plot);
+    assert_fig_eq_ref(fig, "axes/multiple-trbl-titles")
 
-#     assert_fig_eq_ref!(&fig, "axes/datetime-locator");
-# }
+def test_axes_datetime_locator():
+    import datetime
 
-# #[test]
-# fn axes_num_datetime_locator() {
-#     use plotive::time;
+    start = datetime.datetime(2020, 1, 1)
+    x = [start + datetime.timedelta(days=i) for i in range(10)]
+    y = [1.0 / (i + 1.0) for i in range(10)]
+    series = pv.series.Line(x=x, y=y)
+    plot = pv.Plot(
+        series=[series],
+        x_axis=pv.Axis(ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))),
+    )
+    fig = fig_small(plot)
 
-#     let start = time::DateTime::fmt_parse("2020-01-01", "%Y-%m-%d").unwrap();
-#     let x = (0..10)
-#         .map(|i| start + time::TimeDelta::from_days(i as f64))
-#         .map(|dt| dt.timestamp())
-#         .collect::<Vec<_>>();
-#     let y = (0..10).map(|i| 1.0 / (i as f64 + 1.0)).collect::<Vec<_>>();
+    assert_fig_eq_ref(fig, "axes/datetime-locator")
 
-#     let series = des::series::Line::new(x.into(), y.into());
+def axes_num_datetime_locator():
+    import datetime
 
-#     let plot = des::Plot::new(vec![series.into()]).with_x_axis(des::Axis::new().with_ticks(
-#         des::axis::Ticks::new().with_locator(des::axis::ticks::DateTimeLocator::Days(2).into()),
-#     ));
-#     let fig = fig_small(plot);
+    start = datetime.datetime(2020, 1, 1)
+    x = [(start + datetime.timedelta(days=i)).timestamp() for i in range(10)]
+    y = [1.0 / (i + 1.0) for i in range(10)]
+    series = pv.series.Line(x=x, y=y)
+    plot = pv.Plot(
+        series=[series],
+        x_axis=pv.Axis(ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))),
+    )
+    fig = fig_small(plot)
 
-#     assert_fig_eq_ref!(&fig, "axes/datetime-locator");
-# }
+    assert_fig_eq_ref(fig, "axes/datetime-locator")
