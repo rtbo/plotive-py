@@ -23,30 +23,47 @@ Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas
 """
 
 
-@dataclass(kw_only=True)
+
 class Legend:
     """Legend display settings."""
 
-    pos: str = "bottom"
-    """
-    Legend position as a string. Accepted values depends whether the legend is attached to a figure or a plot.
-    Accepted figure legend positions are "top", "bottom", "left" and "right".
-    Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
-    "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
-    "in-top", "in-bottom", "in-left" and "in-right".
-    """
-    border: Stroke | str = "foreground"
-    """Stroke style of the legend border."""
-    columns: None | int = None
-    """Number of columns in the legend.
-    If None, the number of columns is determined automatically based on the position and number of entries.
-    """
-    margin: float = 12
-    """Margin between the legend and the figure/plot edges in pixels."""
-    padding: Padding = 8
-    """Padding inside the legend box."""
-    spacing: float | tuple[float, float] = (16, 10)
-    """Spacing between legend entries (horizontal, vertical)."""
+    def __init__(
+            self,
+            pos: str,
+            *,
+            border: Stroke | str = "foreground",
+            columns: None | int = None,
+            margin: float = 12,
+            padding: Padding = 8,
+            spacing: float | tuple[float, float] = (16, 10),
+    ):
+        """Initialize a legend.
+        Parameters
+        ----------
+        pos : str, default="bottom"
+            Legend position as a string. Accepted values depends whether the legend is attached to a figure or a plot.
+            Accepted figure legend positions are "top", "bottom", "left" and "right".
+            Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
+            "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
+            "in-top", "in-bottom", "in-left" and "in-right".
+        border : Stroke | str, default="foreground"
+            Stroke style of the legend border.
+        columns : int | None, default=None
+            Number of columns in the legend.
+            If None, the number of columns is determined automatically based on the position and number of entries.
+        margin : float, default=12
+            Margin between the legend and the figure/plot edges in pixels.
+        padding : Padding, default=8
+            Padding inside the legend box.
+        spacing : float or tuple[float, float], default=(16, 10)
+            Spacing between legend entries (horizontal, vertical).
+        """
+        self.pos = pos
+        self.border = border
+        self.columns = columns
+        self.margin = margin
+        self.padding = padding
+        self.spacing = spacing
 
 
 class Plot:
@@ -97,14 +114,19 @@ class Plot:
         """
         self.title = title
         self.subplot = subplot
+
         if isinstance(series, list):
             self.series = series
         else:
             self.series = [series]
+
         if isinstance(legend, str):
+            if legend == "auto":
+                legend = "out-bottom"
             self.legend = Legend(pos=legend)
         else:
             self.legend = legend
+
         self.annotations = annotations
 
         if x_axis is not None and x_axes is not None:
