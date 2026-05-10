@@ -91,43 +91,11 @@ def test_series_scatter_sizes():
     assert_fig_eq_ref(fig_small(plot), "series/scatter-sizes")
 
 
-# #[test]
-# fn series_scatter_nodata() {
-#     let plot = des::Plot::new(vec![
-#         des::series::Scatter::new(
-#             des::DataCol::Inline(data::VecColumn::F64(vec![])),
-#             des::DataCol::Inline(data::VecColumn::F64(vec![])),
-#         )
-#         .into(),
-#     ]);
-#     let fig = fig_small(plot);
+def test_series_scatter_nodata():
+    series = pv.series.Scatter(x=[], y=[])
+    plot = pv.Plot(series)
+    assert_fig_eq_ref(fig_small(plot), "series/scatter-nodata")
 
-#     assert_fig_eq_ref!(&fig, "series/scatter-nodata");
-# }
-
-# #[test]
-# fn series_scatter_sizes() {
-#     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-#     let y = vec![1.0, 4.0, 9.0, 16.0, 25.0];
-#     let sizes = vec![8.0, 4.0, 2.0, 1.0, 0.5];
-
-#     let color: plotive::Rgba8 = "light eggplant".parse().unwrap();
-
-#     let plot = des::Plot::new(vec![
-#         des::series::Scatter::new(des::data_inline(x), des::data_inline(y))
-#             .with_size_data(des::data_inline(sizes))
-#             .with_marker(
-#                 style::series::Marker::default()
-#                     .with_color(color.into())
-#                     .with_fill_opacity(0.6)
-#                     .with_stroke_width(2.0),
-#             )
-#             .into(),
-#     ]);
-#     let fig = fig_small(plot);
-
-#     assert_fig_eq_ref!(&fig, "series/scatter-sizes");
-# }
 
 # #[test]
 # fn series_area_double() {
