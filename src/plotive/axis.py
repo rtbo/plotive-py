@@ -130,9 +130,25 @@ class TicksLocator:
         return TimeDeltaTicksLocator(period, unit)
 
     @staticmethod
-    def _normalize(ticks: TicksLocator | list[float]):
+    def _normalize(ticks: TicksLocator | list[float] | str):
         if isinstance(ticks, TicksLocator):
             return ticks
+        elif isinstance(ticks, str):
+            ticksl = ticks.lower()
+            if ticksl == "auto":
+                return AutoTicksLocator()
+            elif ticksl == "maxn":
+                return MaxNTicksLocator()
+            elif ticksl == "pimultiple":
+                return PiMultipleTicksLocator()
+            elif ticksl == "log":
+                return LogTicksLocator()
+            elif ticksl == "datetime":
+                return DateTimeTicksLocator()
+            elif ticksl == "timedelta":
+                return TimeDeltaTicksLocator()
+            else:
+                raise ValueError(f"Invalid ticks locator specification: {ticks}")
         elif isinstance(ticks, list):
             return ListTicksLocator(ticks)
         else:

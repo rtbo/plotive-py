@@ -4,7 +4,7 @@ use pyo3::prelude::*;
 use plotive::des;
 use pyo3::types::{PyDateAccess, PyDateTime, PyList, PyTimeAccess};
 
-use crate::py_des::{extract_axis_scale, extract_ticks_locator};
+use crate::py_des::extract_axis_scale;
 use crate::py_style::{
     extract_color, extract_series_fill, extract_series_marker, extract_series_stroke,
 };
@@ -152,12 +152,15 @@ fn extract_cmap(py_cmap: &Bound<'_, PyAny>) -> PyResult<des::cmap::LerpColorMap>
         };
         (method, colors.as_slice()).into()
     };
-    if let Some(py_scale) = getattr_not_none(py_cmap, "scale")? {
-        cmap = cmap.with_scale(extract_axis_scale(&py_scale)?);
+
+    if let Some(py_scale) = py_cmap.getattr_opt("scale")? {
+        if !py_scale.is_none() {
+            cmap = cmap.with_scale(extract_axis_scale(&py_scale)?);
+        } else {
+            cmap = cmap.with_scale(Default::default())
+        }
     }
-    if let Some(py_ticks) = getattr_not_none(py_cmap, "ticks")? {
-        cmap = cmap.force_ticks_locator(extract_ticks_locator(&py_ticks)?);
-    }
+
     Ok(cmap)
 }
 

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from .style import Color, SeriesFill, SeriesMarker, SeriesStroke
 
-type DataCol = str | list[float] | list[str] | list[datetime] | np.ndarray
+type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
 
 type AxisRef = str | int
@@ -98,7 +98,6 @@ class ColorMap:
         cmap: str | list[Color],
         method: str | None ="auto",
         scale: None | axis.Scale = None,
-        ticks: None | axis.TicksLocator | list[float] = None,
     ):
         """Initializes a colormap
 
@@ -123,8 +122,6 @@ class ColorMap:
         scale : Scale | None, default=None
             Optional scale for mapping data values to the colormap. If None, a default linear scale will be used,
             that maps the full data range to the full colormap.
-        ticks : TicksLocator | list[float] | None, default=None
-            Optional ticks locator or list of tick positions on the colormap legend.
         """
         self.cmap = cmap
         if method is None:
@@ -135,7 +132,6 @@ class ColorMap:
             method = "linear" if len(cmap) < 256 else "nearest"
         self.method = method
         self.scale = scale
-        self.ticks = ticks
 
     @staticmethod
     def _normalize(input: str | list[Color] | ColorMap) -> "ColorMap":

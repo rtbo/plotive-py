@@ -25,20 +25,19 @@ Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas
 """
 
 
-
 class Legend:
     """Legend display settings."""
 
     def __init__(
-            self,
-            pos: str,
-            *,
-            fill: ThemeFill | ThemeColor | None = ThemeFill("legend-fill", opacity=0.5),
-            border: Stroke | str = "foreground",
-            columns: None | int = None,
-            margin: float = 12,
-            padding: Padding = 8,
-            spacing: float | tuple[float, float] = (16, 10),
+        self,
+        pos: str,
+        *,
+        fill: ThemeFill | ThemeColor | None = ThemeFill("legend-fill", opacity=0.5),
+        border: Stroke | str = "foreground",
+        columns: None | int = None,
+        margin: float = 12,
+        padding: Padding = 8,
+        spacing: float | tuple[float, float] = (16, 10),
     ):
         """Initialize a legend.
         Parameters
@@ -72,13 +71,14 @@ class Legend:
         self.padding = padding
         self.spacing = spacing
 
+
 class ColorBar:
     def __init__(
         self,
         pos: str = "right",
         *,
         width: float = 20.0,
-        title: str|None = None,
+        title: str | None = None,
         border: ThemeStroke | ThemeColor | None = "foreground",
         ticks: None | axis.TicksLocator | list[float] = None,
         margin: float = 12.0,
@@ -91,6 +91,15 @@ class ColorBar:
         self.border = ThemeStroke._normalize(border) if border is not None else None
         self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
         self.margin = margin
+
+    @staticmethod
+    def _normalize(input: str | ColorBar) -> "ColorBar":
+        if isinstance(input, ColorBar):
+            return input
+        elif isinstance(input, str):
+            return ColorBar(pos=input)
+        else:
+            raise ValueError(f"Invalid colorbar config: {input!r}")
 
 
 
@@ -158,10 +167,8 @@ class Plot:
         else:
             self.legend = legend
 
-        if isinstance(colorbar, str):
-            colorbar = ColorBar(pos=colorbar)
+        self.colorbar = ColorBar._normalize(colorbar) if colorbar is not None else None
 
-        self.colorbar = colorbar
         self.annotations = annotations
 
         if x_axis is not None and x_axes is not None:
@@ -282,7 +289,7 @@ class Figure:
         """
         from ._rs import render_pxl as rs_render_pxl
 
-        (data, width, height) = rs_render_pxl(self, data_source, style)
+        data, width, height = rs_render_pxl(self, data_source, style)
         return PxlArray(data, width, height)
 
     def save_png(
