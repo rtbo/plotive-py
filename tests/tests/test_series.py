@@ -70,24 +70,25 @@ def test_series_scatter():
     assert_fig_eq_ref(fig_small(plot), "series/scatter")
 
 
-# def test_series_scatter_sizes():
-#     x = [1.0, 2.0, 3.0, 4.0, 5.0]
-#     y = [1.0, 4.0, 9.0, 16.0, 25.0]
-#     sizes = [8.0, 4.0, 2.0, 1.0, 0.5]
+def test_series_scatter_sizes():
+    rnd = NotRandom()
+    x = rnd.make_col_uniform(15)
+    y = rnd.make_col_uniform(15)
+    sizes = rnd.make_col_uniform(15, 1.0, 24.0)
 
-#     color = "light eggplant"
+    color = "light eggplant"
 
-#     series = pv.series.Scatter(
-#         x=x,
-#         y=y,
-#         sizes=sizes,
-#         marker=pv.style.SeriesMarker(
-#             fill=pv.style.SeriesFill(color, opacity=0.6),
-#             stroke=pv.style.SeriesStroke(color, width=2.0),
-#         ),
-#     )
-#     plot = pv.Plot(series)
-#     assert_fig_eq_ref(fig_small(plot), "series/scatter-sizes")
+    series = pv.series.Scatter(
+        x=x,
+        y=y,
+        sizes=sizes,
+        marker=pv.style.SeriesMarker(
+            fill=pv.style.SeriesFill(color, opacity=0.6),
+            stroke=pv.style.SeriesStroke(color, width=2.0),
+        ),
+    )
+    plot = pv.Plot(series)
+    assert_fig_eq_ref(fig_small(plot), "series/scatter-sizes")
 
 
 # #[test]

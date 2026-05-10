@@ -171,6 +171,10 @@ fn extract_scatter_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         scatter = scatter.with_y_axis(y_axis);
     }
 
+    if let Some(py_sizes) = getattr_not_none(py_ser, "sizes")? {
+        scatter = scatter.with_size_data(extract_data_col(&py_sizes)?);
+    }
+
     if let Some(py_marker) = getattr_not_none(py_ser, "marker")? {
         scatter = scatter.with_marker(extract_series_marker(&py_marker)?);
     }

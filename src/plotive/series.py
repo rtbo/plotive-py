@@ -98,6 +98,7 @@ class Scatter(Series):
         y: DataCol,
         *,
         name: None | str = None,
+        sizes: None | DataCol = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
         marker: SeriesMarker = SeriesMarker(),
@@ -110,6 +111,10 @@ class Scatter(Series):
             X values or x data source reference.
         y : DataCol
             Y values or y data source reference.
+        sizes : DataCol | None, default=None
+            Optional marker sizes specified as a data column or sequence.
+            If specified, the marker size will be multiplied by the size value for each point.
+            Note that the marker size is an area measurement, so the size value will be interpreted as a scaling factor for the marker area.
         name : str | None, default=None
             Legend/display name of the series.
         x_axis : AxisRef | None, default=None
@@ -122,6 +127,7 @@ class Scatter(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
         self.y = y
+        self.sizes = sizes
         self.marker = marker
 
 class Area(Series):
