@@ -254,6 +254,7 @@ fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend
     if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
+            "auto" => des::plot::LegendPos::default(),
             "out-top" => des::plot::LegendPos::OutTop,
             "out-right" => des::plot::LegendPos::OutRight,
             "out-bottom" => des::plot::LegendPos::OutBottom,
@@ -282,6 +283,7 @@ fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegen
     if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
+            "auto" => des::figure::LegendPos::default(),
             "top" => des::figure::LegendPos::Top,
             "right" => des::figure::LegendPos::Right,
             "bottom" => des::figure::LegendPos::Bottom,

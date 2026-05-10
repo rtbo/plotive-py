@@ -49,6 +49,7 @@ class Legend:
             Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
             "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
             "in-top", "in-bottom", "in-left" and "in-right".
+            "auto" is also accepted for default position at the bottom.
         fill: ThemeFill | ThemeColor | None, default=ThemeFill("legend-fill", opacity=0.5)
             Legend background fill.
         border : Stroke | str, default="foreground"
