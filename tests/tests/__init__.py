@@ -93,7 +93,7 @@ def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
         os.makedirs(os.path.dirname(diff_path), exist_ok=True)
         fig_img.save(failed_path)
         diff_img.save(diff_path)
-        print(f"    Actual figure: {failed_path}")
+        print(f"    Tested figure: {failed_path}")
         print(f"       Ref figure: {ref_path}")
         print(f"             Diff: {diff_path}")
         assert False, f"Figure does not match reference: '{ref_name}'"
@@ -102,7 +102,7 @@ def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
         print(f"  Error comparing figure to reference: {err}")
         os.makedirs(os.path.dirname(failed_path), exist_ok=True)
         fig_img.save(failed_path)
-        print(f"    Actual figure: {failed_path}")
+        print(f"    Tested figure: {failed_path}")
         assert False, f"Missing figure reference: '{ref_name}'"
     else:
         if os.path.exists(failed_path):

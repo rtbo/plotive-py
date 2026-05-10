@@ -72,6 +72,27 @@ class Legend:
         self.padding = padding
         self.spacing = spacing
 
+class ColorBar:
+    def __init__(
+        self,
+        pos: str = "right",
+        *,
+        width: float = 20.0,
+        title: str|None = None,
+        border: ThemeStroke | ThemeColor | None = "foreground",
+        ticks: None | axis.TicksLocator | list[float] = None,
+        margin: float = 12.0,
+    ):
+        if pos == "auto":
+            pos = "right"
+        self.pos = pos
+        self.width = width
+        self.title = title
+        self.border = ThemeStroke._normalize(border) if border is not None else None
+        self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
+        self.margin = margin
+
+
 
 class Plot:
     """Single subplot definition with series, axes, and annotations."""
@@ -87,6 +108,7 @@ class Plot:
         subplot: None | tuple[int, int] = None,
         title: None | str = None,
         legend: None | Legend | str = None,
+        colorbar: None | ColorBar | str = None,
         annotations: list[Annotation] = [],
     ):
         """Initialize a plot.
@@ -111,6 +133,8 @@ class Plot:
             Subplot title.
         legend : Legend | str | None, default=None
             Subplot legend config or shortcut position.
+        colorbar : ColorBar | None | str, default=None
+            Subplot colorbar config.
         annotations : list[Annotation], default=[]
             Annotation objects attached to this plot.
 
@@ -134,6 +158,10 @@ class Plot:
         else:
             self.legend = legend
 
+        if isinstance(colorbar, str):
+            colorbar = ColorBar(pos=colorbar)
+
+        self.colorbar = colorbar
         self.annotations = annotations
 
         if x_axis is not None and x_axes is not None:

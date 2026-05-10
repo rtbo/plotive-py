@@ -98,6 +98,11 @@ class TicksLocator:
         return AutoTicksLocator()
 
     @classmethod
+    def List(cls, ticks: list[float]) -> "ListTicksLocator":
+        """Create a ticks locator specified by list."""
+        return ListTicksLocator(ticks)
+
+    @classmethod
     def MaxN(
         cls, bins: int = 9, steps: list[float] = [1, 2, 2.5, 5]
     ) -> "MaxNTicksLocator":
@@ -124,11 +129,27 @@ class TicksLocator:
         """Create a locator for time durations."""
         return TimeDeltaTicksLocator(period, unit)
 
+    @staticmethod
+    def _normalize(ticks: TicksLocator | list[float]):
+        if isinstance(ticks, TicksLocator):
+            return ticks
+        elif isinstance(ticks, list):
+            return ListTicksLocator(ticks)
+        else:
+            raise ValueError(f"Invalid ticks locator specification: {ticks}")
+
 
 class AutoTicksLocator(TicksLocator):
     """Automatically selected tick locator."""
 
     pass
+
+
+class ListTicksLocator(TicksLocator):
+    """Ticks location specified by a list"""
+
+    def __init__(self, ticks: list[float]):
+        self.ticks = ticks
 
 
 class MaxNTicksLocator(TicksLocator):
@@ -390,7 +411,7 @@ class Grid(ThemeStroke):
     def __init__(
         self,
         *,
-        color: ThemeColor="grid",
+        color: ThemeColor = "grid",
         width: float = 1.0,
         pattern: None | list[float] | str = None,
         opacity: float = 0.6,
@@ -405,9 +426,9 @@ class MinorGrid(ThemeStroke):
     def __init__(
         self,
         *,
-        color: ThemeColor="grid",
+        color: ThemeColor = "grid",
         width: float = 0.5,
-        pattern: None | list[float] | str = [5, 5],
+        pattern: None | list[float] | str = [5.0, 5.0],
         opacity: float = 0.6,
     ):
         """Initialize a grid style."""

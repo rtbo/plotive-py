@@ -4,7 +4,10 @@ use pyo3::prelude::*;
 use plotive::des;
 use pyo3::types::{PyDateAccess, PyDateTime, PyList, PyTimeAccess};
 
-use crate::py_style::{extract_series_fill, extract_series_marker, extract_series_stroke};
+use crate::py_des::{extract_axis_scale, extract_ticks_locator};
+use crate::py_style::{
+    extract_color, extract_series_fill, extract_series_marker, extract_series_stroke,
+};
 use crate::{extract_class_name, getattr_not_none};
 
 fn datetime_conv(dt: &Bound<'_, PyDateTime>) -> PyResult<plotive::time::DateTime> {
@@ -119,6 +122,45 @@ fn interpolation_from_str(interp_str: &str) -> PyResult<des::series::Interpolati
     }
 }
 
+fn extract_cmap(py_cmap: &Bound<'_, PyAny>) -> PyResult<des::cmap::LerpColorMap> {
+    let py_cmap_attr = py_cmap.getattr("cmap")?;
+    let mut cmap = if let Ok(cmap_name) = py_cmap_attr.extract::<&str>() {
+        plotive::des::cmap::from_name(cmap_name).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(format!("Unknown colormap name: {cmap_name}"))
+        })?
+    } else {
+        let py_colors = py_cmap_attr.cast::<PyList>()?;
+        let mut colors: Vec<plotive::Rgb8> = Vec::with_capacity(py_colors.len());
+
+        for py_col in py_colors.iter() {
+            let color = extract_color(&py_col)?;
+            colors.push(color.rgb());
+        }
+        let py_method = py_cmap.getattr("method")?;
+
+        let method_str: &str = py_method.extract()?;
+        let method = match method_str {
+            "nearest" => des::cmap::LerpMethod::Nearest,
+            "srgb" => des::cmap::LerpMethod::SRgb,
+            "linear" => des::cmap::LerpMethod::LinearRgb,
+            "perceptual" => des::cmap::LerpMethod::Perceptual,
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Unknown colormap interpolation method: {method_str}"
+                )));
+            }
+        };
+        (method, colors.as_slice()).into()
+    };
+    if let Some(py_scale) = getattr_not_none(py_cmap, "scale")? {
+        cmap = cmap.with_scale(extract_axis_scale(&py_scale)?);
+    }
+    if let Some(py_ticks) = getattr_not_none(py_cmap, "ticks")? {
+        cmap = cmap.force_ticks_locator(extract_ticks_locator(&py_ticks)?);
+    }
+    Ok(cmap)
+}
+
 fn extract_line_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     let x = py_ser.getattr("x")?;
     let y = py_ser.getattr("y")?;
@@ -171,12 +213,18 @@ fn extract_scatter_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         scatter = scatter.with_y_axis(y_axis);
     }
 
+    if let Some(py_marker) = getattr_not_none(py_ser, "marker")? {
+        scatter = scatter.with_marker(extract_series_marker(&py_marker)?);
+    }
+
     if let Some(py_sizes) = getattr_not_none(py_ser, "sizes")? {
         scatter = scatter.with_size_data(extract_data_col(&py_sizes)?);
     }
 
-    if let Some(py_marker) = getattr_not_none(py_ser, "marker")? {
-        scatter = scatter.with_marker(extract_series_marker(&py_marker)?);
+    if let Some(py_colors) = getattr_not_none(py_ser, "colors")? {
+        let color_data = extract_data_col(&py_colors)?;
+        let color_map = extract_cmap(&py_ser.getattr("cmap")?)?;
+        scatter = scatter.with_color_data(color_data, color_map);
     }
     Ok(des::Series::Scatter(scatter))
 }

@@ -39,7 +39,7 @@ fn extract_axis_range(py_range: &Bound<'_, PyAny>) -> PyResult<des::axis::Range>
     Ok(des::axis::Range(min, max))
 }
 
-fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale> {
+pub fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale> {
     let cls_name = extract_class_name(py_scale)?;
     match cls_name.as_str() {
         "AutoScale" => Ok(des::axis::Scale::Auto),
@@ -61,10 +61,13 @@ fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale>
     }
 }
 
-fn extract_ticks_locator(py_locator: &Bound<'_, PyAny>) -> PyResult<des::axis::ticks::Locator> {
+pub fn extract_ticks_locator(py_locator: &Bound<'_, PyAny>) -> PyResult<des::axis::ticks::Locator> {
     let cls_name = extract_class_name(py_locator)?;
     match cls_name.as_str() {
         "AutoTicksLocator" => Ok(des::axis::ticks::Locator::Auto),
+        "ListTicksLocator" => {
+            Ok(des::axis::ticks::ListLocator(py_locator.getattr("ticks")?.extract()?).into())
+        }
         "MaxNTicksLocator" => Ok(des::axis::ticks::MaxNLocator {
             bins: py_locator.getattr("bins")?.extract()?,
             steps: py_locator.getattr("steps")?.extract()?,
@@ -299,6 +302,55 @@ fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegen
     Ok(extract_legend(py_legend, pos)?)
 }
 
+fn extract_colorbar(py_cbar: &Bound<'_, PyAny>) -> PyResult<des::ColorBar> {
+    let pos = getattr_not_none(py_cbar, "pos")?
+        .map(|py_pos| {
+            let pos_str: String = py_pos.extract()?;
+            match pos_str.as_str() {
+                "auto" => Ok(des::colorbar::Pos::default()),
+                "top" => Ok(des::colorbar::Pos::Top),
+                "right" => Ok(des::colorbar::Pos::Right),
+                "bottom" => Ok(des::colorbar::Pos::Bottom),
+                "left" => Ok(des::colorbar::Pos::Left),
+                _ => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unknown colorbar position string: {}",
+                        pos_str
+                    )));
+                }
+            }
+        })
+        .transpose()?
+        .unwrap_or_default();
+
+    let mut cbar = des::ColorBar::new(pos);
+
+    if let Some(py_width) = getattr_not_none(py_cbar, "width")? {
+        cbar = cbar.with_width(py_width.extract()?);
+    }
+
+    if let Some(py_title) = getattr_not_none(py_cbar, "title")? {
+        let title: String = py_title.extract()?;
+        cbar = cbar.with_title(title.into());
+    }
+
+    if let Some(py_border) = getattr_not_none(py_cbar, "border")? {
+        let border = extract_theme_stroke(&py_border)?;
+        cbar = cbar.with_border(border.into());
+    }
+
+    if let Some(py_locator) = getattr_not_none(py_cbar, "ticks_locator")? {
+        let locator = extract_ticks_locator(&py_locator)?;
+        cbar = cbar.with_ticks_locator(locator);
+    }
+
+    if let Some(py_margin) = getattr_not_none(py_cbar, "margin")? {
+        cbar = cbar.with_margin(py_margin.extract()?);
+    }
+
+    Ok(cbar)
+}
+
 fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
     let py_series = py_plot.getattr("series")?;
     let py_series = py_series.cast::<PyList>()?;
@@ -313,6 +365,11 @@ fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
     if let Some(py_legend) = getattr_not_none(py_plot, "legend")? {
         let legend = extract_plot_legend(&py_legend)?;
         plot = plot.with_legend(legend);
+    }
+
+    if let Some(py_cbar) = getattr_not_none(py_plot, "colorbar")? {
+        let cbar = extract_colorbar(&py_cbar)?;
+        plot = plot.with_colorbar(cbar);
     }
 
     let py_title = py_plot.getattr("title")?;

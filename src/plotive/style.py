@@ -4,9 +4,10 @@ from typing import Literal
 
 from ._rs import parse_color as _parse_color
 
-type Color = str | tuple[int, int, int] | tuple[int, int, int, int]
+type Color = str | tuple[float, float, float] | tuple[float, float, float, float]
 """
 Named/CSS color string or RGB(A) tuple.
+Tuples are expressed in sRGB color space with components in the [0, 1] interval.
 """
 
 type ThemeColor = Color | str

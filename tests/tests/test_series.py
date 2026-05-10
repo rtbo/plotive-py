@@ -91,6 +91,38 @@ def test_series_scatter_sizes():
     assert_fig_eq_ref(fig_small(plot), "series/scatter-sizes")
 
 
+def test_series_scatter_colors():
+    rnd = NotRandom()
+    x = rnd.make_col_uniform(15)
+    y = rnd.make_col_uniform(15)
+    colors = [float(i) / 14 for i in range(15)]
+
+    series = pv.series.Scatter(
+        x=x,
+        y=y,
+        colors=colors,
+        marker=pv.style.SeriesMarker(size=16**2),
+    )
+    plot = pv.Plot(series)
+    assert_fig_eq_ref(fig_small(plot), "series/scatter-colors")
+
+def test_series_scatter_colors_stellar():
+    rnd = NotRandom()
+    x = rnd.make_col_uniform(15)
+    y = rnd.make_col_uniform(15)
+    colors = [float(i * 1000) + 1000 for i in range(15)]
+
+    series = pv.series.Scatter(
+        x=x,
+        y=y,
+        colors=colors,
+        cmap="stellar",
+        marker=pv.style.SeriesMarker(size=16**2),
+    )
+    plot = pv.Plot(series)
+    assert_fig_eq_ref(fig_small(plot), "series/scatter-colors-stellar")
+
+
 def test_series_area_double():
     x = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
     y1 = [10.0, 15.0, 8.0, 6.0, 12.0, 10.0]
@@ -109,6 +141,7 @@ def test_series_area_double():
 
     assert_fig_eq_ref(fig, "series/area-double")
 
+
 def test_series_area_double_legend():
     x = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
     y1 = [10.0, 15.0, 8.0, 6.0, 12.0, 10.0]
@@ -121,7 +154,9 @@ def test_series_area_double_legend():
     series1 = pv.series.Area(
         x=x, y1=y1, y2=y2, name="area1", fill=fill1, y1_line=stroke, y2_line=stroke
     )
-    series2 = pv.series.Area(x=x, y1=y2, name="area2", fill=fill2, y1_line=stroke, y2_line=stroke)
+    series2 = pv.series.Area(
+        x=x, y1=y2, name="area2", fill=fill2, y1_line=stroke, y2_line=stroke
+    )
 
     plot = pv.Plot([series1, series2])
     fig = fig_small(plot, legend="auto")
