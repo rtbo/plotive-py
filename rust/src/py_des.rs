@@ -339,7 +339,7 @@ fn extract_colorbar(py_cbar: &Bound<'_, PyAny>) -> PyResult<des::ColorBar> {
         cbar = cbar.with_border(border.into());
     }
 
-    if let Some(py_locator) = getattr_not_none(py_cbar, "ticks_locator")? {
+    if let Some(py_locator) = getattr_not_none(py_cbar, "ticks")? {
         let locator = extract_ticks_locator(&py_locator)?;
         cbar = cbar.with_ticks_locator(locator);
     }

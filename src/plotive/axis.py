@@ -130,7 +130,7 @@ class TicksLocator:
         return TimeDeltaTicksLocator(period, unit)
 
     @staticmethod
-    def _normalize(ticks: TicksLocator | list[float] | str):
+    def _normalize(ticks: TicksLocator | list[float] | list[int] | str):
         if isinstance(ticks, TicksLocator):
             return ticks
         elif isinstance(ticks, str):
@@ -164,7 +164,7 @@ class AutoTicksLocator(TicksLocator):
 class ListTicksLocator(TicksLocator):
     """Ticks location specified by a list"""
 
-    def __init__(self, ticks: list[float]):
+    def __init__(self, ticks: list[float] | list[int]):
         self.ticks = ticks
 
 

@@ -80,7 +80,7 @@ class ColorBar:
         width: float = 20.0,
         title: str | None = None,
         border: ThemeStroke | ThemeColor | None = "foreground",
-        ticks: None | axis.TicksLocator | list[float] = None,
+        ticks: None | axis.TicksLocator | list[float] | list[int] = None,
         margin: float = 12.0,
     ):
         if pos == "auto":
@@ -101,7 +101,19 @@ class ColorBar:
         else:
             raise ValueError(f"Invalid colorbar config: {input!r}")
 
-
+STELLAR_TICKS = [
+    1000.0,
+    2000.0,
+    3000.0,
+    4000.0,
+    5000.0,
+    6500.0,
+    8000.0,
+    10000.0,
+    12500.0,
+    15000.0,
+]
+"""Predefined ticks that fits well the stellar colormap."""
 
 class Plot:
     """Single subplot definition with series, axes, and annotations."""
