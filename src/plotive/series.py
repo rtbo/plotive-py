@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .style import SeriesColor
     from . import axis
 
-from .style import Color, SeriesFill, SeriesMarker, SeriesStroke
+from .style import Color, Fill, Marker, SeriesFill, SeriesMarker, SeriesStroke, Stroke
 
 type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
@@ -56,9 +56,9 @@ class Line(Series):
         x: DataCol,
         y: DataCol,
         *,
-        line: SeriesStroke | SeriesColor = SeriesStroke(),
+        line: Stroke[SeriesColor] | SeriesColor = SeriesStroke(),
         interpolation: None | str = None,
-        marker: SeriesMarker | None = None,
+        marker: Marker[SeriesColor] | None = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
@@ -71,11 +71,11 @@ class Line(Series):
             X values or x data source reference.
         y : DataCol
             Y values or y data source reference.
-        line : SeriesStroke | SeriesColor | None, default=None
+        line : Stroke[SeriesColor] | SeriesColor, default=SeriesStroke()
             Line stroke style or color.
         interpolation : str | None, default=None
             Interpolation mode for rendering.
-        marker : SeriesMarker | None, default=None
+        marker : Marker[SeriesColor] | None, default=None
             Marker style. If None, no marker will be rendered.    let ?;
         name : str | None, default=None
             Legend/display name of the series.
@@ -151,7 +151,7 @@ class Scatter(Series):
         x: DataCol,
         y: DataCol,
         *,
-        marker: SeriesMarker = SeriesMarker(),
+        marker: Marker[SeriesColor] = SeriesMarker(),
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
         cmap: None | ColorMap | list[Color] | str = "viridis",
@@ -181,7 +181,7 @@ class Scatter(Series):
              - If a string is provided, it will be interpreted as a named colormap and used to create a ColorMap with default settings.
              - If None, a default colormap will be used if `colors` is specified, otherwise no colormap will be applied.
             Ignored if `colors` is not specified.
-        marker : SeriesMarker, default=SeriesMarker()
+        marker : Marker[SeriesColor], default=SeriesMarker()
             Marker style. If None, the marker will be automatically assigned based on the series palette.
         name : str | None, default=None
             Legend/display name of the series.
@@ -213,9 +213,9 @@ class Area(Series):
         y1: DataCol,
         y2: DataCol | float = 0,
         *,
-        fill: SeriesFill | SeriesColor = SeriesFill(),
-        y1_line: SeriesStroke | SeriesColor | None = None,
-        y2_line: SeriesStroke | SeriesColor | None = None,
+        fill: Fill[SeriesColor] | SeriesColor = SeriesFill(),
+        y1_line: Stroke[SeriesColor] | SeriesColor | None = None,
+        y2_line: Stroke[SeriesColor] | SeriesColor | None = None,
         y1_interpolation: None | str = None,
         y2_interpolation: None | str = None,
         interpolation: None | str = None,
@@ -269,8 +269,8 @@ class Histogram(Series):
         self,
         data: DataCol,
         *,
-        fill: None | SeriesFill | SeriesColor = "auto",
-        outline: None | SeriesStroke | SeriesColor = None,
+        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
+        outline: None | Stroke[SeriesColor] | SeriesColor = None,
         bins: int = 10,
         density: bool = False,
         name: None | str = None,
@@ -291,8 +291,8 @@ class Bars(Series):
         x: DataCol,
         y: DataCol,
         *,
-        fill: None | SeriesFill | SeriesColor = "auto",
-        outline: None | SeriesStroke | SeriesColor = None,
+        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
+        outline: None | Stroke[SeriesColor] | SeriesColor = None,
         bars_offset=0.3,
         bars_width=0.4,
         name: None | str = None,

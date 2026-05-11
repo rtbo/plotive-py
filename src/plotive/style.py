@@ -41,7 +41,7 @@ class ThemeFill(Fill[ThemeColor]):
         super().__init__(color=color, opacity=opacity)
 
     @staticmethod
-    def _normalize(input: ThemeFill | ThemeColor) -> ThemeFill:
+    def _normalize(input: Fill[ThemeColor] | ThemeColor) -> Fill[ThemeColor]:
         """Normalize a fill specification to a ThemeFill object."""
         if isinstance(input, Fill):
             return input
@@ -55,9 +55,9 @@ class SeriesFill(Fill[SeriesColor]):
         super().__init__(color=color, opacity=opacity)
 
     @staticmethod
-    def _normalize(input: SeriesFill | SeriesColor) -> SeriesFill:
+    def _normalize(input: Fill[SeriesColor] | SeriesColor) -> Fill[SeriesColor]:
         """Normalize a fill specification to a SeriesFill object."""
-        if isinstance(input, SeriesFill):
+        if isinstance(input, Fill):
             return input
         else:
             return SeriesFill(color=input)
@@ -123,9 +123,9 @@ class ThemeStroke(Stroke[ThemeColor]):
         self.opacity = opacity
 
     @staticmethod
-    def _normalize(input: ThemeStroke | ThemeColor) -> ThemeStroke:
+    def _normalize(input: Stroke[ThemeColor] | ThemeColor) -> Stroke[ThemeColor]:
         """Normalize a stroke specification to a ThemeStroke object."""
-        if isinstance(input, ThemeStroke):
+        if isinstance(input, Stroke):
             return input
         else:
             return ThemeStroke(color=input)
@@ -160,9 +160,9 @@ class SeriesStroke(Stroke[SeriesColor]):
         self.opacity = opacity
 
     @staticmethod
-    def _normalize(input: SeriesStroke | SeriesColor) -> SeriesStroke:
+    def _normalize(input: Stroke[SeriesColor] | SeriesColor) -> Stroke[SeriesColor]:
         """Normalize a stroke specification to a SeriesStroke object."""
-        if isinstance(input, SeriesStroke):
+        if isinstance(input, Stroke):
             return input
         else:
             return SeriesStroke(color=input)
@@ -216,11 +216,11 @@ class ThemeMarker(Marker[ThemeColor]):
 
     def __init__(
         self,
-        shape: str = "circle",
+        shape: MarkerShape = "circle",
         *,
         size: float = 8.5**2,
-        fill: None | ThemeFill | ThemeColor = "foreground",
-        stroke: None | ThemeStroke | ThemeColor = "foreground",
+        fill: None | Fill[ThemeColor] | ThemeColor = "foreground",
+        stroke: None | Stroke[ThemeColor] | ThemeColor = "foreground",
     ):
         """Initialize a marker style.
 
@@ -230,26 +230,25 @@ class ThemeMarker(Marker[ThemeColor]):
             Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
         size : float, default=8.5**2
             Marker size. It is interpreted as an area, therefore the dimensions of markers are proportional to sqrt(size)
-        fill : ThemeFill | ThemeColor | None, default="foreground"
+        fill : Fill[ThemeColor] | ThemeColor | None, default="foreground"
             Marker fill color.
-        stroke : ThemeStroke | ThemeColor | None, default="foreground"
+        stroke : Stroke[ThemeColor] | ThemeColor | None, default="foreground"
             Marker stroke style.
         """
-        self.shape = shape
-        self.size = size
-        self.fill = ThemeFill._normalize(fill) if fill is not None else None
-        self.stroke = ThemeStroke._normalize(stroke) if stroke is not None else None
+        fill = ThemeFill._normalize(fill) if fill is not None else None
+        stroke = ThemeStroke._normalize(stroke) if stroke is not None else None
+        super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
 
 class SeriesMarker(Marker[SeriesColor]):
     """Marker style for scatter series."""
 
     def __init__(
         self,
-        shape: str = "circle",
+        shape: MarkerShape = "circle",
         *,
         size: float = 8.5**2,
-        fill: None | SeriesFill | SeriesColor = "auto",
-        stroke: None | SeriesStroke | SeriesColor = "auto",
+        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
+        stroke: None | Stroke[SeriesColor] | SeriesColor = "auto",
     ):
         """Initialize a marker style.
 
@@ -264,10 +263,9 @@ class SeriesMarker(Marker[SeriesColor]):
         stroke : Stroke[C] | None, default=None
             Marker stroke style.
         """
-        self.shape = shape
-        self.size = size
-        self.fill = SeriesFill._normalize(fill) if fill is not None else None
-        self.stroke = SeriesStroke._normalize(stroke) if stroke is not None else None
+        fill = SeriesFill._normalize(fill) if fill is not None else None
+        stroke = SeriesStroke._normalize(stroke) if stroke is not None else None
+        super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
 
 
 class ThemePalette:
