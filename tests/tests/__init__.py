@@ -65,9 +65,9 @@ def _render_fig_to_img(fig: pv.Figure, style) -> pil.Image:
         "RGBA", (fig_pxl.width, fig_pxl.height), fig_pxl.data, "raw", "RGBa", 0, 1
     )
 
-
 def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
     from pixelmatch.contrib.PIL import pixelmatch
+    from pytest_check import check
 
     ref_path = _ref_file_path(ref_name)
     failed_path = _failed_file_path(ref_name)
@@ -96,14 +96,14 @@ def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
         print(f"    Tested figure: {failed_path}")
         print(f"       Ref figure: {ref_path}")
         print(f"             Diff: {diff_path}")
-        assert False, f"Figure does not match reference: '{ref_name}'"
+        check.fail(f"Figure does not match reference: '{ref_name}'")
     elif err is not None:
         print(f"Figure ref assertion failed: '{ref_name}'")
         print(f"  Error comparing figure to reference: {err}")
         os.makedirs(os.path.dirname(failed_path), exist_ok=True)
         fig_img.save(failed_path)
         print(f"    Tested figure: {failed_path}")
-        assert False, f"Missing figure reference: '{ref_name}'"
+        check.fail(f"Missing figure reference: '{ref_name}'")
     else:
         if os.path.exists(failed_path):
             os.remove(failed_path)
