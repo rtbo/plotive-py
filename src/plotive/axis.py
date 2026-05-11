@@ -7,7 +7,7 @@ type AxisRef = str | int
 Represents a reference to an axis, either by its string ID or title or integer index.
 """
 
-type Range = tuple[str | None, str | None]
+type Range = tuple[float | None, float | None]
 """
 The Range type represents a range with optional start and end values.
 None indicates that the bound in that direction is determined automatically.
@@ -15,27 +15,26 @@ None indicates that the bound in that direction is determined automatically.
 
 
 class Scale:
-    """Factory namespace for axis scale strategies."""
+    """Defines how data is mapped to axis coordinates."""
 
-    @classmethod
-    def Auto(cls) -> "AutoScale":
-        """Create an automatic scale."""
-        return AutoScale()
-
-    @classmethod
-    def Lin(cls, range: Range = (None, None)) -> "LinScale":
-        """Create a linear scale."""
-        return LinScale(range)
-
-    @classmethod
-    def Log(cls, base: float = 10, range: Range = (None, None)) -> "LogScale":
-        """Create a logarithmic scale."""
-        return LogScale(base, range)
-
-    @classmethod
-    def Shared(cls, ref: AxisRef = 0) -> "SharedScale":
-        """Create a scale shared with another axis."""
-        return SharedScale(ref)
+    @staticmethod
+    def _normalize(scale: Scale | str | Range) -> Scale:
+        if isinstance(scale, Scale):
+            return scale
+        elif isinstance(scale, tuple) and len(scale) == 2:
+            return LinScale(range=scale)
+        elif isinstance(scale, str):
+            scalel = scale.lower()
+            if scalel == "auto":
+                return AutoScale()
+            elif scalel == "lin":
+                return LinScale()
+            elif scalel == "log":
+                return LogScale()
+            else:
+                return SharedScale(scale)
+        else:
+            raise ValueError(f"Invalid scale specification: {scale}")
 
 
 class AutoScale(Scale):
@@ -459,7 +458,7 @@ class Axis:
         *,
         title: str | None = None,
         id: str | None = None,
-        scale: Scale | str = AutoScale(),
+        scale: Scale | str | Range = AutoScale(),
         opposite_side: bool | None = None,
         side: str | None = None,
         ticks: Ticks | str | None = None,
@@ -497,28 +496,19 @@ class Axis:
         """
         self.title = title
         self.id = id
-        if isinstance(scale, str):
-            if scale.lower() == "auto":
-                self.scale = AutoScale()
-            elif scale.lower() == "lin":
-                self.scale = LinScale()
-            elif scale.lower() == "log":
-                self.scale = LogScale()
-            else:
-                self.scale = SharedScale(scale)
-        else:
-            self.scale = scale
+        self.scale = Scale._normalize(scale)
 
         if opposite_side is not None and side is not None:
             raise ValueError("Cannot specify both 'opposite_side' and 'side'.")
         if side is not None:
-            if side.lower() in ["left", "right", "top", "bottom"]:
-                self._side = side.lower()
+            sidel = side.lower()
+            if sidel in ["left", "right", "top", "bottom"]:
+                self._side = sidel
             else:
                 raise ValueError(
                     f"Invalid side value: {side}. Must be 'left', 'right', 'top' or 'bottom'."
                 )
-            self.opposite_side = side == "right" or side == "top"
+            self.opposite_side = sidel == "right" or sidel == "top"
         elif opposite_side is not None:
             self.opposite_side = opposite_side
         else:
