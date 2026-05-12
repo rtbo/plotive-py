@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .style import SeriesColor
     from . import axis
 
-from .style import Color, Fill, Marker, SeriesFill, SeriesMarker, SeriesStroke, Stroke
+from .style import Color, Fill, Marker, SeriesFill, SeriesMarker, SeriesStroke, Stroke, _parse_mpl_style
 
 type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
@@ -62,6 +62,8 @@ class Line(Series):
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
+        style: None | str = None,
+        width: None | float = None,
     ):
         """Initialize a line series.
 
@@ -76,13 +78,18 @@ class Line(Series):
         interpolation : str | None, default=None
             Interpolation mode for rendering.
         marker : Marker[SeriesColor] | None, default=None
-            Marker style. If None, no marker will be rendered.    let ?;
+            Marker style. If None, no marker will be rendered.
         name : str | None, default=None
             Legend/display name of the series.
         x_axis : AxisRef | None, default=None
             Target x-axis reference.
         y_axis : AxisRef | None, default=None
             Target y-axis reference.
+        style: None | str, default=None
+            Optional style shorthand string for quick styling.
+            It is compatible with matplotlib's style syntax for line properties.
+        width: None | float, default=None
+            Optional shorthand to specify the line width in points.
         """
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
@@ -90,6 +97,21 @@ class Line(Series):
         self.line = SeriesStroke._normalize(line)
         self.interpolation = interpolation
         self.marker = marker
+        self.style = style
+        if style is not None:
+            marker_shape, line_pattern, line_color = _parse_mpl_style(style)
+            if marker_shape is not None:
+                if self.marker is None:
+                    self.marker = SeriesMarker(shape=marker_shape)
+                else:
+                    self.marker.shape = marker_shape
+            if line_pattern is not None:
+                self.line.pattern = line_pattern
+            if line_color is not None:
+                self.line.color = line_color
+        if width is not None:
+            self.line.width = width
+
 
 
 class ColorMap:

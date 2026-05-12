@@ -25,6 +25,9 @@ If "auto", the color will be automatically assigned from the series palette base
 Can also be an integer index referring to a color in the series palette.
 """
 
+type Pattern = list[float] | Literal["solid", "dashed", "dotted", "dash-dot"]
+"""Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
+
 
 class Fill[C = Color]:
     """Type alias for fill colors."""
@@ -72,7 +75,7 @@ class Stroke[C = Color]:
         Stroke color.
     width : float, default=1.0
         Stroke width in pixels.
-    pattern : list[float] | str | None, default=None
+    pattern : Pattern | None, default=None
         Dash pattern specification.
     opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
@@ -84,7 +87,7 @@ class Stroke[C = Color]:
         color: C,
         *,
         width: float = 1.0,
-        pattern: None | list[float] | str = None,
+        pattern: None | Pattern = None,
         opacity: None | float = None,
     ):
         """Initialize a stroke style."""
@@ -103,7 +106,7 @@ class ThemeStroke(Stroke[ThemeColor]):
         Stroke color.
     width : float, default=1.0
         Stroke width in pixels.
-    pattern : list[float] | str | None, default=None
+    pattern : Pattern | None, default=None
         Dash pattern specification.
     opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
@@ -115,7 +118,7 @@ class ThemeStroke(Stroke[ThemeColor]):
         color: ThemeColor = "foreground",
         *,
         width: float = 1.0,
-        pattern: None | list[float] | str = None,
+        pattern: None | Pattern = None,
         opacity: None | float = None,
     ):
         """Initialize a stroke style."""
@@ -141,7 +144,7 @@ class SeriesStroke(Stroke[SeriesColor]):
         Stroke color.
     width : float, default=1.5
         Stroke width in pixels.
-    pattern : list[float] | str | None, default=None
+    pattern : Pattern | None, default=None
         Dash pattern specification.
     opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
@@ -153,7 +156,7 @@ class SeriesStroke(Stroke[SeriesColor]):
         color: SeriesColor = "auto",
         *,
         width: float = 1.5,
-        pattern: None | list[float] | str = None,
+        pattern: None | Pattern = None,
         opacity: None | float = None,
     ):
         """Initialize a stroke style."""
@@ -366,3 +369,122 @@ class Style:
         """Initialize global style settings."""
         self.theme = theme
         self.palette = palette
+
+def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, SeriesColor | None]:
+    from ._rs import parse_color as rs_parse_color
+
+    try:
+        color = rs_parse_color(mpl_style)
+        return (None, None, color)
+    except ValueError:
+        pass
+
+    shape = None
+    pattern = None
+    color = None
+
+    def set_shape(new_shape):
+        nonlocal shape
+        if shape is not None:
+            raise ValueError(f"Multiple marker shapes specified in style: {mpl_style}")
+        shape = new_shape
+
+    def set_pattern(new_pattern):
+        nonlocal pattern
+        if pattern is not None:
+            raise ValueError(f"Multiple marker patterns specified in style: {mpl_style}")
+        pattern = new_pattern
+
+    def set_color(new_color):
+        nonlocal color
+        if color is not None:
+            raise ValueError(f"Multiple colors specified in style: {mpl_style}")
+        color = new_color
+
+    i = 0
+    while i < len(mpl_style):
+        if i + 1 < len(mpl_style):
+            c2 = mpl_style[i:i+2]
+            if c2 == "--":
+                set_pattern("dashed")
+                i += 2
+                continue
+            if c2 == ".-":
+                set_pattern("dash-dot")
+                i += 2
+                continue
+        c = mpl_style[i]
+        if c == "o":
+            set_shape("circle")
+            i += 1
+        elif c == "s":
+            set_shape("square")
+            i += 1
+        elif c == "D":
+            set_shape("diamond")
+            i += 1
+        elif c == "x":
+            set_shape("cross")
+            i += 1
+        elif c == "+":
+            set_shape("plus")
+            i += 1
+        elif c == "^":
+            set_shape("triangle-up")
+            i += 1
+        elif c == "v":
+            set_shape("triangle-down")
+            i += 1
+        elif c == "<":
+            set_shape("triangle-left")
+            i += 1
+        elif c == ">":
+            set_shape("triangle-right")
+            i += 1
+        elif c == "-":
+            set_pattern("solid")
+            i += 1
+        elif c == ":":
+            set_pattern("dotted")
+            i += 1
+        elif c == "b":
+            set_color('#0000ff')
+            i += 1
+        elif c == "g":
+            set_color('#008000')
+            i += 1
+        elif c == "r":
+            set_color('#ff0000')
+            i += 1
+        elif c == "c":
+            set_color('#00bfbf')
+            i += 1
+        elif c == "m":
+            set_color('#bf00bf')
+            i += 1
+        elif c == "y":
+            set_color('#bfbf00')
+            i += 1
+        elif c == "k":
+            set_color('#000000')
+            i += 1
+        elif c == "w":
+            set_color('#ffffff')
+            i += 1
+        elif c == "C":
+            i += 1
+            try:
+                idx = int(mpl_style[i:])
+                set_color(idx)
+                break
+            except ValueError:
+                raise ValueError(f"Invalid color index in style: {mpl_style}")
+        else:
+            # Try to parse the rest as a color
+            try:
+                set_color(rs_parse_color(mpl_style[i:]))
+                break
+            except ValueError:
+                raise ValueError(f"Unrecognized style component '{c}' in style: {mpl_style}")
+
+    return (shape, pattern, color)

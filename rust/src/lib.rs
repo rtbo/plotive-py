@@ -38,9 +38,14 @@ mod plt_rs {
     use super::py_style;
 
     #[pyfunction]
-    fn parse_color(py_col: &Bound<'_, PyAny>) -> PyResult<(u8, u8, u8, u8)> {
+    fn parse_color(py_col: &Bound<'_, PyAny>) -> PyResult<(f32, f32, f32, f32)> {
         let col = py_style::extract_color(py_col)?;
-        Ok((col.r(), col.g(), col.b(), col.a()))
+        Ok((
+            col.r() as f32 / 255.0,
+            col.g() as f32 / 255.0,
+            col.b() as f32 / 255.0,
+            col.a() as f32 / 255.0,
+        ))
     }
 
     #[pyfunction]

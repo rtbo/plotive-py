@@ -1,5 +1,5 @@
 use plotive::style;
-use plotive::{Rgb8, Rgba8};
+use plotive::{Rgb8, Rgba8, color};
 
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -14,17 +14,27 @@ pub fn extract_color(py_col: &Bound<'_, PyAny>) -> PyResult<Rgba8> {
                 col, e
             ))
         })?)
-    } else if let Ok((r, g, b)) = py_col.extract::<(u8, u8, u8)>() {
-        Ok(Rgb8::new(r, g, b).opaque())
-    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, u8)>() {
-        Ok(Rgba8::new(r, g, b, a))
-    } else if let Ok((r, g, b, a)) = py_col.extract::<(u8, u8, u8, f32)>() {
+    } else if let Ok((r, g, b, a)) = py_col.extract::<(f32, f32, f32, f32)>() {
+        let rgb = color::SRgb::new(r, g, b).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Invalid color specification: {py_col}"
+            ))
+        })?;
         if a < 0.0 || a > 1.0 {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "Alpha value must be between 0.0 and 1.0.",
             ));
         }
-        Ok(Rgba8::new(r, g, b, (a * 255.0) as u8))
+        let rgb: Rgb8 = rgb.into();
+        Ok(rgb.with_a((a / 255.0).round() as u8))
+    } else if let Ok((r, g, b)) = py_col.extract::<(f32, f32, f32)>() {
+        let rgb = color::SRgb::new(r, g, b).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Invalid color specification: {py_col}"
+            ))
+        })?;
+        let rgb: Rgb8 = rgb.into();
+        Ok(rgb.opaque())
     } else {
         Err(pyo3::exceptions::PyTypeError::new_err(format!(
             "Color must be a string (got {py_col:?})"
@@ -195,7 +205,6 @@ where
         .transpose()?
         .map(style::MarkerSize)
         .unwrap_or_default();
-
 
     Ok(style::Marker {
         shape,

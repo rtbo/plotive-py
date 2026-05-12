@@ -1,5 +1,4 @@
 import plotive as pv
-from plotive.style import SeriesMarker
 
 from . import *
 
@@ -33,7 +32,7 @@ def test_style_line_dash_dotted():
     plot = pv.Plot(
         pv.series.Line(x=x, y=y, line=pv.SeriesStroke(width=2, pattern=[5, 5, 1, 5])),
     )
-    assert_fig_eq_ref(fig_small(plot), "style/line-dash-dotted")
+    assert_fig_eq_ref(fig_small(plot), "style/line-dash-dot")
 
 
 def test_style_line_color():
@@ -47,6 +46,14 @@ def test_style_line_color():
 def test_style_line_marker():
     x, y = [0, 1], [0, 1]
     plot = pv.Plot(
-        pv.series.Line(x=x, y=y, marker=SeriesMarker()),
+        pv.series.Line(x=x, y=y, marker=pv.SeriesMarker()),
     )
     assert_fig_eq_ref(fig_small(plot), "style/line-marker")
+
+
+def test_style_line_mpl_style():
+    x, y = [0, 1], [0, 1]
+    plot = pv.Plot(
+        pv.series.Line(x=x, y=y, style="o--r"),
+    )
+    assert_fig_eq_ref(fig_small(plot), "style/line-marker-dash-red")
