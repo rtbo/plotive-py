@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .style import Fill, Color
 
-from .style import Stroke
+from .style import Stroke, ThemeColor, ThemeMarker
+from . import style
 
 
 class Annotation(ABC):
@@ -142,6 +143,36 @@ class Arrow(Annotation):
         self.stroke = stroke
         self.head_size = head_size
 
+class Marker(Annotation):
+    """Marker annotation placed in data space."""
+
+    def __init__(
+        self,
+        xy: tuple[float, float],
+        *,
+        marker: style.Marker[ThemeColor] = ThemeMarker(),
+        x_axis: str | None = None,
+        y_axis: str | None = None,
+        zpos: str = "above-series",
+    ):
+        """Initialize a marker annotation.
+
+        Parameters
+        ----------
+        xy : tuple[float, float]
+            Marker position.
+        marker : style.Marker[ThemeColor], default=ThemeMarker()
+            Marker style.
+        x_axis : str | None, default=None
+            Target x-axis identifier.
+        y_axis : str | None, default=None
+            Target y-axis identifier.
+        zpos : str, default="above-series"
+            Rendering layer relative to series.
+        """
+        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        self.x, self.y = xy
+        self.marker = marker
 
 class Label(Annotation):
     """Text label annotation placed in data space."""

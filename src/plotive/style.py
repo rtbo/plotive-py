@@ -74,8 +74,9 @@ class Stroke[C = Color]:
         Stroke width in pixels.
     pattern : list[float] | str | None, default=None
         Dash pattern specification.
-    opacity : float, default=1.0
+    opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
+        None means opaque
     """
 
     def __init__(
@@ -84,7 +85,7 @@ class Stroke[C = Color]:
         *,
         width: float = 1.0,
         pattern: None | list[float] | str = None,
-        opacity: float = 1.0,
+        opacity: None | float = None,
     ):
         """Initialize a stroke style."""
         self.color = color
@@ -104,8 +105,9 @@ class ThemeStroke(Stroke[ThemeColor]):
         Stroke width in pixels.
     pattern : list[float] | str | None, default=None
         Dash pattern specification.
-    opacity : float, default=1.0
+    opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
+        None means opaque.
     """
 
     def __init__(
@@ -114,7 +116,7 @@ class ThemeStroke(Stroke[ThemeColor]):
         *,
         width: float = 1.0,
         pattern: None | list[float] | str = None,
-        opacity: float = 1.0,
+        opacity: None | float = None,
     ):
         """Initialize a stroke style."""
         self.color = color
@@ -141,8 +143,9 @@ class SeriesStroke(Stroke[SeriesColor]):
         Stroke width in pixels.
     pattern : list[float] | str | None, default=None
         Dash pattern specification.
-    opacity : float, default=1.0
+    opacity : None | float, default=None
         Stroke opacity in the ``[0, 1]`` interval.
+        None means opaque.
     """
 
     def __init__(
@@ -151,7 +154,7 @@ class SeriesStroke(Stroke[SeriesColor]):
         *,
         width: float = 1.5,
         pattern: None | list[float] | str = None,
-        opacity: float = 1.0,
+        opacity: None | float = None,
     ):
         """Initialize a stroke style."""
         self.color = color
@@ -189,8 +192,8 @@ class Marker[C]:
         shape: MarkerShape = "circle",
         *,
         size: float = 8.5**2,
-        fill: None | Fill[C] | C = None,
-        stroke: None | Stroke[C] | C = None,
+        fill: None | Fill[C] = None,
+        stroke: None | Stroke[C] = None,
     ):
         """Initialize a marker style.
 
@@ -221,6 +224,8 @@ class ThemeMarker(Marker[ThemeColor]):
         size: float = 8.5**2,
         fill: None | Fill[ThemeColor] | ThemeColor = "foreground",
         stroke: None | Stroke[ThemeColor] | ThemeColor = "foreground",
+        color: None | ThemeColor = None,
+        fill_opacity: float | None = None,
     ):
         """Initialize a marker style.
 
@@ -234,9 +239,24 @@ class ThemeMarker(Marker[ThemeColor]):
             Marker fill color.
         stroke : Stroke[ThemeColor] | ThemeColor | None, default="foreground"
             Marker stroke style.
+        color: ThemeColor | None, default=None
+            Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke
+        fill_opacity: float | None, default=None
+            Optional fill opacity in the [0, 1] interval. Overrides fill.opacity if fill
         """
         fill = ThemeFill._normalize(fill) if fill is not None else None
         stroke = ThemeStroke._normalize(stroke) if stroke is not None else None
+        if color is not None:
+            if fill is None:
+                fill = ThemeFill(color=color)
+            else:
+                fill.color = color
+            if stroke is None:
+                stroke = ThemeStroke(color=color)
+            else:
+                stroke.color = color
+        if fill and fill_opacity is not None:
+            fill.opacity = fill_opacity
         super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
 
 class SeriesMarker(Marker[SeriesColor]):
@@ -249,6 +269,8 @@ class SeriesMarker(Marker[SeriesColor]):
         size: float = 8.5**2,
         fill: None | Fill[SeriesColor] | SeriesColor = "auto",
         stroke: None | Stroke[SeriesColor] | SeriesColor = "auto",
+        color: None | ThemeColor = None,
+        fill_opacity: None | float = None,
     ):
         """Initialize a marker style.
 
@@ -262,9 +284,24 @@ class SeriesMarker(Marker[SeriesColor]):
             Marker fill color.
         stroke : Stroke[C] | None, default=None
             Marker stroke style.
+        color: SeriesColor | None, default=None
+            Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke
+        fill_opacity: float | None, default=None
+            Optional fill opacity in the [0, 1] interval. Overrides fill.opacity if fill
         """
         fill = SeriesFill._normalize(fill) if fill is not None else None
         stroke = SeriesStroke._normalize(stroke) if stroke is not None else None
+        if color is not None:
+            if fill is None:
+                fill = SeriesFill(color=color)
+            else:
+                fill.color = color
+            if stroke is None:
+                stroke = SeriesStroke(color=color)
+            else:
+                stroke.color = color
+        if fill and fill_opacity is not None:
+            fill.opacity = fill_opacity
         super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
 
 

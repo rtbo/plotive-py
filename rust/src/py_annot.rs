@@ -2,13 +2,14 @@ use pyo3::{prelude::*, types::PyTuple};
 
 use plotive::des;
 
-use crate::py_style::{extract_theme_color, extract_theme_stroke};
+use crate::py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke};
 
 pub fn extract_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::Annotation> {
     let cls_name = super::extract_class_name(py_annot)?;
     let mut annot = match cls_name.as_str() {
         "Line" => extract_line_annot(py_annot).map(des::Annotation::Line),
         "Arrow" => extract_arrow_annot(py_annot).map(des::Annotation::Arrow),
+        "Marker" => extract_marker_annot(py_annot).map(des::Annotation::Marker),
         "Label" => extract_label_annot(py_annot).map(des::Annotation::Label),
         _ => Err(pyo3::exceptions::PyTypeError::new_err(format!(
             "Unsupported annotation type: {}",
@@ -39,7 +40,7 @@ pub fn extract_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::Annotation> {
 }
 
 fn extract_line_annot(py_line: &Bound<'_, PyAny>) -> PyResult<des::annot::Line> {
-    let mut line = if let Some(py_y) = super::getattr_not_none(py_line, "horizontal")? {
+    let mut annot = if let Some(py_y) = super::getattr_not_none(py_line, "horizontal")? {
         let y = py_y.extract::<f64>()?;
         des::annot::Line::horizontal(y)
     } else if let Some(py_x) = super::getattr_not_none(py_line, "vertical")? {
@@ -59,10 +60,10 @@ fn extract_line_annot(py_line: &Bound<'_, PyAny>) -> PyResult<des::annot::Line> 
 
     if let Some(py_stroke) = super::getattr_not_none(py_line, "stroke")? {
         let stroke = extract_theme_stroke(&py_stroke)?;
-        line = line.with_stroke(stroke);
+        annot = annot.with_stroke(stroke);
     }
 
-    Ok(line)
+    Ok(annot)
 }
 
 fn extract_arrow_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Arrow> {
@@ -70,35 +71,47 @@ fn extract_arrow_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Arro
     let y = py_annot.getattr("y")?.extract::<f64>()?;
     let dx = py_annot.getattr("dx")?.extract::<f32>()?;
     let dy = py_annot.getattr("dy")?.extract::<f32  >()?;
-    let mut arrow = des::annot::Arrow::new(x, y, dx, dy);
+    let mut annot = des::annot::Arrow::new(x, y, dx, dy);
     if let Some(py_head_size) = super::getattr_not_none(py_annot, "head_size")? {
         let head_size = py_head_size.extract::<f32>()?;
-        arrow = arrow.with_head_size(head_size);
+        annot = annot.with_head_size(head_size);
     }
     if let Some(py_stroke) = super::getattr_not_none(py_annot, "stroke")? {
         let stroke = extract_theme_stroke(&py_stroke)?;
-        arrow = arrow.with_stroke(stroke);
+        annot = annot.with_stroke(stroke);
     }
-    Ok(arrow)
+    Ok(annot)
+}
+
+fn extract_marker_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Marker> {
+    let x = py_annot.getattr("x")?.extract::<f64>()?;
+    let y = py_annot.getattr("y")?.extract::<f64>()?;
+    let mut annot = des::annot::Marker::new(x, y);
+    if let Some(py_marker) = super::getattr_not_none(py_annot, "marker")? {
+        let marker = extract_theme_marker(&py_marker)?;
+        annot = annot.with_marker(marker);
+    }
+
+    Ok(annot)
 }
 
 fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Label> {
     let x = py_annot.getattr("x")?.extract::<f64>()?;
     let y = py_annot.getattr("y")?.extract::<f64>()?;
     let text = py_annot.getattr("text")?.extract::<String>()?;
-    let mut label = des::annot::Label::new(text, x, y);
+    let mut annot = des::annot::Label::new(text, x, y);
     if let Some(py_anchor) = super::getattr_not_none(py_annot, "anchor")? {
         let anchor = py_anchor.extract::<&str>()?;
-        label = match anchor {
-            "top-left" => label.with_anchor(des::annot::Anchor::TopLeft),
-            "top-center" => label.with_anchor(des::annot::Anchor::TopCenter),
-            "top-right" => label.with_anchor(des::annot::Anchor::TopRight),
-            "center-left" => label.with_anchor(des::annot::Anchor::CenterLeft),
-            "center" => label.with_anchor(des::annot::Anchor::Center),
-            "center-right" => label.with_anchor(des::annot::Anchor::CenterRight),
-            "bottom-left" => label.with_anchor(des::annot::Anchor::BottomLeft),
-            "bottom-center" => label.with_anchor(des::annot::Anchor::BottomCenter),
-            "bottom-right" => label.with_anchor(des::annot::Anchor::BottomRight),
+        annot = match anchor {
+            "top-left" => annot.with_anchor(des::annot::Anchor::TopLeft),
+            "top-center" => annot.with_anchor(des::annot::Anchor::TopCenter),
+            "top-right" => annot.with_anchor(des::annot::Anchor::TopRight),
+            "center-left" => annot.with_anchor(des::annot::Anchor::CenterLeft),
+            "center" => annot.with_anchor(des::annot::Anchor::Center),
+            "center-right" => annot.with_anchor(des::annot::Anchor::CenterRight),
+            "bottom-left" => annot.with_anchor(des::annot::Anchor::BottomLeft),
+            "bottom-center" => annot.with_anchor(des::annot::Anchor::BottomCenter),
+            "bottom-right" => annot.with_anchor(des::annot::Anchor::BottomRight),
             _ => {
                 return Err(pyo3::exceptions::PyValueError::new_err(format!(
                     "Unknown anchor string: {}",
@@ -109,11 +122,11 @@ fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Labe
     }
     if let Some(py_color) = super::getattr_not_none(py_annot, "color")? {
         let color = extract_theme_color(&py_color)?;
-        label = label.with_color(color);
+        annot = annot.with_color(color);
     }
     if let Some(py_angle) = super::getattr_not_none(py_annot, "angle")? {
         let angle = py_angle.extract::<f32>()?;
-        label = label.with_angle(angle);
+        annot = annot.with_angle(angle);
     }
     if let Some(py_frame) = super::getattr_not_none(py_annot, "frame")? {
         let py_frame = py_frame.cast::<PyTuple>()?;
@@ -134,8 +147,8 @@ fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Labe
         } else {
             Some(extract_theme_stroke(&py_stroke)?)
         };
-        label = label.with_frame(fill, stroke);
+        annot = annot.with_frame(fill, stroke);
     }
 
-    Ok(label)
+    Ok(annot)
 }

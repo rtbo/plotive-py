@@ -1,12 +1,8 @@
 """High-level public API for building and exporting Plotive figures."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from plotive.style import ThemeFill
-
-if TYPE_CHECKING:
-    from .style import Stroke, Fill, Style
+from .style import *
 
 from .annot import Annotation
 from .axis import *

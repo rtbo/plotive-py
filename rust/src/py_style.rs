@@ -160,54 +160,69 @@ pub fn extract_series_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::se
     extract_stroke(py_stroke, color)
 }
 
-pub fn extract_series_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::series::Marker> {
-    let mut marker = style::series::Marker::default();
-
-    if let Some(s) = getattr_not_none(py_marker, "shape")? {
-        let s_str = s.extract::<&str>()?;
-        let shape = match s_str {
-            "circle" => style::MarkerShape::Circle,
-            "square" => style::MarkerShape::Square,
-            "diamond" => style::MarkerShape::Diamond,
-            "cross" => style::MarkerShape::Cross,
-            "plus" => style::MarkerShape::Plus,
-            "triangle-up" => style::MarkerShape::TriangleUp,
-            "triangle-down" => style::MarkerShape::TriangleDown,
-            "triangle-left" => style::MarkerShape::TriangleLeft,
-            "triangle-right" => style::MarkerShape::TriangleRight,
-            _ => {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+pub fn extract_marker<C>(
+    py_marker: &Bound<'_, PyAny>,
+    fill: Option<style::Fill<C>>,
+    stroke: Option<style::Stroke<C>>,
+) -> PyResult<style::Marker<C>>
+where
+    C: plotive::Color,
+{
+    let shape = getattr_not_none(py_marker, "shape")?
+        .map(|s| {
+            let s_str = s.extract::<&str>()?;
+            match s_str {
+                "circle" => Ok(style::MarkerShape::Circle),
+                "square" => Ok(style::MarkerShape::Square),
+                "diamond" => Ok(style::MarkerShape::Diamond),
+                "cross" => Ok(style::MarkerShape::Cross),
+                "plus" => Ok(style::MarkerShape::Plus),
+                "triangle-up" => Ok(style::MarkerShape::TriangleUp),
+                "triangle-down" => Ok(style::MarkerShape::TriangleDown),
+                "triangle-left" => Ok(style::MarkerShape::TriangleLeft),
+                "triangle-right" => Ok(style::MarkerShape::TriangleRight),
+                _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
                     "Unknown marker shape: {}",
                     s_str
-                )));
+                ))),
             }
-        };
-        marker.shape = shape;
-    }
+        })
+        .transpose()?
+        .unwrap_or_default();
 
-    if let Some(s) = getattr_not_none(py_marker, "size")? {
-        marker.size = s.extract::<f32>()?.into();
-    }
+    let size = getattr_not_none(py_marker, "size")?
+        .map(|s| s.extract::<f32>())
+        .transpose()?
+        .map(style::MarkerSize)
+        .unwrap_or_default();
 
-    if let Some(py_fill) = py_marker.getattr_opt("fill")? {
-        if py_fill.is_none() {
-            marker.fill = None;
-        } else {
-            let fill = extract_series_fill(&py_fill)?;
-            marker.fill = Some(fill);
-        }
-    }
 
-    if let Some(py_stroke) = py_marker.getattr_opt("stroke")? {
-        if py_stroke.is_none() {
-            marker.stroke = None;
-        } else {
-            let stroke = extract_series_stroke(&py_stroke)?;
-            marker.stroke = Some(stroke);
-        }
-    }
+    Ok(style::Marker {
+        shape,
+        size,
+        fill,
+        stroke,
+    })
+}
 
-    Ok(marker)
+pub fn extract_theme_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::theme::Marker> {
+    let fill = super::getattr_not_none(py_marker, "fill")?
+        .map(|py_fill| extract_theme_fill(&py_fill))
+        .transpose()?;
+    let stroke = super::getattr_not_none(py_marker, "stroke")?
+        .map(|py_stroke| extract_theme_stroke(&py_stroke))
+        .transpose()?;
+    extract_marker(py_marker, fill, stroke)
+}
+
+pub fn extract_series_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::series::Marker> {
+    let fill = super::getattr_not_none(py_marker, "fill")?
+        .map(|py_fill| extract_series_fill(&py_fill))
+        .transpose()?;
+    let stroke = super::getattr_not_none(py_marker, "stroke")?
+        .map(|py_stroke| extract_series_stroke(&py_stroke))
+        .transpose()?;
+    extract_marker(py_marker, fill, stroke)
 }
 
 pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
