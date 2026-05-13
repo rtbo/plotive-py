@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .style import Fill, Color
 
-from .style import Stroke, ThemeColor, ThemeMarker
+from .style import Pattern, Stroke
 from . import style
 
 
@@ -47,7 +47,7 @@ class Line(Annotation):
         slope: None | tuple[tuple[float, float], float] = None,
         two_points: None | tuple[tuple[float, float], tuple[float, float]] = None,
         stroke: None | Stroke = None,
-        pattern: None | str | list[float] = None,
+        pattern: None | Pattern = None,
         x_axis: str | None = None,
         y_axis: str | None = None,
         zpos: str = "below-series",
@@ -150,7 +150,7 @@ class Marker(Annotation):
         self,
         xy: tuple[float, float],
         *,
-        marker: style.Marker[ThemeColor] = ThemeMarker(),
+        marker: style.Marker = style.Marker(),
         x_axis: str | None = None,
         y_axis: str | None = None,
         zpos: str = "above-series",
@@ -161,7 +161,7 @@ class Marker(Annotation):
         ----------
         xy : tuple[float, float]
             Marker position.
-        marker : style.Marker[ThemeColor], default=ThemeMarker()
+        marker : style.Marker, default=style.Marker()
             Marker style.
         x_axis : str | None, default=None
             Target x-axis identifier.

@@ -1,6 +1,6 @@
 use pyo3::{prelude::*, types::PyTuple};
 
-use plotive::des;
+use plotive::{des, style};
 
 use crate::py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke};
 
@@ -32,7 +32,7 @@ pub fn extract_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::Annotation> {
             _ => {
                 return Err(pyo3::exceptions::PyValueError::new_err(
                     "zpos must be either 'below-series' or 'above-series'.",
-                ))
+                ));
             }
         }
     }
@@ -47,7 +47,7 @@ fn extract_line_annot(py_line: &Bound<'_, PyAny>) -> PyResult<des::annot::Line> 
         let x = py_x.extract::<f64>()?;
         des::annot::Line::vertical(x)
     } else if let Some(py_slope) = super::getattr_not_none(py_line, "slope")? {
-        let ((x,  y), slope) = py_slope.extract::<((f64, f64), f32)>()?;
+        let ((x, y), slope) = py_slope.extract::<((f64, f64), f32)>()?;
         des::annot::Line::slope(x, y, slope)
     } else if let Some(py_two_points) = super::getattr_not_none(py_line, "two_points")? {
         let ((x1, y1), (x2, y2)) = py_two_points.extract::<((f64, f64), (f64, f64))>()?;
@@ -55,11 +55,11 @@ fn extract_line_annot(py_line: &Bound<'_, PyAny>) -> PyResult<des::annot::Line> 
     } else {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "Line annotation must have either 'horizontal', 'vertical', 'slope' or 'two_points' attribute.",
-        ))
+        ));
     };
 
     if let Some(py_stroke) = super::getattr_not_none(py_line, "stroke")? {
-        let stroke = extract_theme_stroke(&py_stroke)?;
+        let stroke = extract_theme_stroke(&py_stroke, style::theme::Col::Foreground.into())?;
         annot = annot.with_stroke(stroke);
     }
 
@@ -70,14 +70,14 @@ fn extract_arrow_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Arro
     let x = py_annot.getattr("x")?.extract::<f64>()?;
     let y = py_annot.getattr("y")?.extract::<f64>()?;
     let dx = py_annot.getattr("dx")?.extract::<f32>()?;
-    let dy = py_annot.getattr("dy")?.extract::<f32  >()?;
+    let dy = py_annot.getattr("dy")?.extract::<f32>()?;
     let mut annot = des::annot::Arrow::new(x, y, dx, dy);
     if let Some(py_head_size) = super::getattr_not_none(py_annot, "head_size")? {
         let head_size = py_head_size.extract::<f32>()?;
         annot = annot.with_head_size(head_size);
     }
     if let Some(py_stroke) = super::getattr_not_none(py_annot, "stroke")? {
-        let stroke = extract_theme_stroke(&py_stroke)?;
+        let stroke = extract_theme_stroke(&py_stroke, style::theme::Col::Foreground.into())?;
         annot = annot.with_stroke(stroke);
     }
     Ok(annot)
@@ -121,7 +121,7 @@ fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Labe
         };
     }
     if let Some(py_color) = super::getattr_not_none(py_annot, "color")? {
-        let color = extract_theme_color(&py_color)?;
+        let color = extract_theme_color(&py_color, style::theme::Col::Foreground.into())?;
         annot = annot.with_color(color);
     }
     if let Some(py_angle) = super::getattr_not_none(py_annot, "angle")? {
@@ -140,12 +140,15 @@ fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Labe
         let fill = if py_fill.is_none() {
             None
         } else {
-            Some(extract_theme_color(&py_fill)?.into())
+            Some(extract_theme_color(&py_fill, style::theme::Col::Background.into())?.into())
         };
         let stroke = if py_stroke.is_none() {
             None
         } else {
-            Some(extract_theme_stroke(&py_stroke)?)
+            Some(extract_theme_stroke(
+                &py_stroke,
+                style::theme::Col::Foreground.into(),
+            )?)
         };
         annot = annot.with_frame(fill, stroke);
     }

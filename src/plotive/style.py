@@ -6,172 +6,93 @@ from ._rs import parse_color as _parse_color
 
 type Color = str | tuple[float, float, float] | tuple[float, float, float, float]
 """
-Named/CSS color string or RGB(A) tuple.
+Named string or Hex string or RGB(A) tuple.
 Tuples are expressed in sRGB color space with components in the [0, 1] interval.
+String can either be a named color from the CSS color specification, or the XKCD color survey,
+or a hex color code in the form "#RGB", "#RGBA", "#RRGGBB" or "#RRGGBBAA" (both lower and upper case hex accepted).
+
+Colors can be used either in the context of a theme (foreground, background, grid, etc.) or in the context of a series palette.
+In a theme context, color strings can also refer to theme color names ("background", "foreground", "grid", "legend-fill" and "legend-border").
+In a series palette context, color strings can also refer to a color in the series palette by index (e.g. "C0" for the first color, "C1" for the second etc.)
+The special string "auto" can be used in both contexts to refer to the default color for the context.
 """
 
-type ThemeColor = Color | str
-"""
-Color used in the context of a theme palette (grids, background, foreground, etc.).
-Can be a named/CSS color string, RGB(A) tuple as well as a reference to a theme color by name.
-Accepted theme colors are "background", "foreground", "grid", "legend-fill" and "legend-border".
-"""
-
-type SeriesColor = Color | str | int
-"""
-Color used in the context of a series palette.
-Can be a named/CSS color string, RGB(A) tuple as well as a reference to a series palette by index.
-If "auto", the color will be automatically assigned from the series palette based on the series index.
-Can also be an integer index referring to a color in the series palette.
-"""
-
-type Pattern = list[float] | Literal["solid", "dashed", "dotted", "dash-dot"]
+type Pattern = list[float | int] | Literal["solid", "dashed", "dotted", "dash-dot"]
 """Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
 
 
-class Fill[C = Color]:
+class Fill:
     """Type alias for fill colors."""
 
-    def __init__(self, color: C, *, opacity: float | None = None):
-        """Initialize a fill color."""
+    def __init__(self, color: Color = "auto", *, opacity: float | None = None):
+        """Initialize a fill color.
+
+        Parameters
+        ----------
+        color : Color, default="auto"
+            Fill color. "auto" means that the default color for the context will be used.
+        opacity : float | None, default=None
+            Fill opacity in the ``[0, 1]`` interval.
+            None means opaque.
+        """
         self.color = color
         self.opacity = opacity
 
-
-class ThemeFill(Fill[ThemeColor]):
-    def __init__(self, color: ThemeColor = "background", *, opacity: float | None = None):
-        """Initialize a fill color."""
-        super().__init__(color=color, opacity=opacity)
-
     @staticmethod
-    def _normalize(input: Fill[ThemeColor] | ThemeColor) -> Fill[ThemeColor]:
+    def _normalize(input: Fill | Color) -> Fill:
         """Normalize a fill specification to a ThemeFill object."""
         if isinstance(input, Fill):
-            return input
+            return Fill(color=input.color, opacity=input.opacity)
         else:
-            return ThemeFill(color=input)
+            return Fill(color=input)
 
 
-class SeriesFill(Fill[SeriesColor]):
-    def __init__(self, color: SeriesColor = "auto", *, opacity: float | None = None):
-        """Initialize a fill color."""
-        super().__init__(color=color, opacity=opacity)
-
-    @staticmethod
-    def _normalize(input: Fill[SeriesColor] | SeriesColor) -> Fill[SeriesColor]:
-        """Normalize a fill specification to a SeriesFill object."""
-        if isinstance(input, Fill):
-            return input
-        else:
-            return SeriesFill(color=input)
-
-
-class Stroke[C = Color]:
-    """Line stroke style.
-
-    Parameters
-    ----------
-    color : Color or ThemeColor or SeriesColor (depending on context)
-        Stroke color.
-    width : float, default=1.0
-        Stroke width in pixels.
-    pattern : Pattern | None, default=None
-        Dash pattern specification.
-    opacity : None | float, default=None
-        Stroke opacity in the ``[0, 1]`` interval.
-        None means opaque
-    """
+class Stroke:
+    """Line stroke style."""
 
     def __init__(
         self,
-        color: C,
+        color: Color = "auto",
         *,
-        width: float = 1.0,
-        pattern: None | Pattern = None,
-        opacity: None | float = None,
+        width: float | None = None,
+        pattern: Pattern | None = None,
+        opacity: float | None = None,
     ):
-        """Initialize a stroke style."""
-        self.color = color
-        self.width = width
-        self.pattern = pattern
-        self.opacity = opacity
+        """Initialize a stroke style.
 
 
-class ThemeStroke(Stroke[ThemeColor]):
-    """Line stroke style for theme elements.
-
-    Parameters
-    ----------
-    color : ThemeColor
-        Stroke color.
-    width : float, default=1.0
-        Stroke width in pixels.
-    pattern : Pattern | None, default=None
-        Dash pattern specification.
-    opacity : None | float, default=None
-        Stroke opacity in the ``[0, 1]`` interval.
-        None means opaque.
-    """
-
-    def __init__(
-        self,
-        color: ThemeColor = "foreground",
-        *,
-        width: float = 1.0,
-        pattern: None | Pattern = None,
-        opacity: None | float = None,
-    ):
-        """Initialize a stroke style."""
+        Parameters
+        ----------
+        color : Color, default="auto"
+            Stroke color. "auto" means that the default color for the context will be used.
+        width : float | None
+            Stroke width in pixels. None means that the default width for the context will be used.
+            (1.0 for theme strokes, 1.5 for series strokes)
+        pattern : Pattern | None, default=None
+            Dash pattern specification. None means solid line.
+        opacity : float | None, default=None
+            Stroke opacity in the ``[0, 1]`` interval.
+            None means opaque
+        """
         self.color = color
         self.width = width
         self.pattern = pattern
         self.opacity = opacity
 
     @staticmethod
-    def _normalize(input: Stroke[ThemeColor] | ThemeColor) -> Stroke[ThemeColor]:
+    def _normalize(
+        input: Stroke | Color, default_width: float
+    ) -> Stroke:
         """Normalize a stroke specification to a ThemeStroke object."""
         if isinstance(input, Stroke):
-            return input
+            return Stroke(
+                color=input.color,
+                width=input.width if input.width is not None else default_width,
+                pattern=input.pattern, # type: ignore[arg-type]
+                opacity=input.opacity,
+            )
         else:
-            return ThemeStroke(color=input)
-
-class SeriesStroke(Stroke[SeriesColor]):
-    """Line stroke style for series.
-
-    Parameters
-    ----------
-    color : SeriesColor
-        Stroke color.
-    width : float, default=1.5
-        Stroke width in pixels.
-    pattern : Pattern | None, default=None
-        Dash pattern specification.
-    opacity : None | float, default=None
-        Stroke opacity in the ``[0, 1]`` interval.
-        None means opaque.
-    """
-
-    def __init__(
-        self,
-        color: SeriesColor = "auto",
-        *,
-        width: float = 1.5,
-        pattern: None | Pattern = None,
-        opacity: None | float = None,
-    ):
-        """Initialize a stroke style."""
-        self.color = color
-        self.width = width
-        self.pattern = pattern
-        self.opacity = opacity
-
-    @staticmethod
-    def _normalize(input: Stroke[SeriesColor] | SeriesColor) -> Stroke[SeriesColor]:
-        """Normalize a stroke specification to a SeriesStroke object."""
-        if isinstance(input, Stroke):
-            return input
-        else:
-            return SeriesStroke(color=input)
+            return Stroke(color=input, width=default_width)
 
 
 type MarkerShape = Literal[
@@ -187,92 +108,17 @@ type MarkerShape = Literal[
 ]
 
 
-class Marker[C]:
+class Marker:
     """Marker style for scatter series."""
 
     def __init__(
         self,
-        shape: MarkerShape = "circle",
         *,
-        size: float = 8.5**2,
-        fill: None | Fill[C] = None,
-        stroke: None | Stroke[C] = None,
-    ):
-        """Initialize a marker style.
-
-        Parameters
-        ----------
-        shape : MarkerShape
-            Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
-        size : float, default=10.0
-            Marker size in pixels.
-        fill : Fill[C] | None, default=None
-            Marker fill color.
-        stroke : Stroke[C] | None, default=None
-            Marker stroke style.
-        """
-        self.shape = shape
-        self.size = size
-        self.fill = fill
-        self.stroke = stroke
-
-
-class ThemeMarker(Marker[ThemeColor]):
-    """Marker style for annotations"""
-
-    def __init__(
-        self,
         shape: MarkerShape = "circle",
-        *,
         size: float = 8.5**2,
-        fill: None | Fill[ThemeColor] | ThemeColor = "foreground",
-        stroke: None | Stroke[ThemeColor] | ThemeColor = "foreground",
-        color: None | ThemeColor = None,
-        fill_opacity: float | None = None,
-    ):
-        """Initialize a marker style.
-
-        Parameters
-        ----------
-        shape : MarkerShape
-            Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
-        size : float, default=8.5**2
-            Marker size. It is interpreted as an area, therefore the dimensions of markers are proportional to sqrt(size)
-        fill : Fill[ThemeColor] | ThemeColor | None, default="foreground"
-            Marker fill color.
-        stroke : Stroke[ThemeColor] | ThemeColor | None, default="foreground"
-            Marker stroke style.
-        color: ThemeColor | None, default=None
-            Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke
-        fill_opacity: float | None, default=None
-            Optional fill opacity in the [0, 1] interval. Overrides fill.opacity if fill
-        """
-        fill = ThemeFill._normalize(fill) if fill is not None else None
-        stroke = ThemeStroke._normalize(stroke) if stroke is not None else None
-        if color is not None:
-            if fill is None:
-                fill = ThemeFill(color=color)
-            else:
-                fill.color = color
-            if stroke is None:
-                stroke = ThemeStroke(color=color)
-            else:
-                stroke.color = color
-        if fill and fill_opacity is not None:
-            fill.opacity = fill_opacity
-        super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
-
-class SeriesMarker(Marker[SeriesColor]):
-    """Marker style for scatter series."""
-
-    def __init__(
-        self,
-        shape: MarkerShape = "circle",
-        *,
-        size: float = 8.5**2,
-        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
-        stroke: None | Stroke[SeriesColor] | SeriesColor = "auto",
-        color: None | ThemeColor = None,
+        fill: None | Fill | Color = "auto",
+        stroke: None | Stroke | Color = "auto",
+        color: None | Color = None,
         fill_opacity: None | float = None,
     ):
         """Initialize a marker style.
@@ -283,29 +129,30 @@ class SeriesMarker(Marker[SeriesColor]):
             Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
         size : float, default=10.0
             Marker size in pixels.
-        fill : Fill[C] | None, default=None
+        fill : Fill | None, default="auto"
             Marker fill color.
-        stroke : Stroke[C] | None, default=None
+        stroke : Stroke | Color | None, default="auto"
             Marker stroke style.
-        color: SeriesColor | None, default=None
-            Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke
+        color: Color | None, default=None
+            Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke and colors
         fill_opacity: float | None, default=None
-            Optional fill opacity in the [0, 1] interval. Overrides fill.opacity if fill
+            Optional shorthand fill opacity in the [0, 1] interval. Overrides fill.opacity if fill is not None.
         """
-        fill = SeriesFill._normalize(fill) if fill is not None else None
-        stroke = SeriesStroke._normalize(stroke) if stroke is not None else None
+        self.shape = shape
+        self.size = size
+        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
         if color is not None:
-            if fill is None:
-                fill = SeriesFill(color=color)
+            if self.fill is None:
+                self.fill = Fill(color=color)
             else:
-                fill.color = color
-            if stroke is None:
-                stroke = SeriesStroke(color=color)
+                self.fill.color = color
+            if self.stroke is None:
+                self.stroke = Stroke(color=color)
             else:
-                stroke.color = color
-        if fill and fill_opacity is not None:
-            fill.opacity = fill_opacity
-        super().__init__(shape=shape, size=size, fill=fill, stroke=stroke)
+                self.stroke.color = color
+        if self.fill and fill_opacity is not None:
+            self.fill.opacity = fill_opacity
 
 
 class ThemePalette:
@@ -319,10 +166,10 @@ class ThemePalette:
         Main foreground color.
     grid : Color | None, default=None
         Grid line color.
-    axis : Color | None, default=None
-        Axis line and tick color.
-    text : Color | None, default=None
-        Text color.
+    legend-fill : Color | None, default=None
+        Legend fill color.
+    legend-border : Color | None, default=None
+        Legend border color.
     """
 
     def __init__(
@@ -331,15 +178,15 @@ class ThemePalette:
         background: None | Color = None,
         foreground: None | Color = None,
         grid: None | Color = None,
-        axis: None | Color = None,
-        text: None | Color = None,
+        legend_fill: None | Color = None,
+        legend_border: None | Color = None,
     ):
         """Initialize a theme palette."""
         self.background = background
         self.foreground = foreground
         self.grid = grid
-        self.axis = axis
-        self.text = text
+        self.legend_fill = legend_fill
+        self.legend_border = legend_border
 
 
 type Theme = ThemePalette | str
@@ -370,7 +217,10 @@ class Style:
         self.theme = theme
         self.palette = palette
 
-def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, SeriesColor | None]:
+
+def _parse_mpl_style(
+    mpl_style: str,
+) -> tuple[MarkerShape | None, Pattern | None, Color | None]:
     from ._rs import parse_color as rs_parse_color
 
     try:
@@ -392,7 +242,9 @@ def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, Se
     def set_pattern(new_pattern):
         nonlocal pattern
         if pattern is not None:
-            raise ValueError(f"Multiple marker patterns specified in style: {mpl_style}")
+            raise ValueError(
+                f"Multiple marker patterns specified in style: {mpl_style}"
+            )
         pattern = new_pattern
 
     def set_color(new_color):
@@ -404,7 +256,7 @@ def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, Se
     i = 0
     while i < len(mpl_style):
         if i + 1 < len(mpl_style):
-            c2 = mpl_style[i:i+2]
+            c2 = mpl_style[i : i + 2]
             if c2 == "--":
                 set_pattern("dashed")
                 i += 2
@@ -448,28 +300,28 @@ def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, Se
             set_pattern("dotted")
             i += 1
         elif c == "b":
-            set_color('#0000ff')
+            set_color("#0000ff")
             i += 1
         elif c == "g":
-            set_color('#008000')
+            set_color("#008000")
             i += 1
         elif c == "r":
-            set_color('#ff0000')
+            set_color("#ff0000")
             i += 1
         elif c == "c":
-            set_color('#00bfbf')
+            set_color("#00bfbf")
             i += 1
         elif c == "m":
-            set_color('#bf00bf')
+            set_color("#bf00bf")
             i += 1
         elif c == "y":
-            set_color('#bfbf00')
+            set_color("#bfbf00")
             i += 1
         elif c == "k":
-            set_color('#000000')
+            set_color("#000000")
             i += 1
         elif c == "w":
-            set_color('#ffffff')
+            set_color("#ffffff")
             i += 1
         elif c == "C":
             i += 1
@@ -485,6 +337,8 @@ def _parse_mpl_style(mpl_style: str) -> tuple[MarkerShape | None, str | None, Se
                 set_color(rs_parse_color(mpl_style[i:]))
                 break
             except ValueError:
-                raise ValueError(f"Unrecognized style component '{c}' in style: {mpl_style}")
+                raise ValueError(
+                    f"Unrecognized style component '{c}' in style: {mpl_style}"
+                )
 
     return (shape, pattern, color)

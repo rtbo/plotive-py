@@ -1,7 +1,5 @@
 """High-level public API for building and exporting Plotive figures."""
 
-from dataclasses import dataclass
-
 from .style import *
 
 from .annot import Annotation
@@ -28,8 +26,8 @@ class Legend:
         self,
         pos: str,
         *,
-        fill: ThemeFill | ThemeColor | None = ThemeFill("legend-fill", opacity=0.5),
-        border: Stroke | str = "foreground",
+        fill: Fill | Color | None = Fill("legend-fill", opacity=0.5),
+        border: Stroke | str | None = "foreground",
         columns: None | int = None,
         margin: float = 12,
         padding: Padding = 8,
@@ -45,7 +43,7 @@ class Legend:
             "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
             "in-top", "in-bottom", "in-left" and "in-right".
             "auto" is also accepted for default position at the bottom.
-        fill: ThemeFill | ThemeColor | None, default=ThemeFill("legend-fill", opacity=0.5)
+        fill: Fill | Color | None, default=Fill("legend-fill", opacity=0.5)
             Legend background fill.
         border : Stroke | str, default="foreground"
             Stroke style of the legend border.
@@ -60,12 +58,23 @@ class Legend:
             Spacing between legend entries (horizontal, vertical).
         """
         self.pos = pos
-        self.fill = fill and ThemeFill._normalize(fill)
-        self.border = border
+        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
         self.columns = columns
         self.margin = margin
         self.padding = padding
         self.spacing = spacing
+
+    @staticmethod
+    def _normalize(input: Legend | str, default_pos: str) -> Legend:
+        if isinstance(input, Legend):
+            return input
+        elif isinstance(input, str):
+            if input == "auto":
+                input = default_pos
+            return Legend(pos=input)
+        else:
+            raise ValueError(f"Invalid legend config: {input!r}")
 
 
 class ColorBar:
@@ -75,7 +84,7 @@ class ColorBar:
         *,
         width: float = 20.0,
         title: str | None = None,
-        border: ThemeStroke | ThemeColor | None = "foreground",
+        border: Stroke | Color | None = "foreground",
         ticks: None | axis.TicksLocator | list[float] | list[int] = None,
         margin: float = 12.0,
     ):
@@ -84,7 +93,7 @@ class ColorBar:
         self.pos = pos
         self.width = width
         self.title = title
-        self.border = ThemeStroke._normalize(border) if border is not None else None
+        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
         self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
         self.margin = margin
 
@@ -124,6 +133,7 @@ class Plot:
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
         title: None | str = None,
+        fill: None | Fill | Color = None,
         legend: None | Legend | str = None,
         colorbar: None | ColorBar | str = None,
         annotations: list[Annotation] = [],
@@ -148,6 +158,8 @@ class Plot:
             Only relevant when multiple plots are defined in the same figure.
         title : str | None, default=None
             Subplot title.
+        fill : Fill | Color | None, default=None
+            Background fill for the plot area.
         legend : Legend | str | None, default=None
             Subplot legend config or shortcut position.
         colorbar : ColorBar | None | str, default=None
@@ -168,12 +180,9 @@ class Plot:
         else:
             self.series = [series]
 
-        if isinstance(legend, str):
-            if legend == "auto":
-                legend = "out-bottom"
-            self.legend = Legend(pos=legend)
-        else:
-            self.legend = legend
+        self.legend = Legend._normalize(legend, default_pos="out-bottom") if legend is not None else None
+
+        self.fill = Fill._normalize(fill) if fill is not None else None
 
         self.colorbar = ColorBar._normalize(colorbar) if colorbar is not None else None
 
@@ -238,7 +247,7 @@ class Figure:
         title: None | str = None,
         size: None | Size = (800, 600),
         padding: None | Padding = 20.0,
-        fill: None | ThemeFill | ThemeColor = "background",
+        fill: None | Fill | Color = "background",
         legend: None | Legend | str = None,
         plot: None | Plot = None,
         plots: None | list[Plot] = None,
@@ -253,7 +262,7 @@ class Figure:
             Output size in pixels.
         padding : Padding | None, default=20.0
             Figure inner padding.
-        fill : ThemeFill | ThemeColor | None, default="background"
+        fill : Fill | Color | None, default="background"
             Figure background fill.
         legend : Legend | str | None, default=None
             Figure-level legend config or shortcut position.
@@ -277,11 +286,8 @@ class Figure:
         self.title = title
         self.size = size
         self.padding = padding
-        self.fill = fill and ThemeFill._normalize(fill)
-        if isinstance(legend, str):
-            self.legend = Legend(pos=legend)
-        else:
-            self.legend = legend
+        self.fill = fill and Fill._normalize(fill)
+        self.legend = Legend._normalize(legend, default_pos="bottom") if legend is not None else None
 
     def render_pxl(
         self, *, data_source: None | DataSource = None, style: None | Style | str = None

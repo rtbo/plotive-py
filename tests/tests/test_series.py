@@ -60,10 +60,10 @@ def test_series_scatter():
     series = pv.series.Scatter(
         x=x,
         y=y,
-        marker=pv.style.SeriesMarker(
+        marker=pv.Marker(
             size=24**2,
-            fill=pv.style.SeriesFill(color, opacity=0.6),
-            stroke=pv.style.SeriesStroke(color),
+            color = color,
+            fill_opacity=0.6,
         ),
     )
     plot = pv.Plot(series)
@@ -82,9 +82,10 @@ def test_series_scatter_sizes():
         x=x,
         y=y,
         sizes=sizes,
-        marker=pv.style.SeriesMarker(
-            fill=pv.style.SeriesFill(color, opacity=0.6),
-            stroke=pv.style.SeriesStroke(color, width=2.0),
+        marker=pv.Marker(
+            stroke=pv.Stroke(width=2.0),
+            color=color,
+            fill_opacity=0.6,
         ),
     )
     plot = pv.Plot(series)
@@ -101,7 +102,7 @@ def test_series_scatter_colors():
         x=x,
         y=y,
         colors=colors,
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/scatter-colors")
@@ -117,7 +118,7 @@ def test_series_scatter_colors_stellar():
         y=y,
         colors=colors,
         cmap="stellar",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/scatter-colors-stellar")

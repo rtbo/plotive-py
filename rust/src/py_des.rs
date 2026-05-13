@@ -1,4 +1,4 @@
-use plotive::{des, geom};
+use plotive::{des, geom, style};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
@@ -201,7 +201,7 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     }
 
     if let Some(py_grid) = getattr_not_none(py_axis, "grid")? {
-        let stroke = extract_theme_stroke(&py_grid)?;
+        let stroke = extract_theme_stroke(&py_grid, style::theme::Col::Grid.into())?;
         axis = axis.with_grid(stroke.into());
     }
 
@@ -212,7 +212,7 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     }
 
     if let Some(py_minor_grid) = getattr_not_none(py_axis, "minor_grid")? {
-        let stroke = extract_theme_stroke(&py_minor_grid)?;
+        let stroke = extract_theme_stroke(&py_minor_grid, style::theme::Col::Grid.into())?;
         axis = axis.with_minor_grid(stroke.into());
     }
 
@@ -228,11 +228,15 @@ fn extract_legend<P: Default>(py_legend: &Bound<'_, PyAny>, pos: P) -> PyResult<
         let padding = extract_padding(&py_padding)?;
         legend = legend.with_padding(padding);
     }
-    let fill = py_legend
-        .getattr_opt("fill")?
-        .map(|f| extract_theme_fill(&f))
+    let fill = getattr_not_none(py_legend, "fill")?
+        .map(|f| extract_theme_fill(&f, style::theme::Col::LegendFill.into()))
         .transpose()?;
     legend = legend.with_fill(fill);
+
+    let border = getattr_not_none(py_legend, "border")?
+        .map(|b| extract_theme_stroke(&b, style::theme::Col::LegendBorder.into()))
+        .transpose()?;
+    legend = legend.with_border(border);
 
     if let Some(py_spacing) = getattr_not_none(py_legend, "spacing")? {
         if let Ok(spacing) = py_spacing.extract::<f32>() {
@@ -335,7 +339,7 @@ fn extract_colorbar(py_cbar: &Bound<'_, PyAny>) -> PyResult<des::ColorBar> {
     }
 
     if let Some(py_border) = getattr_not_none(py_cbar, "border")? {
-        let border = extract_theme_stroke(&py_border)?;
+        let border = extract_theme_stroke(&py_border, style::theme::Col::Foreground.into())?;
         cbar = cbar.with_border(border.into());
     }
 
@@ -376,6 +380,11 @@ fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
     if !py_title.is_none() {
         let title: String = py_title.extract()?;
         plot = plot.with_title(title.into());
+    }
+
+    if let Some(py_fill) = getattr_not_none(py_plot, "fill")? {
+        let fill = extract_theme_fill(&py_fill, style::theme::Col::Background.into())?;
+        plot = plot.with_fill(fill.into());
     }
 
     let py_x_axes = py_plot.getattr("x_axes")?;
@@ -510,7 +519,7 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
 
     let fill = py_fig
         .getattr_opt("fill")?
-        .map(|f| extract_theme_fill(&f))
+        .map(|f| extract_theme_fill(&f, style::theme::Col::Background.into()))
         .transpose()?;
 
     let mut fig = des::Figure::new(plots).with_fill(fill);

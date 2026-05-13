@@ -6,10 +6,9 @@ import numpy as np
 
 if TYPE_CHECKING:
     from datetime import datetime
-    from .style import SeriesColor
     from . import axis
 
-from .style import Color, Fill, Marker, SeriesFill, SeriesMarker, SeriesStroke, Stroke, _parse_mpl_style
+from .style import Color, Fill, Marker, Stroke, _parse_mpl_style
 
 type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
@@ -56,9 +55,9 @@ class Line(Series):
         x: DataCol,
         y: DataCol,
         *,
-        line: Stroke[SeriesColor] | SeriesColor = SeriesStroke(),
+        line: Stroke | Color = "auto",
         interpolation: None | str = None,
-        marker: Marker[SeriesColor] | None = None,
+        marker: Marker | None = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
@@ -73,11 +72,11 @@ class Line(Series):
             X values or x data source reference.
         y : DataCol
             Y values or y data source reference.
-        line : Stroke[SeriesColor] | SeriesColor, default=SeriesStroke()
+        line : Stroke | Color, default="auto"
             Line stroke style or color.
         interpolation : str | None, default=None
             Interpolation mode for rendering.
-        marker : Marker[SeriesColor] | None, default=None
+        marker : Marker | None, default=None
             Marker style. If None, no marker will be rendered.
         name : str | None, default=None
             Legend/display name of the series.
@@ -94,7 +93,7 @@ class Line(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
         self.y = y
-        self.line = SeriesStroke._normalize(line)
+        self.line = Stroke._normalize(line, default_width=1.5)
         self.interpolation = interpolation
         self.marker = marker
         self.style = style
@@ -102,7 +101,7 @@ class Line(Series):
             marker_shape, line_pattern, line_color = _parse_mpl_style(style)
             if marker_shape is not None:
                 if self.marker is None:
-                    self.marker = SeriesMarker(shape=marker_shape)
+                    self.marker = Marker(shape=marker_shape)
                 else:
                     self.marker.shape = marker_shape
             if line_pattern is not None:
@@ -173,7 +172,7 @@ class Scatter(Series):
         x: DataCol,
         y: DataCol,
         *,
-        marker: Marker[SeriesColor] = SeriesMarker(),
+        marker: Marker | None = None,
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
         cmap: None | ColorMap | list[Color] | str = "viridis",
@@ -203,7 +202,7 @@ class Scatter(Series):
              - If a string is provided, it will be interpreted as a named colormap and used to create a ColorMap with default settings.
              - If None, a default colormap will be used if `colors` is specified, otherwise no colormap will be applied.
             Ignored if `colors` is not specified.
-        marker : Marker[SeriesColor], default=SeriesMarker()
+        marker : Marker, default=None
             Marker style. If None, the marker will be automatically assigned based on the series palette.
         name : str | None, default=None
             Legend/display name of the series.
@@ -216,10 +215,11 @@ class Scatter(Series):
         self.x = x
         self.y = y
         self.sizes = sizes
-        self.marker = marker
+        self.marker = marker if marker is not None else Marker()
         self.colors = colors
         assert not (self.colors is not None and cmap is None), "cmap must be specified if colors are provided"
         self.cmap = ColorMap._normalize(cmap) if cmap is not None else None
+        print(f"Marker: {self.marker!r}")
 
 
 class Area(Series):
@@ -235,9 +235,9 @@ class Area(Series):
         y1: DataCol,
         y2: DataCol | float = 0,
         *,
-        fill: Fill[SeriesColor] | SeriesColor = SeriesFill(),
-        y1_line: Stroke[SeriesColor] | SeriesColor | None = None,
-        y2_line: Stroke[SeriesColor] | SeriesColor | None = None,
+        fill: Fill | Color = "auto",
+        y1_line: Stroke | Color | None = None,
+        y2_line: Stroke | Color | None = None,
         y1_interpolation: None | str = None,
         y2_interpolation: None | str = None,
         interpolation: None | str = None,
@@ -255,11 +255,11 @@ class Area(Series):
             Y1 values or y1 data source reference.
         y2 : DataCol | float, default=0
             Y2 values or y2 data source reference. Can be a constant value.
-        fill : SeriesFill | SeriesColor, default=SeriesFill()
+        fill : Fill | Color, default="auto"
             Area fill style or color.
-        y1_line : SeriesStroke | SeriesColor, default=SeriesStroke()
+        y1_line : Stroke | Color | None, default=None
             Area outline stroke style or color for Y1.
-        y2_line : SeriesStroke | SeriesColor, default=SeriesStroke()
+        y2_line : Stroke | Color | None, default=None
             Area outline stroke style or color for Y2.
         y1_interpolation : str | None, default=None
             Interpolation mode for y1 rendering. If None, defaults to the value of `interpolation`.
@@ -279,9 +279,9 @@ class Area(Series):
         self.x = x
         self.y1 = y1
         self.y2 = y2
-        self.fill = SeriesFill._normalize(fill)
-        self.y1_line = SeriesStroke._normalize(y1_line) if y1_line is not None else None
-        self.y2_line = SeriesStroke._normalize(y2_line) if y2_line is not None else None
+        self.fill = Fill._normalize(fill)
+        self.y1_line = Stroke._normalize(y1_line, default_width=1.5) if y1_line is not None else None
+        self.y2_line = Stroke._normalize(y2_line, default_width=1.5) if y2_line is not None else None
         self.y1_interpolation = y1_interpolation or interpolation
         self.y2_interpolation = y2_interpolation or interpolation
 
@@ -291,8 +291,8 @@ class Histogram(Series):
         self,
         data: DataCol,
         *,
-        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
-        outline: None | Stroke[SeriesColor] | SeriesColor = None,
+        fill: None | Fill | Color = "auto",
+        outline: None | Stroke | Color = None,
         bins: int = 10,
         density: bool = False,
         name: None | str = None,
@@ -301,8 +301,8 @@ class Histogram(Series):
     ):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.data = data
-        self.fill = SeriesFill._normalize(fill) if fill is not None else None
-        self.outline = SeriesStroke._normalize(outline) if outline is not None else None
+        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.outline = Stroke._normalize(outline, default_width=1.5) if outline is not None else None
         self.bins = bins
         self.density = density
 
@@ -313,8 +313,8 @@ class Bars(Series):
         x: DataCol,
         y: DataCol,
         *,
-        fill: None | Fill[SeriesColor] | SeriesColor = "auto",
-        outline: None | Stroke[SeriesColor] | SeriesColor = None,
+        fill: None | Fill | Color = "auto",
+        outline: None | Stroke | Color = None,
         bars_offset=0.3,
         bars_width=0.4,
         name: None | str = None,
@@ -324,7 +324,7 @@ class Bars(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
         self.y = y
-        self.fill = SeriesFill._normalize(fill) if fill is not None else None
-        self.outline = SeriesStroke._normalize(outline) if outline is not None else None
+        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.outline = Stroke._normalize(outline, default_width=1.5) if outline is not None else None
         self.bars_offset = bars_offset
         self.bars_width = bars_width

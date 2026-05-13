@@ -1,6 +1,6 @@
 """Axis configuration primitives, tick locators, and formatters."""
 
-from .style import Stroke, ThemeStroke, ThemeColor
+from .style import Color, Pattern, Stroke
 
 type AxisRef = str | int
 """
@@ -356,22 +356,22 @@ class Ticks:
             raise ValueError(f"Invalid ticks specification: {input}")
 
 
-class Grid(ThemeStroke):
+class Grid(Stroke):
     """Major grid configuration for an axis"""
 
     def __init__(
         self,
         *,
-        color: ThemeColor = "grid",
+        color: Color = "grid",
         width: float = 1.0,
-        pattern: None | list[float] | str = None,
+        pattern: None | Pattern = "solid",
         opacity: float = 0.6,
     ):
         """Initialize a grid style."""
         super().__init__(color=color, width=width, pattern=pattern, opacity=opacity)
 
     @staticmethod
-    def _normalize(grid: Grid | Stroke[ThemeColor] | str):
+    def _normalize(grid: Grid | Stroke | str):
         if isinstance(grid, Grid):
             return grid
         elif isinstance(grid, Stroke):
@@ -385,22 +385,22 @@ class Grid(ThemeStroke):
             raise ValueError(f"Invalid grid specification: {grid}")
 
 
-class MinorGrid(ThemeStroke):
+class MinorGrid(Stroke):
     """Minor grid configuration for an axis"""
 
     def __init__(
         self,
         *,
-        color: ThemeColor = "grid",
+        color: Color = "grid",
         width: float = 0.5,
-        pattern: None | list[float] | str = [5.0, 5.0],
+        pattern: None | Pattern = "dashed",
         opacity: float = 0.6,
     ):
         """Initialize a grid style."""
         super().__init__(color=color, width=width, pattern=pattern, opacity=opacity)
 
     @staticmethod
-    def _normalize(grid: MinorGrid | Stroke[ThemeColor] | str):
+    def _normalize(grid: MinorGrid | Stroke | str):
         if isinstance(grid, MinorGrid):
             return grid
         elif isinstance(grid, Stroke):
@@ -422,13 +422,13 @@ class Axis:
         *,
         title: str | None = None,
         id: str | None = None,
-        scale: Scale | str | Range = AutoScale(),
+        scale: Scale | str | Range = "auto",
         opposite_side: bool | None = None,
         side: str | None = None,
         ticks: Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str | None = None,
-        grid: Grid | Stroke[ThemeColor] | str | None = None,
+        grid: Grid | Stroke | str | None = None,
         minor_ticks: TicksLocator | str | None = None,
-        minor_grid: MinorGrid | Stroke[ThemeColor] | str | None = None,
+        minor_grid: MinorGrid | Stroke | str | None = None,
     ):
         """Initialize an axis and normalize rendering options.
 
@@ -438,7 +438,7 @@ class Axis:
             Axis title.
         id : str | None, default=None
             Axis identifier.
-        scale : Scale | str, default=AutoScale()
+        scale : Scale | str | Range, default="auto"
             Scale strategy or string shortcut.
         opposite_side : bool | None, default=None
             Put axis on the opposite side.

@@ -32,21 +32,33 @@ def test_annot_markers():
         pv.series.Line(x=x, y=y),
         annotations=[
             pv.annot.Marker(
+                (0.2, 0.2),
+                marker=pv.Marker(shape="triangle-up", color="purple", size=12**2),
+                zpos="above-series",
+            ),
+            pv.annot.Marker(
                 (0.5, 0.5),
-                marker=pv.style.ThemeMarker(shape="square", color="purple", size=12**2),
+                marker=pv.Marker(shape="square", color="purple", size=14**2),
+                zpos="below-series",
+            ),
+            pv.annot.Marker(
+                (0.8, 0.8),
+                marker=pv.Marker(shape="triangle-down", color="purple", size=16**2),
+                zpos="above-series",
             ),
             pv.annot.Marker(
                 (0.2, 0.8),
-                marker=pv.style.ThemeMarker(
+                marker=pv.Marker(
                     shape="diamond",
                     size=24**2,
-                    stroke=pv.Stroke(color="indian red", width=2),
-                    fill=pv.Fill(color="indian red", opacity=0.5),
+                    stroke=pv.Stroke(width=2),
+                    color="indian red",
+                    fill_opacity=0.5,
                 ),
             ),
             pv.annot.Marker(
                 (0.8, 0.2),
-                marker=pv.style.ThemeMarker(shape="circle", color="purple", size=12**2),
+                marker=pv.Marker(shape="circle", color="purple", size=12**2, fill_opacity=0.5),
             ),
         ],
     )

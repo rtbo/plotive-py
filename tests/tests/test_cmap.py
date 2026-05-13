@@ -13,7 +13,7 @@ def test_cmap_default():
         x=x,
         y=y,
         colors=colors,
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series, colorbar="auto")
     assert_fig_eq_ref(fig_small(plot), "cmap/default")
@@ -30,7 +30,7 @@ def test_cmap_viridis():
         y=y,
         colors=colors,
         cmap="viridis",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series, colorbar="auto")
     assert_fig_eq_ref(fig_small(plot), "cmap/default")
@@ -47,7 +47,7 @@ def test_cmap_stellar():
         y=y,
         colors=colors,
         cmap="stellar",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "cmap/stellar")
@@ -63,7 +63,7 @@ def test_cmap_stellar_noscale():
         y=y,
         colors=colors,
         cmap=pv.series.ColorMap("stellar", scale=None),
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "cmap/stellar")

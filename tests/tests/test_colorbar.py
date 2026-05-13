@@ -15,7 +15,7 @@ def test_colorbar_pos():
         y=y,
         colors=colors,
         cmap="viridis",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
 
     def test(pos, ref):
@@ -40,7 +40,7 @@ def test_colorbar_with_axes():
         y=y,
         colors=colors,
         cmap="viridis",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
 
     def test(pos, ref):
@@ -69,7 +69,7 @@ def test_colorbar_with_axes_title():
         y=y,
         colors=colors,
         cmap="viridis",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
 
     def test(pos, ref):
@@ -98,7 +98,7 @@ def test_colorbar_title_with_axes_title():
         y=y,
         colors=colors,
         cmap="viridis",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
 
     def test(pos, ref):
@@ -128,7 +128,7 @@ def test_colorbar_stellar_ticks():
         y=y,
         colors=colors,
         cmap="stellar",
-        marker=pv.style.SeriesMarker(size=16**2),
+        marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series, colorbar=pv.ColorBar(ticks=pv.STELLAR_TICKS))
     assert_fig_eq_ref(fig_small(plot), "colorbar/stellar-ticks")

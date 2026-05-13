@@ -1,3 +1,5 @@
+use std::fmt;
+
 use plotive::style;
 use plotive::{Rgb8, Rgba8, color};
 
@@ -47,6 +49,19 @@ pub fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series
         if col == "auto" {
             return Ok(style::series::Color::Auto);
         }
+        let colb = col.as_bytes();
+        if colb.len() > 1 && colb[0] == b'C' && colb[1].is_ascii_digit() {
+            let index_str = std::str::from_utf8(&colb[1..]).unwrap();
+            let index = index_str.parse::<usize>().map_err(|e| {
+                pyo3::exceptions::PyValueError::new_err(format!(
+                    "Invalid color string '{}': {}",
+                    col, e
+                ))
+            })?;
+            return Ok(style::series::Color::Index(style::series::IndexColor(
+                index,
+            )));
+        }
     }
     if let Ok(col) = py_col.extract::<usize>() {
         return Ok(style::series::Color::Index(style::series::IndexColor(col)));
@@ -55,9 +70,13 @@ pub fn extract_series_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::series
     Ok(color.into())
 }
 
-pub fn extract_theme_color(py_col: &Bound<'_, PyAny>) -> PyResult<style::theme::Color> {
+pub fn extract_theme_color(
+    py_col: &Bound<'_, PyAny>,
+    auto: style::theme::Color,
+) -> PyResult<style::theme::Color> {
     if let Ok(col) = py_col.extract::<&str>() {
         match col {
+            "auto" => return Ok(auto),
             "background" => return Ok(style::theme::Col::Background.into()),
             "foreground" => return Ok(style::theme::Col::Foreground.into()),
             "grid" => return Ok(style::theme::Col::Grid.into()),
@@ -81,14 +100,17 @@ fn extract_fill<C: plotive::Color>(
     Ok(style::Fill::Solid { color, opacity })
 }
 
-pub fn extract_theme_fill(py_fill: &Bound<'_, PyAny>) -> PyResult<style::theme::Fill> {
+pub fn extract_theme_fill(
+    py_fill: &Bound<'_, PyAny>,
+    auto: style::theme::Color,
+) -> PyResult<style::theme::Fill> {
     let py_color = py_fill.getattr("color")?;
     if py_color.is_none() {
         return Err(pyo3::exceptions::PyValueError::new_err(format!(
             "\"color\" attribute is required for fill.",
         )));
     }
-    let color = extract_theme_color(&py_color)?;
+    let color = extract_theme_color(&py_color, auto)?;
     extract_fill(py_fill, color)
 }
 
@@ -148,14 +170,17 @@ fn extract_stroke<C: plotive::Color>(
     })
 }
 
-pub fn extract_theme_stroke(py_stroke: &Bound<'_, PyAny>) -> PyResult<style::theme::Stroke> {
+pub fn extract_theme_stroke(
+    py_stroke: &Bound<'_, PyAny>,
+    auto_col: style::theme::Color,
+) -> PyResult<style::theme::Stroke> {
     let py_color = py_stroke.getattr("color")?;
     if py_color.is_none() {
         return Err(pyo3::exceptions::PyValueError::new_err(format!(
             "\"color\" attribute is required for stroke.",
         )));
     }
-    let color = extract_theme_color(&py_color)?;
+    let color = extract_theme_color(&py_color, auto_col)?;
     extract_stroke(py_stroke, color)
 }
 
@@ -176,7 +201,7 @@ pub fn extract_marker<C>(
     stroke: Option<style::Stroke<C>>,
 ) -> PyResult<style::Marker<C>>
 where
-    C: plotive::Color,
+    C: plotive::Color + fmt::Debug,
 {
     let shape = getattr_not_none(py_marker, "shape")?
         .map(|s| {
@@ -216,10 +241,10 @@ where
 
 pub fn extract_theme_marker(py_marker: &Bound<'_, PyAny>) -> PyResult<style::theme::Marker> {
     let fill = super::getattr_not_none(py_marker, "fill")?
-        .map(|py_fill| extract_theme_fill(&py_fill))
+        .map(|py_fill| extract_theme_fill(&py_fill, style::theme::Col::Foreground.into()))
         .transpose()?;
     let stroke = super::getattr_not_none(py_marker, "stroke")?
-        .map(|py_stroke| extract_theme_stroke(&py_stroke))
+        .map(|py_stroke| extract_theme_stroke(&py_stroke, style::theme::Col::Foreground.into()))
         .transpose()?;
     extract_marker(py_marker, fill, stroke)
 }

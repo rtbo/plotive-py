@@ -165,7 +165,7 @@ def test_axes_minor_grid():
 def test_axes_categories():
     x = ["a", "b", "c"]
     y = [1, 1.4, 3]
-    series = pv.series.Bars(x, y, fill="transparent", outline=pv.style.SeriesStroke())
+    series = pv.series.Bars(x, y, fill="transparent", outline=pv.Stroke())
     plot = pv.Plot(series=[series], x_axis=pv.Axis(ticks=pv.axis.Ticks()))
     fig = fig_small(plot)
 
