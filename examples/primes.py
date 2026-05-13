@@ -30,7 +30,7 @@ if __name__ == "__main__":
                     x = "x",
                     y = "y",
                     name = "1000 Prime Numbers",
-                    interpolation = "step",
+                    interp = "step",
                 )
             ],
             x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),

@@ -17,7 +17,7 @@ In a series palette context, color strings can also refer to a color in the seri
 The special string "auto" can be used in both contexts to refer to the default color for the context.
 """
 
-type Pattern = list[float | int] | Literal["solid", "dashed", "dotted", "dash-dot"]
+type Pattern = list[float] | list[int] | Literal["solid", "dashed", "dotted", "dash-dot"]
 """Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
 
 

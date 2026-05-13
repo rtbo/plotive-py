@@ -108,7 +108,7 @@ fn extract_base(
     Ok((name, x_axis, y_axis))
 }
 
-fn interpolation_from_str(interp_str: &str) -> PyResult<des::series::Interpolation> {
+fn interp_from_str(interp_str: &str) -> PyResult<des::series::Interpolation> {
     match interp_str {
         "linear" => Ok(des::series::Interpolation::Linear),
         "step-early" => Ok(des::series::Interpolation::StepEarly),
@@ -182,16 +182,16 @@ fn extract_line_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         line = line.with_y_axis(y_axis);
     }
 
-    if let Some(line_style) = getattr_not_none(py_ser, "line")? {
-        line = line.with_line(extract_series_stroke(&line_style)?);
+    if let Some(line_style) = getattr_not_none(py_ser, "stroke")? {
+        line = line.with_stroke(extract_series_stroke(&line_style)?);
     }
 
     if let Some(marker) = getattr_not_none(py_ser, "marker")? {
         line = line.with_marker(extract_series_marker(&marker)?);
     }
 
-    if let Some(py_interp) = getattr_not_none(py_ser, "interpolation")? {
-        let interp = interpolation_from_str(py_interp.extract()?)?;
+    if let Some(py_interp) = getattr_not_none(py_ser, "interp")? {
+        let interp = interp_from_str(py_interp.extract()?)?;
         line = line.with_interpolation(interp);
     }
 
@@ -242,8 +242,8 @@ pub fn extract_area_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         des::series::AreaY2::Baseline(baseline)
     } else {
         let y2_data = extract_data_col(&y2)?;
-        let y2_interp = getattr_not_none(py_ser, "y2_interpolation")?
-            .map(|py_interp| interpolation_from_str(py_interp.extract()?))
+        let y2_interp = getattr_not_none(py_ser, "y2_interp")?
+            .map(|py_interp| interp_from_str(py_interp.extract()?))
             .transpose()?
             .unwrap_or_default();
         des::series::AreaY2::DataCol(y2_data, y2_interp)
@@ -269,15 +269,15 @@ pub fn extract_area_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
             area = area.with_fill(Some(extract_series_fill(&py_fill)?));
         }
     }
-    if let Some(py_stroke) = getattr_not_none(py_ser, "y1_line")? {
-        area = area.with_y1_line(extract_series_stroke(&py_stroke)?);
+    if let Some(py_stroke) = getattr_not_none(py_ser, "y1_stroke")? {
+        area = area.with_y1_stroke(extract_series_stroke(&py_stroke)?);
     }
-    if let Some(py_stroke) = getattr_not_none(py_ser, "y2_line")? {
-        area = area.with_y2_line(extract_series_stroke(&py_stroke)?);
+    if let Some(py_stroke) = getattr_not_none(py_ser, "y2_stroke")? {
+        area = area.with_y2_stroke(extract_series_stroke(&py_stroke)?);
     }
-    if let Some(py_interp) = getattr_not_none(py_ser, "y1_interpolation")? {
-        let interp = interpolation_from_str(py_interp.extract()?)?;
-        area = area.with_y1_interpolation(interp);
+    if let Some(py_interp) = getattr_not_none(py_ser, "y1_interp")? {
+        let interp = interp_from_str(py_interp.extract()?)?;
+        area = area.with_interpolation(interp);
     }
 
     Ok(area.into())
@@ -303,7 +303,7 @@ pub fn extract_histogram_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Seri
         hist = hist.with_fill(extract_series_fill(&py_fill)?);
     }
 
-    if let Some(py_stroke) = getattr_not_none(py_ser, "outline")? {
+    if let Some(py_stroke) = getattr_not_none(py_ser, "stroke")? {
         hist = hist.with_outline(extract_series_stroke(&py_stroke)?);
     }
 
@@ -344,8 +344,8 @@ pub fn extract_bars_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
         bars = bars.with_fill(extract_series_fill(&py_color)?);
     }
 
-    if let Some(py_outline) = getattr_not_none(py_ser, "outline")? {
-        let stroke = extract_series_stroke(&py_outline)?;
+    if let Some(py_stroke) = getattr_not_none(py_ser, "stroke")? {
+        let stroke = extract_series_stroke(&py_stroke)?;
         bars = bars.with_outline(stroke);
     }
 

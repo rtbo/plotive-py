@@ -55,8 +55,8 @@ class Line(Series):
         x: DataCol,
         y: DataCol,
         *,
-        line: Stroke | Color = "auto",
-        interpolation: None | str = None,
+        stroke: Stroke | Color = "auto",
+        interp: None | str = None,
         marker: Marker | None = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
@@ -74,8 +74,8 @@ class Line(Series):
             Y values or y data source reference.
         line : Stroke | Color, default="auto"
             Line stroke style or color.
-        interpolation : str | None, default=None
-            Interpolation mode for rendering.
+        interp : str | None, default=None
+            interp mode for rendering.
         marker : Marker | None, default=None
             Marker style. If None, no marker will be rendered.
         name : str | None, default=None
@@ -93,8 +93,8 @@ class Line(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.x = x
         self.y = y
-        self.line = Stroke._normalize(line, default_width=1.5)
-        self.interpolation = interpolation
+        self.stroke = Stroke._normalize(stroke, default_width=1.5)
+        self.interp = interp
         self.marker = marker
         self.style = style
         if style is not None:
@@ -105,11 +105,11 @@ class Line(Series):
                 else:
                     self.marker.shape = marker_shape
             if line_pattern is not None:
-                self.line.pattern = line_pattern
+                self.stroke.pattern = line_pattern
             if line_color is not None:
-                self.line.color = line_color
+                self.stroke.color = line_color
         if width is not None:
-            self.line.width = width
+            self.stroke.width = width
 
 
 
@@ -127,19 +127,19 @@ class ColorMap:
         cmap : str | list[Color]
             Colormap name or list of colors.
         method : str | None, default="auto"
-            Interpolation method for the colormap.
+            interp method for the colormap.
             Ignored if `cmap` isn't a list of colors.
             Accepted values are:
                 - "auto":
-                        - If the list has fewer than 256 colors, use "linear" interpolation.
-                        - If the list has 256 colors or more, use "nearest" interpolation,
+                        - If the list has fewer than 256 colors, use "linear" interp.
+                        - If the list has 256 colors or more, use "nearest" interp,
                          since the colormap is already at the maximum resolution typically used for rendering.
                 - None: using nearest neighbor
                 - "nearest: same as None
-                - "srgb" (interpolation in sRGB color space)
+                - "srgb" (interp in sRGB color space)
                 - "fast": same as "srgb"
-                - "linear" (interpolation in linear RGB color space)
-                - "perceptual" (interpolation in OkLab color space)
+                - "linear" (interp in linear RGB color space)
+                - "perceptual" (interp in OkLab color space)
         scale : Scale | None, default=None
             Optional scale for mapping data values to the colormap. If None, a default linear scale will be used,
             that maps the full data range to the full colormap.
@@ -236,11 +236,11 @@ class Area(Series):
         y2: DataCol | float = 0,
         *,
         fill: Fill | Color = "auto",
-        y1_line: Stroke | Color | None = None,
-        y2_line: Stroke | Color | None = None,
-        y1_interpolation: None | str = None,
-        y2_interpolation: None | str = None,
-        interpolation: None | str = None,
+        y1_stroke: Stroke | Color | None = None,
+        y2_stroke: Stroke | Color | None = None,
+        y1_interp: None | str = None,
+        y2_interp: None | str = None,
+        interp: None | str = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
@@ -257,17 +257,17 @@ class Area(Series):
             Y2 values or y2 data source reference. Can be a constant value.
         fill : Fill | Color, default="auto"
             Area fill style or color.
-        y1_line : Stroke | Color | None, default=None
-            Area outline stroke style or color for Y1.
-        y2_line : Stroke | Color | None, default=None
-            Area outline stroke style or color for Y2.
-        y1_interpolation : str | None, default=None
-            Interpolation mode for y1 rendering. If None, defaults to the value of `interpolation`.
-        y2_interpolation : str | None, default=None
-            Interpolation mode for y2 rendering. If None, defaults to the value of `interpolation`.
+        y1_stroke : Stroke | Color | None, default=None
+            Area stroke stroke style or color for Y1.
+        y2_stroke : Stroke | Color | None, default=None
+            Area stroke stroke style or color for Y2.
+        y1_interp : str | None, default=None
+            interp mode for y1 rendering. If None, defaults to the value of `interp`.
+        y2_interp : str | None, default=None
+            interp mode for y2 rendering. If None, defaults to the value of `interp`.
             Ignored if y2 is a constant value.
-        interpolation : str | None, default=None
-            Interpolation mode for rendering. If specified, applies to both y1 and y2.
+        interp : str | None, default=None
+            interp mode for rendering. If specified, applies to both y1 and y2.
         name : str | None, default=None
             Legend/display name of the series.
         x_axis : AxisRef | None, default=None
@@ -280,10 +280,10 @@ class Area(Series):
         self.y1 = y1
         self.y2 = y2
         self.fill = Fill._normalize(fill)
-        self.y1_line = Stroke._normalize(y1_line, default_width=1.5) if y1_line is not None else None
-        self.y2_line = Stroke._normalize(y2_line, default_width=1.5) if y2_line is not None else None
-        self.y1_interpolation = y1_interpolation or interpolation
-        self.y2_interpolation = y2_interpolation or interpolation
+        self.y1_stroke = Stroke._normalize(y1_stroke, default_width=1.5) if y1_stroke is not None else None
+        self.y2_stroke = Stroke._normalize(y2_stroke, default_width=1.5) if y2_stroke is not None else None
+        self.y1_interp = y1_interp or interp
+        self.y2_interp = y2_interp or interp
 
 
 class Histogram(Series):
@@ -292,7 +292,7 @@ class Histogram(Series):
         data: DataCol,
         *,
         fill: None | Fill | Color = "auto",
-        outline: None | Stroke | Color = None,
+        stroke: None | Stroke | Color = None,
         bins: int = 10,
         density: bool = False,
         name: None | str = None,
@@ -302,7 +302,7 @@ class Histogram(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.data = data
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.outline = Stroke._normalize(outline, default_width=1.5) if outline is not None else None
+        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
         self.bins = bins
         self.density = density
 
@@ -314,7 +314,7 @@ class Bars(Series):
         y: DataCol,
         *,
         fill: None | Fill | Color = "auto",
-        outline: None | Stroke | Color = None,
+        stroke: None | Stroke | Color = None,
         bars_offset=0.3,
         bars_width=0.4,
         name: None | str = None,
@@ -325,6 +325,6 @@ class Bars(Series):
         self.x = x
         self.y = y
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.outline = Stroke._normalize(outline, default_width=1.5) if outline is not None else None
+        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
         self.bars_offset = bars_offset
         self.bars_width = bars_width

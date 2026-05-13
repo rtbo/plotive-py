@@ -16,31 +16,31 @@ def test_series_line_nodata():
 
 
 def test_series_line_interp_linear():
-    series = line(interpolation="linear")
+    series = line(interp="linear")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-linear")
 
 
 def test_series_line_interp_step_early():
-    series = line(interpolation="step-early")
+    series = line(interp="step-early")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-early")
 
 
 def test_series_line_interp_step_middle():
-    series = line(interpolation="step-middle")
+    series = line(interp="step-middle")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-middle")
 
 
 def test_series_line_interp_step_late():
-    series = line(interpolation="step-late")
+    series = line(interp="step-late")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-late")
 
 
 def test_series_line_interp_spline():
-    series = line(interpolation="spline")
+    series = line(interp="spline")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-spline")
 
@@ -133,9 +133,9 @@ def test_series_area_double():
     stroke = "black"
 
     series1 = pv.series.Area(
-        x=x, y1=y1, y2=y2, fill=fill, y1_line=stroke, y2_line=stroke
+        x=x, y1=y1, y2=y2, fill=fill, y1_stroke=stroke, y2_stroke=stroke
     )
-    series2 = pv.series.Area(x=x, y1=y2, fill=fill, y1_line=stroke, y2_line=stroke)
+    series2 = pv.series.Area(x=x, y1=y2, fill=fill, y1_stroke=stroke, y2_stroke=stroke)
 
     plot = pv.Plot([series1, series2])
     fig = fig_small(plot)
@@ -153,10 +153,10 @@ def test_series_area_double_legend():
     stroke = "black"
 
     series1 = pv.series.Area(
-        x=x, y1=y1, y2=y2, name="area1", fill=fill1, y1_line=stroke, y2_line=stroke
+        x=x, y1=y1, y2=y2, name="area1", fill=fill1, y1_stroke=stroke, y2_stroke=stroke
     )
     series2 = pv.series.Area(
-        x=x, y1=y2, name="area2", fill=fill2, y1_line=stroke, y2_line=stroke
+        x=x, y1=y2, name="area2", fill=fill2, y1_stroke=stroke, y2_stroke=stroke
     )
 
     plot = pv.Plot([series1, series2])
