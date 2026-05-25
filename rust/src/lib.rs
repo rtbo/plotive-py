@@ -30,7 +30,7 @@ fn extract_class_name(obj: &Bound<'_, PyAny>) -> PyResult<String> {
 #[pymodule]
 #[pyo3(name = "_rs")]
 mod plt_rs {
-    use plotive_pxl::ToPixmap;
+    use plotive_pxl::PxlRender;
     use pyo3::prelude::*;
 
     use super::py_data;
@@ -79,7 +79,7 @@ mod plt_rs {
         py_data_src: &Bound<'_, PyAny>,
         py_style: &Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        use plotive_pxl::SavePng;
+        use plotive_pxl::PxlRender;
 
         let fig = py_des::extract_figure(py_fig)?;
         let data_src = py_data::extract_data_source(py_data_src)?;

@@ -263,11 +263,7 @@ pub fn extract_area_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
     }
 
     if let Some(py_fill) = py_ser.getattr_opt("fill")? {
-        if py_fill.is_none() {
-            area = area.with_fill(None);
-        } else {
-            area = area.with_fill(Some(extract_series_fill(&py_fill)?));
-        }
+        area = area.with_fill(extract_series_fill(&py_fill)?);
     }
     if let Some(py_stroke) = getattr_not_none(py_ser, "y1_stroke")? {
         area = area.with_y1_stroke(extract_series_stroke(&py_stroke)?);
@@ -304,7 +300,7 @@ pub fn extract_histogram_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Seri
     }
 
     if let Some(py_stroke) = getattr_not_none(py_ser, "stroke")? {
-        hist = hist.with_outline(extract_series_stroke(&py_stroke)?);
+        hist = hist.with_stroke(extract_series_stroke(&py_stroke)?);
     }
 
     if py_ser.getattr("bins").is_ok() {
@@ -346,7 +342,7 @@ pub fn extract_bars_series(py_ser: &Bound<'_, PyAny>) -> PyResult<des::Series> {
 
     if let Some(py_stroke) = getattr_not_none(py_ser, "stroke")? {
         let stroke = extract_series_stroke(&py_stroke)?;
-        bars = bars.with_outline(stroke);
+        bars = bars.with_stroke(stroke);
     }
 
     let mut offset: Option<f32> = None;

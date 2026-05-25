@@ -2820,6 +2820,7 @@ name = "plotive-pxl"
 version = "0.4.0"
 dependencies = [
  "plotive",
+ "png 0.17.16",
  "rustybuzz",
  "tiny-skia",
  "tiny-skia-path",
