@@ -4,10 +4,10 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .style import Fill
-    from .color import Color
+    from .style import Fill, Color
 
-from .style import Stroke
+from .style import Pattern, Stroke
+from . import style
 
 
 class Annotation(ABC):
@@ -47,7 +47,7 @@ class Line(Annotation):
         slope: None | tuple[tuple[float, float], float] = None,
         two_points: None | tuple[tuple[float, float], tuple[float, float]] = None,
         stroke: None | Stroke = None,
-        pattern: None | str | list[float] = None,
+        pattern: None | Pattern = None,
         x_axis: str | None = None,
         y_axis: str | None = None,
         zpos: str = "below-series",
@@ -143,6 +143,36 @@ class Arrow(Annotation):
         self.stroke = stroke
         self.head_size = head_size
 
+class Marker(Annotation):
+    """Marker annotation placed in data space."""
+
+    def __init__(
+        self,
+        xy: tuple[float, float],
+        *,
+        marker: style.Marker = style.Marker(),
+        x_axis: str | None = None,
+        y_axis: str | None = None,
+        zpos: str = "above-series",
+    ):
+        """Initialize a marker annotation.
+
+        Parameters
+        ----------
+        xy : tuple[float, float]
+            Marker position.
+        marker : style.Marker, default=style.Marker()
+            Marker style.
+        x_axis : str | None, default=None
+            Target x-axis identifier.
+        y_axis : str | None, default=None
+            Target y-axis identifier.
+        zpos : str, default="above-series"
+            Rendering layer relative to series.
+        """
+        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        self.x, self.y = xy
+        self.marker = marker
 
 class Label(Annotation):
     """Text label annotation placed in data space."""

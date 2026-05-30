@@ -4,9 +4,7 @@ use pyo3::types::PyList;
 
 use crate::py_annot::extract_annot;
 use crate::py_series::extract_series;
-use crate::py_style::{
-    extract_theme_color, extract_theme_stroke,
-};
+use crate::py_style::{extract_theme_fill, extract_theme_stroke};
 
 use super::{extract_class_name, getattr_not_none};
 
@@ -41,7 +39,7 @@ fn extract_axis_range(py_range: &Bound<'_, PyAny>) -> PyResult<des::axis::Range>
     Ok(des::axis::Range(min, max))
 }
 
-fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale> {
+pub fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale> {
     let cls_name = extract_class_name(py_scale)?;
     match cls_name.as_str() {
         "AutoScale" => Ok(des::axis::Scale::Auto),
@@ -63,10 +61,13 @@ fn extract_axis_scale(py_scale: &Bound<'_, PyAny>) -> PyResult<des::axis::Scale>
     }
 }
 
-fn extract_ticks_locator(py_locator: &Bound<'_, PyAny>) -> PyResult<des::axis::ticks::Locator> {
+pub fn extract_ticks_locator(py_locator: &Bound<'_, PyAny>) -> PyResult<des::axis::ticks::Locator> {
     let cls_name = extract_class_name(py_locator)?;
     match cls_name.as_str() {
         "AutoTicksLocator" => Ok(des::axis::ticks::Locator::Auto),
+        "ListTicksLocator" => {
+            Ok(des::axis::ticks::ListLocator(py_locator.getattr("ticks")?.extract()?).into())
+        }
         "MaxNTicksLocator" => Ok(des::axis::ticks::MaxNLocator {
             bins: py_locator.getattr("bins")?.extract()?,
             steps: py_locator.getattr("steps")?.extract()?,
@@ -200,7 +201,7 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     }
 
     if let Some(py_grid) = getattr_not_none(py_axis, "grid")? {
-        let stroke = extract_theme_stroke(&py_grid)?;
+        let stroke = extract_theme_stroke(&py_grid, style::theme::Col::Grid.into())?;
         axis = axis.with_grid(stroke.into());
     }
 
@@ -211,7 +212,7 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     }
 
     if let Some(py_minor_grid) = getattr_not_none(py_axis, "minor_grid")? {
-        let stroke = extract_theme_stroke(&py_minor_grid)?;
+        let stroke = extract_theme_stroke(&py_minor_grid, style::theme::Col::Grid.into())?;
         axis = axis.with_minor_grid(stroke.into());
     }
 
@@ -227,14 +228,16 @@ fn extract_legend<P: Default>(py_legend: &Bound<'_, PyAny>, pos: P) -> PyResult<
         let padding = extract_padding(&py_padding)?;
         legend = legend.with_padding(padding);
     }
-    if let Some(py_fill) = py_legend.getattr_opt("fill")? {
-        if py_fill.is_none() {
-            legend = legend.with_fill(None);
-        } else {
-            let fill = extract_theme_color(&py_fill)?;
-            legend = legend.with_fill(Some(fill.into()));
-        }
-    }
+    let fill = getattr_not_none(py_legend, "fill")?
+        .map(|f| extract_theme_fill(&f, style::theme::Col::LegendFill.into()))
+        .transpose()?;
+    legend = legend.with_fill(fill);
+
+    let border = getattr_not_none(py_legend, "border")?
+        .map(|b| extract_theme_stroke(&b, style::theme::Col::LegendBorder.into()))
+        .transpose()?;
+    legend = legend.with_border(border);
+
     if let Some(py_spacing) = getattr_not_none(py_legend, "spacing")? {
         if let Ok(spacing) = py_spacing.extract::<f32>() {
             legend = legend.with_spacing(geom::Size::new(spacing, spacing));
@@ -258,6 +261,7 @@ fn extract_plot_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::PlotLegend
     if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
+            "auto" => des::plot::LegendPos::default(),
             "out-top" => des::plot::LegendPos::OutTop,
             "out-right" => des::plot::LegendPos::OutRight,
             "out-bottom" => des::plot::LegendPos::OutBottom,
@@ -286,6 +290,7 @@ fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegen
     if let Some(py_pos) = getattr_not_none(py_legend, "pos")? {
         let pos_str: String = py_pos.extract()?;
         pos = match pos_str.as_str() {
+            "auto" => des::figure::LegendPos::default(),
             "top" => des::figure::LegendPos::Top,
             "right" => des::figure::LegendPos::Right,
             "bottom" => des::figure::LegendPos::Bottom,
@@ -299,6 +304,55 @@ fn extract_figure_legend(py_legend: &Bound<'_, PyAny>) -> PyResult<des::FigLegen
         };
     }
     Ok(extract_legend(py_legend, pos)?)
+}
+
+fn extract_colorbar(py_cbar: &Bound<'_, PyAny>) -> PyResult<des::ColorBar> {
+    let pos = getattr_not_none(py_cbar, "pos")?
+        .map(|py_pos| {
+            let pos_str: String = py_pos.extract()?;
+            match pos_str.as_str() {
+                "auto" => Ok(des::colorbar::Pos::default()),
+                "top" => Ok(des::colorbar::Pos::Top),
+                "right" => Ok(des::colorbar::Pos::Right),
+                "bottom" => Ok(des::colorbar::Pos::Bottom),
+                "left" => Ok(des::colorbar::Pos::Left),
+                _ => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unknown colorbar position string: {}",
+                        pos_str
+                    )));
+                }
+            }
+        })
+        .transpose()?
+        .unwrap_or_default();
+
+    let mut cbar = des::ColorBar::new(pos);
+
+    if let Some(py_width) = getattr_not_none(py_cbar, "width")? {
+        cbar = cbar.with_width(py_width.extract()?);
+    }
+
+    if let Some(py_title) = getattr_not_none(py_cbar, "title")? {
+        let title: String = py_title.extract()?;
+        cbar = cbar.with_title(title.into());
+    }
+
+    if let Some(py_border) = getattr_not_none(py_cbar, "border")? {
+        let border = extract_theme_stroke(&py_border, style::theme::Col::Foreground.into())?;
+        cbar = cbar.with_border(border.into());
+    }
+
+    if let Some(py_locator) = getattr_not_none(py_cbar, "ticks")? {
+        let locator = extract_ticks_locator(&py_locator)?;
+        cbar = cbar.with_ticks_locator(locator);
+    }
+
+    if let Some(py_margin) = getattr_not_none(py_cbar, "margin")? {
+        cbar = cbar.with_margin(py_margin.extract()?);
+    }
+
+    Ok(cbar)
 }
 
 fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
@@ -317,10 +371,20 @@ fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
         plot = plot.with_legend(legend);
     }
 
+    if let Some(py_cbar) = getattr_not_none(py_plot, "colorbar")? {
+        let cbar = extract_colorbar(&py_cbar)?;
+        plot = plot.with_colorbar(cbar);
+    }
+
     let py_title = py_plot.getattr("title")?;
     if !py_title.is_none() {
         let title: String = py_title.extract()?;
         plot = plot.with_title(title.into());
+    }
+
+    if let Some(py_fill) = getattr_not_none(py_plot, "fill")? {
+        let fill = extract_theme_fill(&py_fill, style::theme::Col::Background.into())?;
+        plot = plot.with_fill(fill.into());
     }
 
     let py_x_axes = py_plot.getattr("x_axes")?;
@@ -453,19 +517,17 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
     let py_plots = py_fig.getattr("plots")?;
     let plots = extract_plots(&py_plots, subplots, space)?;
 
-    let py_fill = py_fig.getattr_opt("fill")?;
-    let fill = py_fill
-        .map(|f| extract_theme_color(&f))
-        .transpose()?
-        .and_then(|c| {
-            style::theme::Fill::Solid {
-                color: c,
-                opacity: None,
-            }
-            .into()
-        });
+    let fill = py_fig
+        .getattr_opt("fill")?
+        .map(|f| extract_theme_fill(&f, style::theme::Col::Background.into()))
+        .transpose()?;
 
     let mut fig = des::Figure::new(plots).with_fill(fill);
+
+    if let Some(py_size) = getattr_not_none(py_fig, "size")? {
+        let size = py_size.extract::<(f32, f32)>()?;
+        fig = fig.with_size(geom::Size::new(size.0, size.1));
+    }
 
     if let Some(py_title) = getattr_not_none(py_fig, "title")? {
         let title_fmt: String = py_title.extract()?;
