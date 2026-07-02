@@ -1,5 +1,7 @@
 """Axis configuration primitives, tick locators, and formatters."""
 
+from .text import TextProps
+
 from .style import Color, Pattern, Stroke
 
 type AxisRef = str | int
@@ -309,6 +311,8 @@ class Ticks:
         self,
         locator: TicksLocator | list[float] | list[int] | str = "auto",
         formatter: TicksFormatter | str = "auto",
+        label_props: None | TextProps = None,
+        color: None | Color = None
     ):
         """Initialize major tick location and formatting settings.
 
@@ -321,6 +325,8 @@ class Ticks:
         """
         self.locator = TicksLocator._normalize(locator)
         self.formatter = TicksFormatter._normalize(formatter)
+        self.label_props = label_props
+        self.color = color
 
     @staticmethod
     def _normalize(input: Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str):
@@ -336,7 +342,7 @@ class Ticks:
                 return Ticks(locator=AutoTicksLocator(), formatter=AutoTicksFormatter())
             elif inputl == "maxn":
                 return Ticks(locator=MaxNTicksLocator())
-            elif inputl == "pimultiple":
+            elif inputl == "pimultiple" or inputl == "pi":
                 return Ticks(locator=PiMultipleTicksLocator())
             elif inputl == "log":
                 return Ticks(locator=LogTicksLocator())

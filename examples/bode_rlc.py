@@ -3,8 +3,10 @@ import plotive as pv
 
 L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
-TITLE = "Bode diagram of RLC circuit\n" + \
-        "[size=18;italic;font=serif]L = 0.1 mH / C = 1 µF[/size;italic;font]"
+TITLE = [
+    "Bode diagram of RLC circuit",
+    "[size=18;italic;font=serif]L = 0.1 mH / C = 1 µF[/size;italic;font]"
+]
 
 
 def rlc_freq_response(freq, R, L, C):
@@ -59,9 +61,9 @@ if __name__ == "__main__":
             pv.Plot(
                 series=mag_series,
                 x_axis=pv.Axis(
-                    scale="Frequency (Hz)", ticks="auto", minor_ticks="auto"
+                    scale="Frequency [Hz]", ticks="auto", minor_ticks="auto"
                 ),  # references the x-axis scale of the second plot
-                y_axis=pv.Axis(title="Magnitude (dB)", ticks="auto", grid="auto"),
+                y_axis=pv.Axis(title="Magnitude [dB]", ticks="auto", grid="auto"),
                 annotations=[
                     pv.annot.Line(
                         vertical=cutoff_freq,
@@ -87,12 +89,12 @@ if __name__ == "__main__":
             pv.Plot(
                 series=ph_series,
                 x_axis=pv.Axis(
-                    title="Frequency (Hz)",
+                    title="Frequency [Hz]",
                     scale="log",
                     ticks="auto",
                     minor_ticks="auto",
                 ),
-                y_axis=pv.Axis(title="Phase (radians)", ticks="pi", grid="auto"),
+                y_axis=pv.Axis(title="Phase [rad]", ticks="pi", grid="auto"),
             ),
         ],
         legend="right",

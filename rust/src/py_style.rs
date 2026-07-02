@@ -271,6 +271,8 @@ pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
             "macchiato" | "catppuccin-macchiato" => Ok(plotive::Style::catppuccin_macchiato()),
             "frappe" | "catppuccin-frappe" => Ok(plotive::Style::catppuccin_frappe()),
             "latte" | "catppuccin-latte" => Ok(plotive::Style::catppuccin_latte()),
+            "dracula" => Ok(plotive::Style::dracula()),
+            "alucard" => Ok(plotive::Style::alucard()),
             _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
                 "Unknown name for plotive's style: {}",
                 py_str

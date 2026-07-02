@@ -2,7 +2,7 @@ use pyo3::{prelude::*, types::PyTuple};
 
 use plotive::{des, style};
 
-use crate::py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke};
+use crate::{py_des::extract_text, py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke}};
 
 pub fn extract_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::Annotation> {
     let cls_name = super::extract_class_name(py_annot)?;
@@ -98,7 +98,7 @@ fn extract_marker_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Mar
 fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Label> {
     let x = py_annot.getattr("x")?.extract::<f64>()?;
     let y = py_annot.getattr("y")?.extract::<f64>()?;
-    let text = py_annot.getattr("text")?.extract::<String>()?;
+    let text = extract_text(&py_annot.getattr("text")?)?;
     let mut annot = des::annot::Label::new(text, x, y);
     if let Some(py_anchor) = super::getattr_not_none(py_annot, "anchor")? {
         let anchor = py_anchor.extract::<&str>()?;
@@ -119,10 +119,6 @@ fn extract_label_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::annot::Labe
                 )));
             }
         };
-    }
-    if let Some(py_color) = super::getattr_not_none(py_annot, "color")? {
-        let color = extract_theme_color(&py_color, style::theme::Col::Foreground.into())?;
-        annot = annot.with_color(color);
     }
     if let Some(py_angle) = super::getattr_not_none(py_annot, "angle")? {
         let angle = py_angle.extract::<f32>()?;

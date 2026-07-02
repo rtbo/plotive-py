@@ -13,28 +13,28 @@ def get_n_primes(n):
     return primes
 
 if __name__ == "__main__":
-    y = list(range(1, 1001))
-    x = get_n_primes(1000)
+    primes = get_n_primes(1000)
+    indices = list(range(1, 1001))
 
     data_src = {
-        "x": x,
-        "y": y,
+        "primes": primes,
+        "indices": indices,
     }
 
     fig = pv.Figure(
         title="Line Plot Example",
-        legend="bottom",
         plot=pv.Plot(
             series=[
                 pv.series.Line(
-                    x = "x",
-                    y = "y",
+                    x = "primes",
+                    y = "indices",
                     name = "1000 Prime Numbers",
                     interp = "step",
                 )
             ],
-            x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),
-            y_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
+            x_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
+            y_axis = pv.Axis(title="Indices", ticks=pv.Ticks()),
+            legend="in-top-left",
         )
     )
 

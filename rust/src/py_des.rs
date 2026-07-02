@@ -1,12 +1,166 @@
-use plotive::{des, geom, style};
+use plotive::{des, geom, style, text};
 use pyo3::prelude::*;
-use pyo3::types::PyList;
+use pyo3::types::{PyDict, PyList, PyTuple};
 
 use crate::py_annot::extract_annot;
 use crate::py_series::extract_series;
-use crate::py_style::{extract_theme_fill, extract_theme_stroke};
+use crate::py_style::{extract_theme_color, extract_theme_fill, extract_theme_stroke};
 
 use super::{extract_class_name, getattr_not_none};
+
+fn extract_text_props(
+    py_props: &Bound<'_, PyAny>,
+) -> PyResult<text::TextProps<style::theme::Color>> {
+    let mut props = text::TextProps::<style::theme::Color>::default();
+
+    if let Some(py_family) = getattr_not_none(py_props, "family")? {
+        let family = py_family.extract::<String>()?;
+        props.family = Some(text::parse_font_families(&family).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Failed to parse font family string: {}",
+                e
+            ))
+        })?);
+    }
+
+    if let Some(py_weight) = getattr_not_none(py_props, "weight")? {
+        if let Ok(py_weight) = py_weight.extract::<u16>() {
+            props.weight = Some(text::font::Weight(py_weight));
+        } else if let Ok(py_weight) = py_weight.extract::<String>() {
+            match py_weight.as_str() {
+                "thin" => props.weight = Some(text::font::Weight::THIN),
+                "extra-light" => props.weight = Some(text::font::Weight::EXTRA_LIGHT),
+                "light" => props.weight = Some(text::font::Weight::LIGHT),
+                "normal" => props.weight = Some(text::font::Weight::NORMAL),
+                "medium" => props.weight = Some(text::font::Weight::MEDIUM),
+                "semi-bold" => props.weight = Some(text::font::Weight::SEMIBOLD),
+                "bold" => props.weight = Some(text::font::Weight::BOLD),
+                "extra-bold" => props.weight = Some(text::font::Weight::EXTRA_BOLD),
+                "black" => props.weight = Some(text::font::Weight::BLACK),
+                _ => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unknown text weight string: {}",
+                        py_weight
+                    )));
+                }
+            }
+        } else {
+            return Err(pyo3::exceptions::PyTypeError::new_err(
+                "Text weight must be either an integer or a string.",
+            ));
+        }
+    }
+    if let Some(py_width) = getattr_not_none(py_props, "width")? {
+        if let Ok(py_width) = py_width.extract::<f32>() {
+            let width = py_width.clamp(1.0, 9.0).round() as i32;
+            match width {
+                1 => props.width = Some(text::font::Width::UltraCondensed),
+                2 => props.width = Some(text::font::Width::ExtraCondensed),
+                3 => props.width = Some(text::font::Width::Condensed),
+                4 => props.width = Some(text::font::Width::SemiCondensed),
+                5 => props.width = Some(text::font::Width::Normal),
+                6 => props.width = Some(text::font::Width::SemiExpanded),
+                7 => props.width = Some(text::font::Width::Expanded),
+                8 => props.width = Some(text::font::Width::ExtraExpanded),
+                9 => props.width = Some(text::font::Width::UltraExpanded),
+                _ => unreachable!(),
+            }
+        } else if let Ok(py_width) = py_width.extract::<String>() {
+            match py_width.as_str() {
+                "ultra-condensed" => props.width = Some(text::font::Width::UltraCondensed),
+                "extra-condensed" => props.width = Some(text::font::Width::ExtraCondensed),
+                "condensed" => props.width = Some(text::font::Width::Condensed),
+                "semi-condensed" => props.width = Some(text::font::Width::SemiCondensed),
+                "normal" => props.width = Some(text::font::Width::Normal),
+                "semi-expanded" => props.width = Some(text::font::Width::SemiExpanded),
+                "expanded" => props.width = Some(text::font::Width::Expanded),
+                "extra-expanded" => props.width = Some(text::font::Width::ExtraExpanded),
+                "ultra-expanded" => props.width = Some(text::font::Width::UltraExpanded),
+                _ => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unknown text width string: {}",
+                        py_width
+                    )));
+                }
+            }
+        } else {
+            return Err(pyo3::exceptions::PyTypeError::new_err(
+                "Text width must be either a float or a string.",
+            ));
+        }
+    }
+
+    if let Some(py_style) = getattr_not_none(py_props, "style")? {
+        if let Ok(py_style) = py_style.extract::<String>() {
+            match py_style.as_str() {
+                "normal" => props.style = Some(text::font::Style::Normal),
+                "italic" => props.style = Some(text::font::Style::Italic),
+                "oblique" => props.style = Some(text::font::Style::Oblique),
+                _ => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unknown text style string: {}",
+                        py_style
+                    )));
+                }
+            }
+        } else {
+            return Err(pyo3::exceptions::PyTypeError::new_err(
+                "Text style must be a string.",
+            ));
+        }
+    }
+
+    if let Some(py_color) = py_props.getattr_opt("color")? {
+        if !py_color.is_none() {
+            let color = extract_theme_fill(&py_color, style::theme::Col::Foreground.into())?;
+            props.color = Some(Some(color));
+        } else {
+            props.color = Some(None);
+        }
+    }
+
+    if let Some(py_outline) = py_props.getattr_opt("outline")? {
+        if !py_outline.is_none() {
+            let outline = extract_theme_stroke(&py_outline, style::theme::Col::Foreground.into())?;
+            props.outline = Some(Some(outline));
+        } else {
+            props.outline = Some(None);
+        }
+    }
+
+    if let Some(py_underline) = getattr_not_none(py_props, "underline")? {
+        props.underline = Some(py_underline.extract()?);
+    }
+
+    if let Some(py_strikethrough) = getattr_not_none(py_props, "strikethrough")? {
+        props.strikethrough = Some(py_strikethrough.extract()?);
+    }
+
+    Ok(props)
+}
+
+pub fn extract_text(py_text: &Bound<'_, PyAny>) -> PyResult<des::Text> {
+    if let Ok(text) = py_text.extract::<String>() {
+        Ok(des::Text::Plain(text))
+    } else if let Ok(fmt) = py_text.extract::<Vec<String>>() {
+        Ok(des::Text::Rich(fmt.join("\n")))
+    } else if let Ok(py_text) = py_text.cast::<PyTuple>() {
+        let fmt = py_text.get_item(0)?.extract::<String>()?;
+        let py_classes = py_text.get_item(1)?;
+        let py_classes = py_classes.cast::<PyDict>()?;
+        let mut classes = Vec::new();
+        for (py_key, py_class) in py_classes {
+            let key = py_key.extract::<String>()?;
+            let class = extract_text_props(&py_class)?;
+            classes.push((key, class));
+        }
+        Ok(des::Text::RichWithClasses { fmt, classes })
+    } else {
+        Err(pyo3::exceptions::PyTypeError::new_err(
+            "Text must be a string or a RichText object.",
+        ))
+    }
+}
 
 fn extract_padding(py_padding: &Bound<'_, PyAny>) -> PyResult<geom::Padding> {
     if let Ok(pad) = py_padding.extract::<f32>() {
@@ -14,7 +168,12 @@ fn extract_padding(py_padding: &Bound<'_, PyAny>) -> PyResult<geom::Padding> {
     } else if let Ok((hor, ver)) = py_padding.extract::<(f32, f32)>() {
         Ok(geom::Padding::Center { ver, hor })
     } else if let Ok((top, right, bottom, left)) = py_padding.extract::<(f32, f32, f32, f32)>() {
-        Ok(geom::Padding::Custom { top, right, bottom, left })
+        Ok(geom::Padding::Custom {
+            top,
+            right,
+            bottom,
+            left,
+        })
     } else {
         Err(pyo3::exceptions::PyTypeError::new_err(
             "Padding must be a float, a tuple of two floats, or a tuple of four floats.",
@@ -172,6 +331,14 @@ fn extract_axis_ticks(py_ticks: &Bound<'_, PyAny>) -> PyResult<des::axis::Ticks>
     } else {
         ticks = ticks.with_formatter(None);
     }
+    if let Some(py_lbl_props) = getattr_not_none(py_ticks, "label_props")? {
+        let lbl_props = extract_text_props(&py_lbl_props)?;
+        ticks = ticks.with_label_props(lbl_props);
+    }
+    if let Some(py_color) = getattr_not_none(py_ticks, "color")? {
+        let color = extract_theme_color(&py_color, style::theme::Col::Foreground.into())?;
+        ticks = ticks.with_color(color);
+    }
     Ok(ticks)
 }
 
@@ -179,8 +346,8 @@ fn extract_axis(py_axis: &Bound<'_, PyAny>) -> PyResult<des::Axis> {
     let mut axis = des::Axis::new().with_scale(extract_axis_scale(&py_axis.getattr("scale")?)?);
 
     if let Some(py_title) = getattr_not_none(py_axis, "title")? {
-        let title: String = py_title.extract()?;
-        axis = axis.with_title(title.into());
+        let title = extract_text(&py_title)?;
+        axis = axis.with_title(title);
     }
 
     if let Some(py_id) = getattr_not_none(py_axis, "id")? {
@@ -334,8 +501,8 @@ fn extract_colorbar(py_cbar: &Bound<'_, PyAny>) -> PyResult<des::ColorBar> {
     }
 
     if let Some(py_title) = getattr_not_none(py_cbar, "title")? {
-        let title: String = py_title.extract()?;
-        cbar = cbar.with_title(title.into());
+        let title = extract_text(&py_title)?;
+        cbar = cbar.with_title(title);
     }
 
     if let Some(py_border) = getattr_not_none(py_cbar, "border")? {
@@ -378,8 +545,8 @@ fn extract_plot(py_plot: &Bound<'_, PyAny>) -> PyResult<des::Plot> {
 
     let py_title = py_plot.getattr("title")?;
     if !py_title.is_none() {
-        let title: String = py_title.extract()?;
-        plot = plot.with_title(title.into());
+        let title = extract_text(&py_title)?;
+        plot = plot.with_title(title);
     }
 
     if let Some(py_fill) = getattr_not_none(py_plot, "fill")? {
@@ -530,11 +697,8 @@ pub fn extract_figure(py_fig: &Bound<'_, PyAny>) -> PyResult<des::Figure> {
     }
 
     if let Some(py_title) = getattr_not_none(py_fig, "title")? {
-        let title_fmt: String = py_title.extract()?;
-        let title = plotive_text::parse_rich_text(&title_fmt).map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!("Failed to parse plot title: {}", e))
-        })?;
-        fig = fig.with_title(title.into());
+        let title = extract_text(&py_title)?;
+        fig = fig.with_title(title);
     }
 
     if let Some(py_legend) = getattr_not_none(py_fig, "legend")? {

@@ -219,7 +219,6 @@ class Scatter(Series):
         self.colors = colors
         assert not (self.colors is not None and cmap is None), "cmap must be specified if colors are provided"
         self.cmap = ColorMap._normalize(cmap) if cmap is not None else None
-        print(f"Marker: {self.marker!r}")
 
 
 class Area(Series):
