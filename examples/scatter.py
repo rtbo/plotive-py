@@ -28,7 +28,7 @@ fig = pv.Figure(
         x_axis=pv.Axis(ticks="auto", grid="auto"),
         y_axis=pv.Axis(ticks="auto", grid="auto"),
     ),
-    legend=pv.Legend(),
+    legend=pv.Legend("bottom"),
 )
 
 fig.show(data_source=data)

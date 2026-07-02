@@ -12,6 +12,56 @@ type Size = tuple[float, float]
 type Padding = float | tuple[float, float] | tuple[float, float, float, float]
 """Padding as scalar, ``(vertical, horizontal)``, or ``(top, right, bottom, left)``."""
 
+class TextProps:
+    """Text rendering properties."""
+
+    def __init__(
+        self,
+        *,
+        family: None | str | list[str] = None,
+        weight: None | str | int = None,
+        width: None | str | int = None,
+        style: None | str = None,
+        size: None | float = None,
+        color: None | Fill = None,
+        outline: None | Stroke | Color = None,
+        underline: None | bool = None,
+        strikethrough: None | bool = None,
+    ):
+        """Initialize text properties.
+
+        Parameters
+        ----------
+        family : str | list[str] | None, default=None
+            Font family name or list of font family names.
+        weight : str | int | None, default=None
+            Font weight. Accepted values are "normal", "bold", "light", "ultralight", "semibold", "heavy" and "black".
+        width : str | int | None, default=None
+            Font width. Accepted values are "normal", "condensed", "expanded", "ultracondensed", "semicondensed", "semiexpanded", "ultraexpanded" and "extraexpanded".
+        style : str | None, default=None
+            Font style. Accepted values are "normal" and "italic".
+        size : float | None, default=None
+            Font size in pixels.
+        color : Fill | None, default=None
+            Text color.
+        outline : Stroke | None, default=None
+            Text outline.
+        underline : bool | None, default=None
+            Whether the text is underlined.
+        strikethrough : bool | None, default=None
+            Whether the text is strikethrough.
+        """
+        self.family = family
+        self.size = size
+        self.color = Fill._normalize(color) if color is not None else None
+        self.weight = weight
+        self.style = style
+        self.outline = Stroke._normalize(outline, default_width=1.0) if outline is not None else None
+        self.underline = underline
+        self.strikethrough = strikethrough
+
+type Text = str | list[str] | tuple[str, dict[str, TextProps]]
+
 type DataSource = object
 """
 User-provided data source resolved at render time.
@@ -83,7 +133,7 @@ class ColorBar:
         pos: str = "right",
         *,
         width: float = 20.0,
-        title: str | None = None,
+        title: Text | None = None,
         border: Stroke | Color | None = "foreground",
         ticks: None | axis.TicksLocator | list[float] | list[int] = None,
         margin: float = 12.0,
@@ -132,7 +182,7 @@ class Plot:
         x_axes: None | list[Axis] = None,
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
-        title: None | str = None,
+        title: None | Text = None,
         fill: None | Fill | Color = None,
         legend: None | Legend | str = None,
         colorbar: None | ColorBar | str = None,
@@ -156,7 +206,7 @@ class Plot:
         subplot : tuple[int, int] | None, default=None
             Grid position of the subplot.
             Only relevant when multiple plots are defined in the same figure.
-        title : str | None, default=None
+        title : Text | None, default=None
             Subplot title.
         fill : Fill | Color | None, default=None
             Background fill for the plot area.
@@ -244,7 +294,7 @@ class Figure:
         self,
         /,
         *,
-        title: None | str = None,
+        title: None | Text = None,
         size: None | Size = (800, 600),
         padding: None | Padding = 20.0,
         fill: None | Fill | Color = "background",

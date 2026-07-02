@@ -2662,6 +2662,15 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
+version = "2.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "ordered-float"
 version = "5.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f4779c6901a562440c3786d08192c6fbda7c1c2060edd10006b05ee35d10f2d"
@@ -2786,29 +2795,26 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "plotive"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d0185bcd891116effcd6c905ab189923fc58e64335127947b7aa60cf7e08dfc"
+version = "0.6.0-dev"
 dependencies = [
  "plotive-base",
  "plotive-text",
+ "serde",
+ "serde-value",
 ]
 
 [[package]]
 name = "plotive-base"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41adfdf046237e951b4de22aef0a73724e72786524597cb71af2991fbfb64909"
+version = "0.6.0-dev"
 dependencies = [
+ "serde",
  "strict-num 0.2.0",
  "tiny-skia-path",
 ]
 
 [[package]]
 name = "plotive-iced"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "779035344360854652a53c36d4ed811dacb3b52a7eac38f2d50090c489d9603a"
+version = "0.6.0-dev"
 dependencies = [
  "arboard",
  "bytes",
@@ -2823,9 +2829,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-pxl"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c7856704e81a090830efc1cc1225120d0ea700bc19b44bb71c311a386e67fab"
+version = "0.6.0-dev"
 dependencies = [
  "plotive",
  "png 0.17.16",
@@ -2850,9 +2854,7 @@ dependencies = [
 
 [[package]]
 name = "plotive-svg"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79418a14685d660866017a021f768e77783027a12f637c0586a8185ef68f9b7b"
+version = "0.6.0-dev"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2861,15 +2863,14 @@ dependencies = [
 
 [[package]]
 name = "plotive-text"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ce865c152a7483128417c66f91c1b46ca58c96a60face7f9ef8b3299dffc313"
+version = "0.6.0-dev"
 dependencies = [
  "fontconfig-parser",
  "log",
  "memmap2",
  "plotive-base",
  "rustybuzz",
+ "serde",
  "slotmap",
  "tiny-skia",
  "tiny-skia-path",
@@ -3416,6 +3417,16 @@ checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
  "serde_derive",
+]
+
+[[package]]
+name = "serde-value"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3a1a3341211875ef120e117ea7fd5228530ae7e7036a779fdc9117be6b3282c"
+dependencies = [
+ "ordered-float 2.10.1",
+ "serde",
 ]
 
 [[package]]
@@ -4393,7 +4404,7 @@ dependencies = [
  "ndk-sys",
  "objc",
  "once_cell",
- "ordered-float",
+ "ordered-float 5.1.0",
  "parking_lot",
  "portable-atomic",
  "portable-atomic-util",

@@ -89,7 +89,7 @@ pub fn extract_theme_color(
     Ok(color.into())
 }
 
-fn extract_fill<C: plotive::Color>(
+fn extract_fill<C: style::Color>(
     py_fill: &Bound<'_, PyAny>,
     color: C,
 ) -> PyResult<style::Fill<C>> {
@@ -129,7 +129,7 @@ fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePat
     if let Ok(s) = pattern.extract::<String>() {
         match s.as_str() {
             "solid" => return Ok(style::LinePattern::Solid),
-            "dashed" => return Ok(style::Dash::default().into()),
+            "dashed" => return Ok(style::LinePattern::Dashed),
             "dotted" => return Ok(style::LinePattern::Dot),
             _ => {
                 return Err(pyo3::exceptions::PyValueError::new_err(format!(
@@ -140,10 +140,10 @@ fn extract_stroke_pattern(pattern: &Bound<'_, PyAny>) -> PyResult<style::LinePat
         }
     }
     let pattern_vec: Vec<f32> = pattern.extract()?;
-    Ok(style::Dash(pattern_vec).into())
+    Ok(style::LinePattern::Custom(pattern_vec))
 }
 
-fn extract_stroke<C: plotive::Color>(
+fn extract_stroke<C: style::Color>(
     py_stroke: &Bound<'_, PyAny>,
     color: C,
 ) -> PyResult<style::Stroke<C>> {
@@ -201,7 +201,7 @@ pub fn extract_marker<C>(
     stroke: Option<style::Stroke<C>>,
 ) -> PyResult<style::Marker<C>>
 where
-    C: plotive::Color + fmt::Debug,
+    C: style::Color + fmt::Debug,
 {
     let shape = getattr_not_none(py_marker, "shape")?
         .map(|s| {
