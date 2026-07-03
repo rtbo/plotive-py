@@ -3,6 +3,8 @@ use pyo3::prelude::*;
 mod py_annot;
 mod py_data;
 mod py_des;
+mod py_geom;
+mod py_legend;
 mod py_series;
 mod py_style;
 

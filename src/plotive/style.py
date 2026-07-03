@@ -2,34 +2,27 @@
 
 from typing import Literal
 
-from ._rs import parse_color as _parse_color
+from .color import Color
 
-type Color = str | tuple[float, float, float] | tuple[float, float, float, float]
-"""
-Named string or Hex string or RGB(A) tuple.
-Tuples are expressed in sRGB color space with components in the [0, 1] interval.
-String can either be a named color from the CSS color specification, or the XKCD color survey,
-or a hex color code in the form "#RGB", "#RGBA", "#RRGGBB" or "#RRGGBBAA" (both lower and upper case hex accepted).
+type ThemePaletteColor = Literal["background", "foreground", "grid", "legend-border", "legend-fill"]
+type ThemeColor = Color | ThemePaletteColor
 
-Colors can be used either in the context of a theme (foreground, background, grid, etc.) or in the context of a series palette.
-In a theme context, color strings can also refer to theme color names ("background", "foreground", "grid", "legend-fill" and "legend-border").
-In a series palette context, color strings can also refer to a color in the series palette by index (e.g. "C0" for the first color, "C1" for the second etc.)
-The special string "auto" can be used in both contexts to refer to the default color for the context.
-"""
+type SeriesPaletteColor = Literal["auto"] | int
+type SeriesColor = Color | SeriesPaletteColor
 
 type Pattern = list[float] | list[int] | Literal["solid", "dashed", "dotted", "dash-dot"]
 """Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
 
 
-class Fill:
+class Fill[ColType: Color | ThemeColor | SeriesColor]:
     """Type alias for fill colors."""
 
-    def __init__(self, color: Color = "auto", *, opacity: float | None = None):
+    def __init__(self, color: ColType = "auto", *, opacity: float | None = None):
         """Initialize a fill color.
 
         Parameters
         ----------
-        color : Color, default="auto"
+        color : ColType, default="auto"
             Fill color. "auto" means that the default color for the context will be used.
         opacity : float | None, default=None
             Fill opacity in the ``[0, 1]`` interval.
@@ -39,7 +32,7 @@ class Fill:
         self.opacity = opacity
 
     @staticmethod
-    def _normalize(input: Fill | Color) -> Fill:
+    def _normalize(input: Fill | ColType) -> Fill:
         """Normalize a fill specification to a ThemeFill object."""
         if isinstance(input, Fill):
             return Fill(color=input.color, opacity=input.opacity)
@@ -47,12 +40,12 @@ class Fill:
             return Fill(color=input)
 
 
-class Stroke:
+class Stroke[ColType: Color | ThemeColor | SeriesColor]:
     """Line stroke style."""
 
     def __init__(
         self,
-        color: Color = "auto",
+        color: ColType = "auto",
         *,
         width: float | None = None,
         pattern: Pattern | None = None,
@@ -63,7 +56,7 @@ class Stroke:
 
         Parameters
         ----------
-        color : Color, default="auto"
+        color : ColType, default="auto"
             Stroke color. "auto" means that the default color for the context will be used.
         width : float | None
             Stroke width in pixels. None means that the default width for the context will be used.
@@ -81,7 +74,7 @@ class Stroke:
 
     @staticmethod
     def _normalize(
-        input: Stroke | Color, default_width: float
+        input: Stroke | ColType, default_width: float
     ) -> Stroke:
         """Normalize a stroke specification to a ThemeStroke object."""
         if isinstance(input, Stroke):
@@ -108,7 +101,7 @@ type MarkerShape = Literal[
 ]
 
 
-class Marker:
+class Marker[ColType: Color | ThemeColor | SeriesColor]:
     """Marker style for scatter series."""
 
     def __init__(
@@ -116,9 +109,9 @@ class Marker:
         *,
         shape: MarkerShape = "circle",
         size: float = 8.5**2,
-        fill: None | Fill | Color = "auto",
-        stroke: None | Stroke | Color = "auto",
-        color: None | Color = None,
+        fill: None | Fill[ColType] | ColType = "auto",
+        stroke: None | Stroke[ColType] | ColType = "auto",
+        color: None | ColType = None,
         fill_opacity: None | float = None,
     ):
         """Initialize a marker style.
@@ -154,6 +147,13 @@ class Marker:
         if self.fill and fill_opacity is not None:
             self.fill.opacity = fill_opacity
 
+type ThemeFill = Fill[ThemeColor]
+type ThemeStroke = Stroke[ThemeColor]
+type ThemeMarker = Marker[ThemeColor]
+
+type SeriesFill = Fill[SeriesColor]
+type SeriesStroke = Stroke[SeriesColor]
+type SeriesMarker = Marker[SeriesColor]
 
 class ThemePalette:
     """Theme palette for structural chart colors.

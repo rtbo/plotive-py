@@ -4,79 +4,17 @@ from .style import *
 
 from .annot import Annotation
 from .axis import *
+from .color import Color
+from .geom import Padding, Size
+from .legend import FigLegend, FigLegendPos, Legend, PlotLegend, PlotLegendPos
 from .series import Series
 from .text import Text
-
-type Size = tuple[float, float]
-"""Figure size in pixels as ``(width, height)``."""
-
-type Padding = float | tuple[float, float] | tuple[float, float, float, float]
-"""Padding as scalar, ``(vertical, horizontal)``, or ``(top, right, bottom, left)``."""
 
 type DataSource = object
 """
 User-provided data source resolved at render time.
 Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas DataFrames
 """
-
-
-class Legend:
-    """Legend display settings."""
-
-    def __init__(
-        self,
-        pos: str,
-        *,
-        fill: Fill | Color | None = Fill("legend-fill", opacity=0.5),
-        border: Stroke | str | None = "foreground",
-        columns: None | int = None,
-        margin: float = 12,
-        padding: Padding = 8,
-        spacing: float | tuple[float, float] = (16, 10),
-    ):
-        """Initialize a legend.
-        Parameters
-        ----------
-        pos : str, default="bottom"
-            Legend position as a string. Accepted values depends whether the legend is attached to a figure or a plot.
-            Accepted figure legend positions are "top", "bottom", "left" and "right".
-            Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
-            "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
-            "in-top", "in-bottom", "in-left" and "in-right".
-            "auto" is also accepted for default position at the bottom.
-        fill: Fill | Color | None, default=Fill("legend-fill", opacity=0.5)
-            Legend background fill.
-        border : Stroke | str, default="foreground"
-            Stroke style of the legend border.
-        columns : int | None, default=None
-            Number of columns in the legend.
-            If None, the number of columns is determined automatically based on the position and number of entries.
-        margin : float, default=12
-            Margin between the legend and the figure/plot edges in pixels.
-        padding : Padding, default=8
-            Padding inside the legend box.
-        spacing : float or tuple[float, float], default=(16, 10)
-            Spacing between legend entries (horizontal, vertical).
-        """
-        self.pos = pos
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
-        self.columns = columns
-        self.margin = margin
-        self.padding = padding
-        self.spacing = spacing
-
-    @staticmethod
-    def _normalize(input: Legend | str, default_pos: str) -> Legend:
-        if isinstance(input, Legend):
-            return input
-        elif isinstance(input, str):
-            if input == "auto":
-                input = default_pos
-            return Legend(pos=input)
-        else:
-            raise ValueError(f"Invalid legend config: {input!r}")
-
 
 class ColorBar:
     def __init__(
@@ -135,7 +73,7 @@ class Plot:
         subplot: None | tuple[int, int] = None,
         title: None | Text = None,
         fill: None | Fill | Color = None,
-        legend: None | Legend | str = None,
+        legend: None | PlotLegend | PlotLegendPos = None,
         colorbar: None | ColorBar | str = None,
         annotations: list[Annotation] = [],
     ):
@@ -181,7 +119,9 @@ class Plot:
         else:
             self.series = [series]
 
-        self.legend = Legend._normalize(legend, default_pos="out-bottom") if legend is not None else None
+        if isinstance(legend, str):
+            legend = Legend(pos=legend)
+        self.legend = legend
 
         self.fill = Fill._normalize(fill) if fill is not None else None
 
@@ -249,7 +189,7 @@ class Figure:
         size: None | Size = (800, 600),
         padding: None | Padding = 20.0,
         fill: None | Fill | Color = "background",
-        legend: None | Legend | str = None,
+        legend: None | FigLegend | FigLegendPos = None,
         plot: None | Plot = None,
         plots: None | list[Plot] = None,
     ):
@@ -288,7 +228,9 @@ class Figure:
         self.size = size
         self.padding = padding
         self.fill = fill and Fill._normalize(fill)
-        self.legend = Legend._normalize(legend, default_pos="bottom") if legend is not None else None
+        if isinstance(legend, str):
+            legend = Legend(pos=legend)
+        self.legend = legend
 
     def render_pxl(
         self, *, data_source: None | DataSource = None, style: None | Style | str = None
