@@ -16,6 +16,7 @@ User-provided data source resolved at render time.
 Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas DataFrames
 """
 
+
 class ColorBar:
     def __init__(
         self,
@@ -32,7 +33,9 @@ class ColorBar:
         self.pos = pos
         self.width = width
         self.title = title
-        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
+        self.border = (
+            Stroke._normalize(border, default_width=1.0) if border is not None else None
+        )
         self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
         self.margin = margin
 
@@ -44,6 +47,7 @@ class ColorBar:
             return ColorBar(pos=input)
         else:
             raise ValueError(f"Invalid colorbar config: {input!r}")
+
 
 STELLAR_TICKS = [
     1000.0,
@@ -58,6 +62,7 @@ STELLAR_TICKS = [
     15000.0,
 ]
 """Predefined ticks that fits well the stellar colormap."""
+
 
 class Plot:
     """Single subplot definition with series, axes, and annotations."""

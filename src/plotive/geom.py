@@ -1,4 +1,3 @@
-
 type Size = tuple[float, float]
 """Figure size in pixels as ``(width, height)``."""
 

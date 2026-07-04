@@ -267,6 +267,7 @@ def test_axes_multiple_trbl_titles():
 
     assert_fig_eq_ref(fig, "axes/multiple-trbl-titles")
 
+
 def test_axes_datetime_locator():
     import datetime
 
@@ -276,11 +277,14 @@ def test_axes_datetime_locator():
     series = pv.series.Line(x=x, y=y)
     plot = pv.Plot(
         series=[series],
-        x_axis=pv.Axis(ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))),
+        x_axis=pv.Axis(
+            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))
+        ),
     )
     fig = fig_small(plot)
 
     assert_fig_eq_ref(fig, "axes/datetime-locator")
+
 
 def axes_num_datetime_locator():
     import datetime
@@ -291,7 +295,9 @@ def axes_num_datetime_locator():
     series = pv.series.Line(x=x, y=y)
     plot = pv.Plot(
         series=[series],
-        x_axis=pv.Axis(ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))),
+        x_axis=pv.Axis(
+            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))
+        ),
     )
     fig = fig_small(plot)
 

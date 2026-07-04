@@ -15,6 +15,7 @@ The Range type represents a range with optional start and end values.
 None indicates that the bound in that direction is determined automatically.
 """
 
+
 class Scale:
     """Defines how data is mapped to axis coordinates."""
 
@@ -236,6 +237,7 @@ class TicksFormatter:
         else:
             raise ValueError(f"Invalid ticks formatter specification: {formatter}")
 
+
 class AutoTicksFormatter(TicksFormatter):
     """Default automatically selected tick formatter."""
 
@@ -312,7 +314,7 @@ class Ticks:
         locator: TicksLocator | list[float] | list[int] | str = "auto",
         formatter: TicksFormatter | str = "auto",
         label_props: None | TextProps = None,
-        color: None | Color = None
+        color: None | Color = None,
     ):
         """Initialize major tick location and formatting settings.
 
@@ -329,7 +331,9 @@ class Ticks:
         self.color = color
 
     @staticmethod
-    def _normalize(input: Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str):
+    def _normalize(
+        input: Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str,
+    ):
         if isinstance(input, Ticks):
             return input
         elif isinstance(input, TicksLocator):
@@ -351,9 +355,13 @@ class Ticks:
             elif inputl == "decimal":
                 return Ticks(formatter=DecimalTicksFormatter())
             elif inputl == "datetime":
-                return Ticks(locator=DateTimeTicksLocator(), formatter=DateTimeTicksFormatter())
+                return Ticks(
+                    locator=DateTimeTicksLocator(), formatter=DateTimeTicksFormatter()
+                )
             elif inputl == "timedelta":
-                return Ticks(locator=TimeDeltaTicksLocator(), formatter=TimeDeltaTicksFormatter())
+                return Ticks(
+                    locator=TimeDeltaTicksLocator(), formatter=TimeDeltaTicksFormatter()
+                )
             else:
                 raise ValueError(f"Invalid ticks specification: {input}")
         elif isinstance(input, list):
@@ -431,7 +439,9 @@ class Axis:
         scale: Scale | str | Range = "auto",
         opposite_side: bool | None = None,
         side: str | None = None,
-        ticks: Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str | None = None,
+        ticks: (
+            Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str | None
+        ) = None,
         grid: Grid | Stroke | str | None = None,
         minor_ticks: TicksLocator | str | None = None,
         minor_grid: MinorGrid | Stroke | str | None = None,
@@ -488,6 +498,10 @@ class Axis:
 
         self.grid = Grid._normalize(grid) if grid is not None else None
 
-        self.minor_ticks = TicksLocator._normalize(minor_ticks) if minor_ticks is not None else None
+        self.minor_ticks = (
+            TicksLocator._normalize(minor_ticks) if minor_ticks is not None else None
+        )
 
-        self.minor_grid = MinorGrid._normalize(minor_grid) if minor_grid is not None else None
+        self.minor_grid = (
+            MinorGrid._normalize(minor_grid) if minor_grid is not None else None
+        )

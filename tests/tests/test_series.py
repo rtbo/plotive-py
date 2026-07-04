@@ -62,7 +62,7 @@ def test_series_scatter():
         y=y,
         marker=pv.Marker(
             size=24**2,
-            color = color,
+            color=color,
             fill_opacity=0.6,
         ),
     )
@@ -106,6 +106,7 @@ def test_series_scatter_colors():
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/scatter-colors")
+
 
 def test_series_scatter_colors_stellar():
     rnd = NotRandom()

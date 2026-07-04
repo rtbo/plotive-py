@@ -1,7 +1,7 @@
 import plotive as pv
 import numpy as np
 
-R = 1     # 1 ohm
+R = 1  # 1 ohm
 L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     fig = pv.Figure(
         title="A Bode plot",
-        plot = pv.Plot(
+        plot=pv.Plot(
             # We use two Y-axes, we specify that the phase series should use the axis with title "Phase (rad)".
             # (We could also use the axis index or an arbitrary string id.)
             series=[
@@ -52,10 +52,12 @@ if __name__ == "__main__":
             # As gain and phase have different units and scales, we use two Y-axes.
             # For clarity, we only put ticks and grid on the left Y-axis, and a title on each.
             # The phase axis goes on the right side
-            y_axes=[ # note that we use "axEs" (plural) to specify multiple axes
+            y_axes=[  # note that we use "axEs" (plural) to specify multiple axes
                 pv.Axis(title="Magnitude (dB)", ticks="auto", grid="auto"),
                 # Radians are best scaled with ticks at multiples of pi, which we can specify with "pimultiple".
-                pv.Axis(title="Phase (rad)", ticks="pimultiple", side="right", grid="auto"),
+                pv.Axis(
+                    title="Phase (rad)", ticks="pimultiple", side="right", grid="auto"
+                ),
             ],
         ),
         legend="bottom",
@@ -65,5 +67,6 @@ if __name__ == "__main__":
     # You can use `fig.show()` to display it in an interactive window instead,
     # or `fig.save_svg()` to save it as an SVG file.
     import sys
+
     filename = sys.argv[1] if len(sys.argv) > 1 else "bode.png"
     fig.save_png(filename)

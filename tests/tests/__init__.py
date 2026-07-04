@@ -65,6 +65,7 @@ def _render_fig_to_img(fig: pv.Figure, style) -> pil.Image:
         "RGBA", (fig_pxl.width, fig_pxl.height), fig_pxl.data, "raw", "RGBa", 0, 1
     )
 
+
 def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
     from pixelmatch.contrib.PIL import pixelmatch
     from pytest_check import check

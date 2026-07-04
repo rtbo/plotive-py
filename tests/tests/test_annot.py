@@ -58,7 +58,9 @@ def test_annot_markers():
             ),
             pv.annot.Marker(
                 (0.8, 0.2),
-                marker=pv.Marker(shape="circle", color="purple", size=12**2, fill_opacity=0.5),
+                marker=pv.Marker(
+                    shape="circle", color="purple", size=12**2, fill_opacity=0.5
+                ),
             ),
         ],
     )

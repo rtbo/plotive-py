@@ -1,7 +1,7 @@
 import plotive as pv
 import numpy as np
 
-R = 1     # 1 ohm
+R = 1  # 1 ohm
 L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                     minor_ticks="auto",
                 ),
                 y_axis=pv.Axis(title="Phase (rad)", ticks="pimultiple", grid="auto"),
-            )
+            ),
         ],
     )
 
@@ -79,5 +79,6 @@ if __name__ == "__main__":
     # You can use `fig.show()` to display it in an interactive window instead,
     # or `fig.save_svg()` to save it as an SVG file.
     import sys
+
     filename = sys.argv[1] if len(sys.argv) > 1 else "bode.png"
     fig.save_png(filename, data_source=data_src)

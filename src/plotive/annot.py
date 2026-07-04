@@ -14,7 +14,10 @@ class Annotation(ABC):
     """Base class for plot annotations."""
 
     def __init__(
-        self, x_axis: str | None = None, y_axis: str | None = None, zpos: str = "above-series"
+        self,
+        x_axis: str | None = None,
+        y_axis: str | None = None,
+        zpos: str = "above-series",
     ):
         """Initialize common annotation settings.
 
@@ -143,6 +146,7 @@ class Arrow(Annotation):
         self.stroke = stroke
         self.head_size = head_size
 
+
 class Marker(Annotation):
     """Marker annotation placed in data space."""
 
@@ -173,6 +177,7 @@ class Marker(Annotation):
         super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
         self.x, self.y = xy
         self.marker = marker
+
 
 class Label(Annotation):
     """Text label annotation placed in data space."""

@@ -1,4 +1,3 @@
-
 type Color = str | tuple[float, float, float] | tuple[float, float, float, float]
 """
 Named string or Hex string or RGB(A) tuple.

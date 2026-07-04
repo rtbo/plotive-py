@@ -1,4 +1,3 @@
-
 from .style import Color, Fill, Stroke
 
 
@@ -46,9 +45,14 @@ class TextProps:
         self.color = Fill._normalize(color) if color is not None else None
         self.weight = weight
         self.style = style
-        self.outline = Stroke._normalize(outline, default_width=1.0) if outline is not None else None
+        self.outline = (
+            Stroke._normalize(outline, default_width=1.0)
+            if outline is not None
+            else None
+        )
         self.underline = underline
         self.strikethrough = strikethrough
+
 
 type Text = str | list[str] | tuple[str, dict[str, TextProps]]
 """Text content. When a single is provided, it is considered as plain text.

@@ -28,6 +28,7 @@ type PlotLegendPos = Literal[
     "in-right",
 ]
 
+
 class Legend[PosType: FigLegendPos | PlotLegendPos]:
     """Legend display settings."""
 
@@ -68,11 +69,14 @@ class Legend[PosType: FigLegendPos | PlotLegendPos]:
         """
         self.pos = pos
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
+        self.border = (
+            Stroke._normalize(border, default_width=1.0) if border is not None else None
+        )
         self.columns = columns
         self.margin = margin
         self.padding = padding
         self.spacing = spacing
+
 
 type FigLegend = Legend[FigLegendPos]
 type PlotLegend = Legend[PlotLegendPos]

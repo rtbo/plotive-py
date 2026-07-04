@@ -112,12 +112,11 @@ class Line(Series):
             self.stroke.width = width
 
 
-
 class ColorMap:
     def __init__(
         self,
         cmap: str | list[Color],
-        method: str | None ="auto",
+        method: str | None = "auto",
         scale: None | axis.Scale = None,
     ):
         """Initializes a colormap
@@ -217,7 +216,9 @@ class Scatter(Series):
         self.sizes = sizes
         self.marker = marker if marker is not None else Marker()
         self.colors = colors
-        assert not (self.colors is not None and cmap is None), "cmap must be specified if colors are provided"
+        assert not (
+            self.colors is not None and cmap is None
+        ), "cmap must be specified if colors are provided"
         self.cmap = ColorMap._normalize(cmap) if cmap is not None else None
 
 
@@ -279,8 +280,16 @@ class Area(Series):
         self.y1 = y1
         self.y2 = y2
         self.fill = Fill._normalize(fill)
-        self.y1_stroke = Stroke._normalize(y1_stroke, default_width=1.5) if y1_stroke is not None else None
-        self.y2_stroke = Stroke._normalize(y2_stroke, default_width=1.5) if y2_stroke is not None else None
+        self.y1_stroke = (
+            Stroke._normalize(y1_stroke, default_width=1.5)
+            if y1_stroke is not None
+            else None
+        )
+        self.y2_stroke = (
+            Stroke._normalize(y2_stroke, default_width=1.5)
+            if y2_stroke is not None
+            else None
+        )
         self.y1_interp = y1_interp or interp
         self.y2_interp = y2_interp or interp
 
@@ -301,7 +310,9 @@ class Histogram(Series):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
         self.data = data
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        self.stroke = (
+            Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        )
         self.bins = bins
         self.density = density
 
@@ -324,6 +335,8 @@ class Bars(Series):
         self.x = x
         self.y = y
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        self.stroke = (
+            Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        )
         self.bars_offset = bars_offset
         self.bars_width = bars_width

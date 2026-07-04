@@ -4,13 +4,17 @@ from typing import Literal
 
 from .color import Color
 
-type ThemePaletteColor = Literal["background", "foreground", "grid", "legend-border", "legend-fill"]
+type ThemePaletteColor = Literal[
+    "background", "foreground", "grid", "legend-border", "legend-fill"
+]
 type ThemeColor = Color | ThemePaletteColor
 
 type SeriesPaletteColor = Literal["auto"] | int
 type SeriesColor = Color | SeriesPaletteColor
 
-type Pattern = list[float] | list[int] | Literal["solid", "dashed", "dotted", "dash-dot"]
+type Pattern = list[float] | list[int] | Literal[
+    "solid", "dashed", "dotted", "dash-dot"
+]
 """Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
 
 
@@ -73,15 +77,13 @@ class Stroke[ColType: Color | ThemeColor | SeriesColor]:
         self.opacity = opacity
 
     @staticmethod
-    def _normalize(
-        input: Stroke | ColType, default_width: float
-    ) -> Stroke:
+    def _normalize(input: Stroke | ColType, default_width: float) -> Stroke:
         """Normalize a stroke specification to a ThemeStroke object."""
         if isinstance(input, Stroke):
             return Stroke(
                 color=input.color,
                 width=input.width if input.width is not None else default_width,
-                pattern=input.pattern, # type: ignore[arg-type]
+                pattern=input.pattern,  # type: ignore[arg-type]
                 opacity=input.opacity,
             )
         else:
@@ -134,7 +136,9 @@ class Marker[ColType: Color | ThemeColor | SeriesColor]:
         self.shape = shape
         self.size = size
         self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        self.stroke = (
+            Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        )
         if color is not None:
             if self.fill is None:
                 self.fill = Fill(color=color)
@@ -147,6 +151,7 @@ class Marker[ColType: Color | ThemeColor | SeriesColor]:
         if self.fill and fill_opacity is not None:
             self.fill.opacity = fill_opacity
 
+
 type ThemeFill = Fill[ThemeColor]
 type ThemeStroke = Stroke[ThemeColor]
 type ThemeMarker = Marker[ThemeColor]
@@ -154,6 +159,7 @@ type ThemeMarker = Marker[ThemeColor]
 type SeriesFill = Fill[SeriesColor]
 type SeriesStroke = Stroke[SeriesColor]
 type SeriesMarker = Marker[SeriesColor]
+
 
 class ThemePalette:
     """Theme palette for structural chart colors.

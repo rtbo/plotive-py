@@ -38,7 +38,23 @@ def test_cmap_viridis():
 
 def test_cmap_stellar():
     rnd = NotRandom(1234)
-    colors = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000]
+    colors = [
+        1000,
+        2000,
+        3000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        11000,
+        12000,
+        13000,
+        14000,
+        15000,
+    ]
     x = rnd.make_col_uniform(len(colors))
     y = rnd.make_col_uniform(len(colors))
 
@@ -52,9 +68,26 @@ def test_cmap_stellar():
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "cmap/stellar")
 
+
 def test_cmap_stellar_noscale():
     rnd = NotRandom(1234)
-    colors = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]
+    colors = [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+    ]
     x = rnd.make_col_uniform(len(colors))
     y = rnd.make_col_uniform(len(colors))
 

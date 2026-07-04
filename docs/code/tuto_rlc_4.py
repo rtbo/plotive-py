@@ -1,7 +1,7 @@
 import plotive as pv
 import numpy as np
 
-R = 1     # 1 ohm
+R = 1  # 1 ohm
 L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
 
@@ -34,8 +34,10 @@ if __name__ == "__main__":
     # Compute the gain and phase for our RLC circuit
     mag, ph = rlc_freq_response(freq, R, L, C)
 
-    title = "Bode diagram of a series RLC circuit\n" + \
-            "[size=18;italic;font=serif]R = 1 Ω / L = 0.1 mH / C = 1 µF[/size;italic;font]"
+    title = (
+        "Bode diagram of a series RLC circuit\n"
+        + "[size=18;italic;font=serif]R = 1 Ω / L = 0.1 mH / C = 1 µF[/size;italic;font]"
+    )
 
     # compute cutoff frequency of the filter
     cutoff_freq = 1 / (2 * np.pi * np.sqrt(L * C))
@@ -94,7 +96,7 @@ if __name__ == "__main__":
                     minor_ticks="auto",
                 ),
                 y_axis=pv.Axis(title="Phase (rad)", ticks="pimultiple", grid="auto"),
-            )
+            ),
         ],
     )
 
@@ -108,5 +110,6 @@ if __name__ == "__main__":
     # You can use `fig.show()` to display it in an interactive window instead,
     # or `fig.save_svg()` to save it as an SVG file.
     import sys
+
     filename = sys.argv[1] if len(sys.argv) > 1 else "bode.png"
     fig.save_png(filename, data_source=data_src, style="catppuccin-macchiato")

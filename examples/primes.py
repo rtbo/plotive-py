@@ -2,6 +2,7 @@ import plotive as pv
 import numpy as np
 import pandas as pd
 
+
 def get_n_primes(n):
     primes = []
     candidate = 2
@@ -11,6 +12,7 @@ def get_n_primes(n):
             primes.append(candidate)
         candidate += 1
     return primes
+
 
 if __name__ == "__main__":
     primes = get_n_primes(1000)
@@ -26,17 +28,18 @@ if __name__ == "__main__":
         plot=pv.Plot(
             series=[
                 pv.series.Line(
-                    x = "primes",
-                    y = "indices",
-                    name = "1000 Prime Numbers",
-                    interp = "step",
+                    x="primes",
+                    y="indices",
+                    name="1000 Prime Numbers",
+                    interp="step",
                 )
             ],
-            x_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
-            y_axis = pv.Axis(title="Indices", ticks=pv.Ticks()),
+            x_axis=pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
+            y_axis=pv.Axis(title="Indices", ticks=pv.Ticks()),
             legend="in-top-left",
-        )
+        ),
     )
 
     import _common
+
     _common.process_figure(fig, data_src)

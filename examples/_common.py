@@ -1,4 +1,3 @@
-
 def process_figure(fig, data_src):
     import argparse
     import sys

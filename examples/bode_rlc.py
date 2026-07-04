@@ -5,7 +5,7 @@ L = 1e-4  # 100 µH
 C = 1e-6  # 1 uF
 TITLE = [
     "Bode diagram of RLC circuit",
-    "[size=18;italic;font=serif]L = 0.1 mH / C = 1 µF[/size;italic;font]"
+    "[size=18;italic;font=serif]L = 0.1 mH / C = 1 µF[/size;italic;font]",
 ]
 
 
@@ -101,4 +101,5 @@ if __name__ == "__main__":
     )
 
     import _common
+
     _common.process_figure(fig, data_src)
