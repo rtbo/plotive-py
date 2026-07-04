@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from datetime import datetime
     from . import axis
 
+from .cmap import BuiltinCmap, ColorMap
 from .style import Color, Fill, Marker, Stroke, _parse_mpl_style
 
 type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
@@ -112,57 +113,6 @@ class Line(Series):
             self.stroke.width = width
 
 
-class ColorMap:
-    def __init__(
-        self,
-        cmap: str | list[Color],
-        method: str | None = "auto",
-        scale: None | axis.Scale = None,
-    ):
-        """Initializes a colormap
-
-        Parameters
-        ----------
-        cmap : str | list[Color]
-            Colormap name or list of colors.
-        method : str | None, default="auto"
-            interp method for the colormap.
-            Ignored if `cmap` isn't a list of colors.
-            Accepted values are:
-                - "auto":
-                        - If the list has fewer than 256 colors, use "linear" interp.
-                        - If the list has 256 colors or more, use "nearest" interp,
-                         since the colormap is already at the maximum resolution typically used for rendering.
-                - None: using nearest neighbor
-                - "nearest: same as None
-                - "srgb" (interp in sRGB color space)
-                - "fast": same as "srgb"
-                - "linear" (interp in linear RGB color space)
-                - "perceptual" (interp in OkLab color space)
-        scale : Scale | None, default=None
-            Optional scale for mapping data values to the colormap. If None, a default linear scale will be used,
-            that maps the full data range to the full colormap.
-        """
-        self.cmap = cmap
-        if method is None:
-            method = "nearest"
-        if method == "fast":
-            method = "srgb"
-        if method == "auto" and isinstance(cmap, list):
-            method = "linear" if len(cmap) < 256 else "nearest"
-        self.method = method
-        self.scale = scale
-
-    @staticmethod
-    def _normalize(input: str | list[Color] | ColorMap) -> "ColorMap":
-        if isinstance(input, ColorMap):
-            return input
-        elif isinstance(input, str) or isinstance(input, list):
-            return ColorMap(cmap=input)
-        else:
-            raise ValueError(f"Invalid colormap specification: {input}")
-
-
 class Scatter(Series):
     """Scatter series defined by x/y coordinates."""
 
@@ -174,7 +124,7 @@ class Scatter(Series):
         marker: Marker | None = None,
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
-        cmap: None | ColorMap | list[Color] | str = "viridis",
+        cmap: None | ColorMap | list[Color] | BuiltinCmap = "viridis",
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
