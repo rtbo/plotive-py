@@ -1,7 +1,6 @@
+use plotive::des;
 use plotive::des::series::BarsPosition;
 use pyo3::prelude::*;
-
-use plotive::des;
 use pyo3::types::{PyDateAccess, PyDateTime, PyList, PyTimeAccess};
 
 use crate::py_des::extract_axis_scale;

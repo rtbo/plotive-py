@@ -1,8 +1,9 @@
-use pyo3::{prelude::*, types::PyTuple};
-
 use plotive::{des, style};
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 
-use crate::{py_des::extract_text, py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke}};
+use crate::py_des::extract_text;
+use crate::py_style::{extract_theme_color, extract_theme_marker, extract_theme_stroke};
 
 pub fn extract_annot(py_annot: &Bound<'_, PyAny>) -> PyResult<des::Annotation> {
     let cls_name = super::extract_class_name(py_annot)?;

@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use numpy::PyArrayMethods;
 use plotive::data;
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 pub fn extract_data_source<'py>(obj: &Bound<'py, PyAny>) -> PyResult<Arc<dyn data::Source + 'py>> {
     if obj.is_none() {
@@ -295,9 +296,7 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
     Ok(NumpyDataSource { names, columns })
 }
 
-fn extract_column<'py>(
-    col: &Bound<'py, PyAny>,
-) -> Option<NumpyColumn<'py>> {
+fn extract_column<'py>(col: &Bound<'py, PyAny>) -> Option<NumpyColumn<'py>> {
     if let Some(array) = is_numpy_array_f64(col) {
         Some(NumpyColumn::F64(array))
     } else if let Some(array) = is_numpy_array_f32(col) {

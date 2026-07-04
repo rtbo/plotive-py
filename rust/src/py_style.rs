@@ -1,8 +1,6 @@
 use std::fmt;
 
-use plotive::style;
-use plotive::{Rgb8, Rgba8, color};
-
+use plotive::{Rgb8, Rgba8, color, style};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
@@ -89,10 +87,7 @@ pub fn extract_theme_color(
     Ok(color.into())
 }
 
-fn extract_fill<C: style::Color>(
-    py_fill: &Bound<'_, PyAny>,
-    color: C,
-) -> PyResult<style::Fill<C>> {
+fn extract_fill<C: style::Color>(py_fill: &Bound<'_, PyAny>, color: C) -> PyResult<style::Fill<C>> {
     let opacity = getattr_not_none(py_fill, "opacity")?
         .map(|o| o.extract::<f32>())
         .transpose()?;

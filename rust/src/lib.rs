@@ -35,9 +35,7 @@ mod plt_rs {
     use plotive_pxl::PxlRender;
     use pyo3::prelude::*;
 
-    use super::py_data;
-    use super::py_des;
-    use super::py_style;
+    use super::{py_data, py_des, py_style};
 
     #[pyfunction]
     fn parse_color(py_col: &Bound<'_, PyAny>) -> PyResult<(f32, f32, f32, f32)> {
