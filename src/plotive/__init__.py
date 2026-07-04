@@ -1,6 +1,8 @@
 """High-level public API for building and exporting Plotive figures."""
 
+from collections.abc import Mapping
 
+from . import mapping
 from .style import *
 from .annot import Annotation
 from .axis import *
@@ -33,7 +35,7 @@ STELLAR_TICKS = [
 """Predefined ticks that fits well the stellar colormap."""
 
 
-class Plot:
+class Plot(mapping.PvMapping):
     """Single subplot definition with series, axes, and annotations."""
 
     def __init__(
@@ -97,9 +99,9 @@ class Plot:
             legend = Legend(pos=legend)
         self.legend = legend
 
-        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.fill = fill
 
-        self.colorbar = ColorBar._normalize(colorbar) if colorbar is not None else None
+        self.colorbar = colorbar
 
         self.annotations = annotations
 
@@ -118,14 +120,6 @@ class Plot:
             if y_axes is not None
             else ([y_axis] if y_axis is not None else [Axis()])
         )
-
-        # Sanity check
-        for ax in self.x_axes:
-            if hasattr(ax, "_side") and (ax._side == "left" or ax._side == "right"):
-                raise ValueError("X-axis cannot be on the left or right side.")
-        for ax in self.y_axes:
-            if hasattr(ax, "_side") and (ax._side == "top" or ax._side == "bottom"):
-                raise ValueError("Y-axis cannot be on the top or bottom side.")
 
 
 class PxlArray:
@@ -152,7 +146,7 @@ class PxlArray:
         return self.data
 
 
-class Figure:
+class Figure(mapping.PvMapping):
     """Top-level container for one or more plots."""
 
     def __init__(
@@ -201,9 +195,7 @@ class Figure:
         self.title = title
         self.size = size
         self.padding = padding
-        self.fill = fill and Fill._normalize(fill)
-        if isinstance(legend, str):
-            legend = Legend(pos=legend)
+        self.fill = fill
         self.legend = legend
 
     def render_pxl(

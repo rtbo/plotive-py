@@ -1,6 +1,6 @@
-
-
 from typing import Literal
+
+from .mapping import PvMapping
 
 from . import axis
 from .color import Color
@@ -9,7 +9,8 @@ from .text import Text
 
 type ColorBarPos = Literal["auto", "top", "right", "bottom", "left"]
 
-class ColorBar:
+
+class ColorBar(PvMapping):
     def __init__(
         self,
         pos: ColorBarPos = "right",
@@ -25,17 +26,6 @@ class ColorBar:
         self.pos = pos
         self.width = width
         self.title = title
-        self.border = (
-            Stroke._normalize(border, default_width=1.0) if border is not None else None
-        )
-        self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
+        self.border = border
+        self.ticks = ticks
         self.margin = margin
-
-    @staticmethod
-    def _normalize(input: ColorBarPos | ColorBar) -> "ColorBar":
-        if isinstance(input, ColorBar):
-            return input
-        elif isinstance(input, str):
-            return ColorBar(pos=input)
-        else:
-            raise ValueError(f"Invalid colorbar config: {input!r}")

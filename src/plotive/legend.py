@@ -2,6 +2,7 @@ from typing import Literal
 
 from .color import Color
 from .geom import Padding
+from .mapping import PvMapping
 from .style import Fill, Stroke
 
 type FigLegendPos = Literal[
@@ -29,7 +30,7 @@ type PlotLegendPos = Literal[
 ]
 
 
-class Legend[PosType: FigLegendPos | PlotLegendPos]:
+class Legend[PosType: FigLegendPos | PlotLegendPos](PvMapping):
     """Legend display settings."""
 
     def __init__(
@@ -68,10 +69,8 @@ class Legend[PosType: FigLegendPos | PlotLegendPos]:
             Spacing between legend entries (horizontal, vertical).
         """
         self.pos = pos
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.border = (
-            Stroke._normalize(border, default_width=1.0) if border is not None else None
-        )
+        self.fill = fill
+        self.border = border
         self.columns = columns
         self.margin = margin
         self.padding = padding

@@ -1,7 +1,8 @@
-from .style import Color, Fill, Stroke
+from .style import Color, Fill, Stroke, ThemeColor, ThemeFill, ThemeStroke
+from .mapping import PvMapping
 
 
-class TextProps:
+class TextProps(PvMapping):
     """Text rendering properties."""
 
     def __init__(
@@ -12,8 +13,8 @@ class TextProps:
         width: None | str | int = None,
         style: None | str = None,
         size: None | float = None,
-        color: None | Fill = None,
-        outline: None | Stroke | Color = None,
+        color: None | ThemeColor | ThemeFill = None,
+        outline: None | ThemeStroke | ThemeColor = None,
         underline: None | bool = None,
         strikethrough: None | bool = None,
     ):
@@ -41,15 +42,12 @@ class TextProps:
             Whether the text is strikethrough.
         """
         self.family = family
-        self.size = size
-        self.color = Fill._normalize(color) if color is not None else None
+        self.width = width
         self.weight = weight
         self.style = style
-        self.outline = (
-            Stroke._normalize(outline, default_width=1.0)
-            if outline is not None
-            else None
-        )
+        self.size = size
+        self.color = color
+        self.outline = outline
         self.underline = underline
         self.strikethrough = strikethrough
 

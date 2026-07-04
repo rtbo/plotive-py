@@ -278,7 +278,7 @@ def test_axes_datetime_locator():
     plot = pv.Plot(
         series=[series],
         x_axis=pv.Axis(
-            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))
+            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(period=(2, "day")))
         ),
     )
     fig = fig_small(plot)
@@ -296,7 +296,7 @@ def axes_num_datetime_locator():
     plot = pv.Plot(
         series=[series],
         x_axis=pv.Axis(
-            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(2, "days"))
+            ticks=pv.axis.Ticks(locator=pv.axis.DateTimeTicksLocator(period=(2, "day")))
         ),
     )
     fig = fig_small(plot)

@@ -2,6 +2,8 @@
 
 from typing import Literal
 
+from .mapping import PvMapping
+
 from .color import Color
 
 type ThemePaletteColor = Literal[
@@ -18,7 +20,7 @@ type Pattern = list[float] | list[int] | Literal[
 """Line pattern specification, either as a list of dash/gap lengths in pixels or as a predefined pattern name."""
 
 
-class Fill[ColType: Color | ThemeColor | SeriesColor]:
+class Fill[ColType: Color | ThemeColor | SeriesColor](PvMapping):
     """Type alias for fill colors."""
 
     def __init__(self, color: ColType = "auto", *, opacity: float | None = None):
@@ -35,16 +37,8 @@ class Fill[ColType: Color | ThemeColor | SeriesColor]:
         self.color = color
         self.opacity = opacity
 
-    @staticmethod
-    def _normalize(input: Fill | ColType) -> Fill:
-        """Normalize a fill specification to a ThemeFill object."""
-        if isinstance(input, Fill):
-            return Fill(color=input.color, opacity=input.opacity)
-        else:
-            return Fill(color=input)
 
-
-class Stroke[ColType: Color | ThemeColor | SeriesColor]:
+class Stroke[ColType: Color | ThemeColor | SeriesColor](PvMapping):
     """Line stroke style."""
 
     def __init__(
@@ -76,19 +70,6 @@ class Stroke[ColType: Color | ThemeColor | SeriesColor]:
         self.pattern = pattern
         self.opacity = opacity
 
-    @staticmethod
-    def _normalize(input: Stroke | ColType, default_width: float) -> Stroke:
-        """Normalize a stroke specification to a ThemeStroke object."""
-        if isinstance(input, Stroke):
-            return Stroke(
-                color=input.color,
-                width=input.width if input.width is not None else default_width,
-                pattern=input.pattern,  # type: ignore[arg-type]
-                opacity=input.opacity,
-            )
-        else:
-            return Stroke(color=input, width=default_width)
-
 
 type MarkerShape = Literal[
     "circle",
@@ -103,7 +84,7 @@ type MarkerShape = Literal[
 ]
 
 
-class Marker[ColType: Color | ThemeColor | SeriesColor]:
+class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
     """Marker style for scatter series."""
 
     def __init__(
@@ -135,21 +116,31 @@ class Marker[ColType: Color | ThemeColor | SeriesColor]:
         """
         self.shape = shape
         self.size = size
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = (
-            Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
-        )
+        self.fill = fill
+        self.stroke = stroke
+
         if color is not None:
+            if fill is None:
+                self.fill = color
+            elif isinstance(fill, Fill):
+                fill.color = color
+            else:
+                self.fill = color
+
+            if stroke is None:
+                self.stroke = color
+            elif isinstance(stroke, Stroke):
+                stroke.color = color
+            else:
+                self.stroke = color
+
+        if fill_opacity is not None:
             if self.fill is None:
-                self.fill = Fill(color=color)
+                self.fill = Fill("auto", opacity=fill_opacity)
+            elif isinstance(self.fill, Fill):
+                self.fill.opacity = fill_opacity
             else:
-                self.fill.color = color
-            if self.stroke is None:
-                self.stroke = Stroke(color=color)
-            else:
-                self.stroke.color = color
-        if self.fill and fill_opacity is not None:
-            self.fill.opacity = fill_opacity
+                self.fill = Fill(self.fill, opacity=fill_opacity)
 
 
 type ThemeFill = Fill[ThemeColor]
@@ -247,7 +238,7 @@ class Style:
 
 def _parse_mpl_style(
     mpl_style: str,
-) -> tuple[MarkerShape | None, Pattern | None, Color | None]:
+) -> tuple[MarkerShape | None, Pattern | None, SeriesColor | None]:
     from ._rs import parse_color as rs_parse_color
 
     try:

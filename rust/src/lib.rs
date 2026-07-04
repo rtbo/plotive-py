@@ -1,11 +1,7 @@
 use pyo3::prelude::*;
+use pythonize::depythonize;
 
-mod py_annot;
 mod py_data;
-mod py_des;
-mod py_geom;
-mod py_legend;
-mod py_series;
 mod py_style;
 
 fn getattr_not_none<'py>(
@@ -23,10 +19,9 @@ fn getattr_not_none<'py>(
     }
 }
 
-fn extract_class_name(obj: &Bound<'_, PyAny>) -> PyResult<String> {
-    let class = obj.getattr("__class__")?;
-    let name = class.getattr("__name__")?.str()?;
-    Ok(name.to_str()?.to_owned())
+fn extract_figure(obj: &Bound<'_, PyAny>) -> PyResult<plotive::des::Figure> {
+    let fig: plotive::des::Figure = depythonize(obj)?;
+    Ok(fig)
 }
 
 #[pymodule]
@@ -35,7 +30,7 @@ mod plt_rs {
     use plotive_pxl::PxlRender;
     use pyo3::prelude::*;
 
-    use super::{py_data, py_des, py_style};
+    use super::{py_data, py_style};
 
     #[pyfunction]
     fn parse_color(py_col: &Bound<'_, PyAny>) -> PyResult<(f32, f32, f32, f32)> {
@@ -54,7 +49,7 @@ mod plt_rs {
         py_data_src: &Bound<'_, PyAny>,
         py_style: &Bound<'_, PyAny>,
     ) -> PyResult<(Vec<u8>, u32, u32)> {
-        let fig = py_des::extract_figure(py_fig)?;
+        let fig = super::extract_figure(py_fig)?;
         let data_src = py_data::extract_data_source(py_data_src)?;
         let mut params: plotive_pxl::Params = Default::default();
         if !py_style.is_none() {
@@ -81,7 +76,7 @@ mod plt_rs {
     ) -> PyResult<()> {
         use plotive_pxl::PxlRender;
 
-        let fig = py_des::extract_figure(py_fig)?;
+        let fig = super::extract_figure(py_fig)?;
         let data_src = py_data::extract_data_source(py_data_src)?;
         let mut params: plotive_pxl::Params = Default::default();
         if !py_style.is_none() {
@@ -104,7 +99,7 @@ mod plt_rs {
     ) -> PyResult<()> {
         use plotive_svg::SaveSvg;
 
-        let fig = py_des::extract_figure(py_fig)?;
+        let fig = super::extract_figure(py_fig)?;
         let data_src = py_data::extract_data_source(py_data_src)?;
         let mut params: plotive_svg::Params = Default::default();
         if !py_style.is_none() {
@@ -126,7 +121,7 @@ mod plt_rs {
     ) -> PyResult<()> {
         use plotive_iced::Show;
 
-        let fig = py_des::extract_figure(py_fig)?;
+        let fig = super::extract_figure(py_fig)?;
         // show requires 'static lifetime, so we need to copy the data source
         let data_src = py_data::extract_data_source(py_data_src)?.copy();
         let mut params: plotive_iced::show::Params = Default::default();

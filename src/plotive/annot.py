@@ -3,21 +3,22 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
+from . import style
+from .mapping import PvMapping
+from .style import Pattern, Stroke
+
 if TYPE_CHECKING:
     from .style import Fill, Color
 
-from .style import Pattern, Stroke
-from . import style
 
-
-class Annotation(ABC):
+class Annotation(ABC, PvMapping):
     """Base class for plot annotations."""
 
     def __init__(
         self,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: str = "above-series",
     ):
         """Initialize common annotation settings.
 
@@ -30,13 +31,10 @@ class Annotation(ABC):
         zpos : str, default="above-series"
             Rendering layer relative to series.
         """
+        self.type = self.__class__.__name__.lower()
         self.x_axis = x_axis
         self.y_axis = y_axis
-        self.zpos = zpos
-
-    def _get_type(self) -> str:
-        """Return the concrete annotation type name."""
-        return self.__class__.__name__
+        self.z_pos = z_pos
 
 
 class Line(Annotation):
@@ -53,7 +51,7 @@ class Line(Annotation):
         pattern: None | Pattern = None,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "below-series",
+        z_pos: str = "below-series",
     ):
         """Initialize a line annotation.
 
@@ -83,7 +81,7 @@ class Line(Annotation):
         ValueError
             If none or more than one line definition is provided.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
         if sum(x is not None for x in [horizontal, vertical, slope, two_points]) != 1:
             raise ValueError(
                 "Exactly one of 'horizontal', 'vertical', 'slope', or 'two_points' must be provided."
@@ -117,7 +115,7 @@ class Arrow(Annotation):
         head_size: float = 10.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: str = "above-series",
     ):
         """Initialize an arrow annotation.
 
@@ -138,7 +136,7 @@ class Arrow(Annotation):
         zpos : str, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
         self.x, self.y = xy
         self.dx, self.dy = delta
         if isinstance(stroke, str):
@@ -157,7 +155,7 @@ class Marker(Annotation):
         marker: style.Marker = style.Marker(),
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: str = "above-series",
     ):
         """Initialize a marker annotation.
 
@@ -174,8 +172,8 @@ class Marker(Annotation):
         zpos : str, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
-        self.x, self.y = xy
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
+        self.xy = xy
         self.marker = marker
 
 
@@ -193,7 +191,7 @@ class Label(Annotation):
         angle: float = 0.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: str = "above-series",
     ):
         """Initialize a text label annotation.
 
@@ -218,7 +216,7 @@ class Label(Annotation):
         zpos : str, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
         self.x, self.y = xy
         self.text = text
         self.anchor = anchor
