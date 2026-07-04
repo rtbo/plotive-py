@@ -40,13 +40,13 @@ class Plot:
         self,
         series: list[Series] | Series,
         *,
+        title: None | Text = None,
         x_axis: None | Axis = None,
         y_axis: None | Axis = None,
         x_axes: None | list[Axis] = None,
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
-        title: None | Text = None,
-        fill: None | Fill | Color = None,
+        fill: None | ThemeFill | ThemeColor = None,
         legend: None | PlotLegend | PlotLegendPos = None,
         colorbar: None | ColorBar | ColorBarPos = None,
         annotations: list[Annotation] = [],
@@ -159,13 +159,13 @@ class Figure:
         self,
         /,
         *,
-        title: None | Text = None,
         size: None | Size = (800, 600),
-        padding: None | Padding = 20.0,
-        fill: None | Fill | Color = "background",
-        legend: None | FigLegend | FigLegendPos = None,
+        title: None | Text = None,
         plot: None | Plot = None,
         plots: None | list[Plot] = None,
+        padding: None | Padding = None,
+        fill: None | ThemeFill | ThemeColor = "background",
+        legend: None | FigLegend | FigLegendPos = None,
     ):
         """Initialize a figure.
 
@@ -175,7 +175,7 @@ class Figure:
             Figure title.
         size : Size | None, default=(800, 600)
             Output size in pixels.
-        padding : Padding | None, default=20.0
+        padding : Padding | None, default=None
             Figure inner padding.
         fill : Fill | Color | None, default="background"
             Figure background fill.
