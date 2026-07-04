@@ -1,10 +1,11 @@
 """High-level public API for building and exporting Plotive figures."""
 
-from .style import *
 
+from .style import *
 from .annot import Annotation
 from .axis import *
 from .color import Color
+from .colorbar import ColorBar, ColorBarPos
 from .geom import Padding, Size
 from .legend import FigLegend, FigLegendPos, Legend, PlotLegend, PlotLegendPos
 from .series import Series
@@ -15,38 +16,6 @@ type DataSource = object
 User-provided data source resolved at render time.
 Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas DataFrames
 """
-
-
-class ColorBar:
-    def __init__(
-        self,
-        pos: str = "right",
-        *,
-        width: float = 20.0,
-        title: Text | None = None,
-        border: Stroke | Color | None = "foreground",
-        ticks: None | axis.TicksLocator | list[float] | list[int] = None,
-        margin: float = 12.0,
-    ):
-        if pos == "auto":
-            pos = "right"
-        self.pos = pos
-        self.width = width
-        self.title = title
-        self.border = (
-            Stroke._normalize(border, default_width=1.0) if border is not None else None
-        )
-        self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
-        self.margin = margin
-
-    @staticmethod
-    def _normalize(input: str | ColorBar) -> "ColorBar":
-        if isinstance(input, ColorBar):
-            return input
-        elif isinstance(input, str):
-            return ColorBar(pos=input)
-        else:
-            raise ValueError(f"Invalid colorbar config: {input!r}")
 
 
 STELLAR_TICKS = [
@@ -79,7 +48,7 @@ class Plot:
         title: None | Text = None,
         fill: None | Fill | Color = None,
         legend: None | PlotLegend | PlotLegendPos = None,
-        colorbar: None | ColorBar | str = None,
+        colorbar: None | ColorBar | ColorBarPos = None,
         annotations: list[Annotation] = [],
     ):
         """Initialize a plot.
