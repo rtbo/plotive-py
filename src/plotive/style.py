@@ -189,10 +189,31 @@ class ThemePalette:
         self.legend_border = legend_border
 
 
-type Theme = ThemePalette | str
+type Theme = ThemePalette | Literal[
+    "light",
+    "dark",
+    "catppuccin-mocha",
+    "catppuccin-macchiato",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "dracula",
+    "alucard",
+]
 """Explicit theme object or predefined theme name."""
 
-type SeriesPalette = list[Color] | str
+type SeriesPalette = list[Color] | Literal[
+    "black",
+    "standard",
+    "pastel",
+    "tol-bright",
+    "okabe-ito",
+    "catppuccin-mocha",
+    "catppuccin-macchiato",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "dracula",
+    "alucard",
+]
 """Explicit series palette or predefined palette name."""
 
 
