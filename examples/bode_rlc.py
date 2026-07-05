@@ -94,7 +94,7 @@ if __name__ == "__main__":
                     ticks="auto",
                     minor_ticks="auto",
                 ),
-                y_axis=pv.Axis(title="Phase [rad]", ticks="pi", grid="auto"),
+                y_axis=pv.Axis(title="Phase [rad]", ticks="pimultiple", grid="auto"),
             ),
         ],
         legend="right",

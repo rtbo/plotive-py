@@ -1,15 +1,20 @@
 """Annotation objects that can be overlaid on plots."""
 
 from abc import ABC
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
+
+from .color import Color
+
+from .text import Text
 
 from . import style
 from .mapping import PvMapping
 from .style import Pattern, Stroke
 
 if TYPE_CHECKING:
-    from .style import Fill, Color
+    from .style import Fill
 
+type ZPos = Literal["above-series", "below-series"]
 
 class Annotation(ABC, PvMapping):
     """Base class for plot annotations."""
@@ -18,7 +23,7 @@ class Annotation(ABC, PvMapping):
         self,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        z_pos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize common annotation settings.
 
@@ -28,7 +33,7 @@ class Annotation(ABC, PvMapping):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : str, default="above-series"
             Rendering layer relative to series.
         """
         self.type = self.__class__.__name__.lower()
@@ -51,7 +56,7 @@ class Line(Annotation):
         pattern: None | Pattern = None,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        z_pos: str = "below-series",
+        z_pos: ZPos = "below-series",
     ):
         """Initialize a line annotation.
 
@@ -73,7 +78,7 @@ class Line(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="below-series"
+        z_pos : ZPos, default="below-series"
             Rendering layer relative to series.
 
         Raises
@@ -115,7 +120,7 @@ class Arrow(Annotation):
         head_size: float = 10.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        z_pos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize an arrow annotation.
 
@@ -133,7 +138,7 @@ class Arrow(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
         super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
@@ -155,7 +160,7 @@ class Marker(Annotation):
         marker: style.Marker = style.Marker(),
         x_axis: str | None = None,
         y_axis: str | None = None,
-        z_pos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize a marker annotation.
 
@@ -169,7 +174,7 @@ class Marker(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
         super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
@@ -183,15 +188,14 @@ class Label(Annotation):
     def __init__(
         self,
         xy: tuple[float, float],
-        text: str,
+        text: Text,
         *,
         anchor: str = "top-left",
-        color: None | Color = None,
-        frame: None | tuple[Fill | None, Stroke | str | None] = None,
+        frame: None | tuple[Fill | None, Stroke | Color | None] = None,
         angle: float = 0.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        z_pos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize a text label annotation.
 
@@ -213,14 +217,13 @@ class Label(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
         super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
-        self.x, self.y = xy
+        self.xy = xy
         self.text = text
         self.anchor = anchor
-        self.color = color
         if frame is not None:
             fill, stroke = frame
             if isinstance(stroke, str):

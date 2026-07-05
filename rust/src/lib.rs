@@ -135,4 +135,13 @@ mod plt_rs {
 
         Ok(())
     }
+
+    #[pyfunction]
+    fn to_json(py_fig: &Bound<'_, PyAny>) -> PyResult<String> {
+        let fig = super::extract_figure(py_fig)?;
+        let json = serde_json::to_string_pretty(&fig).map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to convert figure to JSON: {}", e))
+        })?;
+        Ok(json)
+    }
 }

@@ -150,41 +150,69 @@ class LogTicksLocator(TicksLocator):
         self.base = base
 
 
+type DateTimeUnit = Literal[
+    "year",
+    "years",
+    "month",
+    "months",
+    "week",
+    "weeks",
+    "day",
+    "days",
+    "hour",
+    "hours",
+    "min",
+    "mins",
+    "sec",
+    "secs",
+    "milli",
+    "millis",
+    "micro",
+    "micros",
+]
+
 class DateTimeTicksLocator(TicksLocator):
     """Tick locator for date/time values."""
 
-    def __init__(self, period: tuple[int, str] | None = None):
+    def __init__(self, period: tuple[int, DateTimeUnit] | None = None):
         """Initialize a datetime tick locator.
 
         Parameters
         ----------
-        period : int, default=1
-            Tick period. Ignored when ``unit='auto'``.
-        unit : str, default="auto"
-            Time unit: ``auto``, ``micro``, ``milli``, ``sec``, ``min``,
-            ``hour``, ``day``, ``week``, ``month``, or ``year``.
+        period : tuple[int, DateTimeUnit] | None, default=None
+            Tick period and unit. Ignored when ``period=None``.
         """
         self.type = "datetime"
         self.period = period
 
+type TimeDeltaUnit = Literal[
+    "day",
+    "days",
+    "hour",
+    "hours",
+    "min",
+    "mins",
+    "sec",
+    "secs",
+    "milli",
+    "millis",
+    "micro",
+    "micros",
+]
 
 class TimeDeltaTicksLocator(TicksLocator):
     """Tick locator for duration values."""
 
-    def __init__(self, period: int = 1, unit: str = "auto"):
+    def __init__(self, period: tuple[int, TimeDeltaUnit] | None = None):
         """Initialize a timedelta tick locator.
 
         Parameters
         ----------
-        period : int, default=1
-            Tick period. Ignored when ``unit='auto'``.
-        unit : str, default="auto"
-            Time unit: ``auto``, ``micros``, ``seconds``, ``minutes``,
-            ``hours``, or ``days``.
+        period : tuple[int, TimeDeltaUnit] | None, default=None
+            Tick period and unit. Ignored when ``period=None``.
         """
         self.type = "timedelta"
         self.period = period
-        self.unit = unit
 
 
 class TicksFormatter(PvMapping):

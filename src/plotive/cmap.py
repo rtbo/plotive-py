@@ -12,18 +12,20 @@ type LerpMethod = Literal["nearest", "srgb", "linear", "perceptual", "xyz"]
 class ColorMap(PvMapping):
     def __init__(
         self,
-        cmap: BuiltinCmap,
+        cmap: BuiltinCmap | None = None,
         stops: None | list[Color] = None,
         method: LerpMethod | None = None,
         scale: None | axis.Scale = None,
     ):
         """Initializes a colormap
 
+        Either of cmap or stops must be provided (but not both).
+
         Parameters
         ----------
         cmap : str
             Colormap name.
-            Can't be used with `stops` and `method` argument.
+            Can't be used with `stops` argument.
         stops : list[Color] | None, default=None
             Optional list of colors for the colormap.
             Can't be used with `cmap` argument.

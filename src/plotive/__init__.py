@@ -75,9 +75,9 @@ class Plot(mapping.PvMapping):
             Subplot title.
         fill : Fill | Color | None, default=None
             Background fill for the plot area.
-        legend : Legend | str | None, default=None
+        legend : Legend | PlotLegendPos | None, default=None
             Subplot legend config or shortcut position.
-        colorbar : ColorBar | None | str, default=None
+        colorbar : ColorBar | None | ColorBarPos, default=None
             Subplot colorbar config.
         annotations : list[Annotation], default=[]
             Annotation objects attached to this plot.
@@ -135,7 +135,6 @@ class PxlArray:
 
     def depremultiply(self) -> bytes:
         """Return non-premultiplied pixel data."""
-
         for i in range(0, len(self.data), 4):
             r, g, b, a = self.data[i : i + 4]
             if a > 0 and a < 255:
@@ -199,7 +198,7 @@ class Figure(mapping.PvMapping):
         self.legend = legend
 
     def render_pxl(
-        self, *, data_source: None | DataSource = None, style: None | Style | str = None
+        self, *, data_source: None | DataSource = None, style: None | Style | BuiltinStyle = None
     ) -> PxlArray:
         """Render the figure as an array of pixels
 
@@ -207,7 +206,7 @@ class Figure(mapping.PvMapping):
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
+        style : Style | BuiltinStyle | None, default=None
             Rendering style object or style name.
         """
         from ._rs import render_pxl as rs_render_pxl
@@ -220,7 +219,7 @@ class Figure(mapping.PvMapping):
         path: str,
         *,
         data_source: None | DataSource = None,
-        style: None | Style | str = None,
+        style: None | Style | BuiltinStyle = None,
     ):
         """Export the figure as PNG.
 
@@ -230,7 +229,7 @@ class Figure(mapping.PvMapping):
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
+        style : Style | BuiltinStyle | None, default=None
             Rendering style object or style name.
         """
         from ._rs import save_png as rs_save_png
@@ -242,7 +241,7 @@ class Figure(mapping.PvMapping):
         path: str,
         *,
         data_source: None | DataSource = None,
-        style: None | Style | str = None,
+        style: None | Style | BuiltinStyle = None,
     ):
         """Export the figure as SVG.
 
@@ -252,7 +251,7 @@ class Figure(mapping.PvMapping):
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
+        style : Style | BuiltinStyle | None, default=None
             Rendering style object or style name.
         """
         from ._rs import save_svg as rs_save_svg
@@ -260,7 +259,7 @@ class Figure(mapping.PvMapping):
         rs_save_svg(self, path, data_source, style)
 
     def show(
-        self, *, data_source: None | DataSource = None, style: None | Style | str = None
+        self, *, data_source: None | DataSource = None, style: None | Style | BuiltinStyle = None
     ):
         """Display the figure in an interactive viewer.
 
@@ -268,7 +267,7 @@ class Figure(mapping.PvMapping):
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
+        style : Style | BuiltinStyle | None, default=None
             Rendering style object or style name.
         """
         from ._rs import show as rs_show

@@ -68,10 +68,10 @@ class Series(ABC, mapping.PvMapping):
         y_axis : AxisRef | None, default=None
             Target y-axis reference.
         """
+        self.type = self.__class__.__name__.lower()
         self.name = name
         self.x_axis = x_axis
         self.y_axis = y_axis
-        self.type = self.__class__.__name__.lower()
 
 
 class Line(Series):

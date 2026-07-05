@@ -1,5 +1,36 @@
+from typing import Literal
+
 from .style import Color, Fill, Stroke, ThemeColor, ThemeFill, ThemeStroke
 from .mapping import PvMapping
+
+type BuiltinFamily = Literal["sans-serif", "serif", "monospace", "cursive", "fantasy"]
+
+type Weight = Literal[
+    "thin",
+    "extra-light",
+    "light",
+    "normal",
+    "medium",
+    "semi-bold",
+    "bold",
+    "semibold",
+    "extra-bold",
+    "black",
+]
+
+type Width = Literal[
+    "ultra-condensed",
+    "extra-condensed",
+    "condensed",
+    "semi-condensed",
+    "normal",
+    "semi-expanded",
+    "expanded",
+    "extra-expanded",
+    "ultra-expanded",
+]
+
+type Style = Literal["normal", "italic", "oblique"]
 
 
 class TextProps(PvMapping):
@@ -8,10 +39,10 @@ class TextProps(PvMapping):
     def __init__(
         self,
         *,
-        family: None | str | list[str] = None,
-        weight: None | str | int = None,
-        width: None | str | int = None,
-        style: None | str = None,
+        family: None | str | BuiltinFamily | list[BuiltinFamily | str] = None,
+        weight: None | Weight | int = None,
+        width: None | Width | int = None,
+        style: None | Style = None,
         size: None | float = None,
         color: None | ThemeColor | ThemeFill = None,
         outline: None | ThemeStroke | ThemeColor = None,
@@ -22,12 +53,12 @@ class TextProps(PvMapping):
 
         Parameters
         ----------
-        family : str | list[str] | None, default=None
+        family : str | BuiltinFamily | list[BuiltinFamily | str] | None, default=None
             Font family name or list of font family names.
-        weight : str | int | None, default=None
-            Font weight. Accepted values are "normal", "bold", "light", "ultralight", "semibold", "heavy" and "black".
-        width : str | int | None, default=None
-            Font width. Accepted values are "normal", "condensed", "expanded", "ultracondensed", "semicondensed", "semiexpanded", "ultraexpanded" and "extraexpanded".
+        weight : Weight | int | None, default=None
+            Font weight. Accepted values are "thin", "extra-light", "light", "normal", "medium", "semi-bold", "bold", "extra-bold", "semibold", "black".
+        width : Width | int | None, default=None
+            Font width. Accepted values are "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "normal", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded".
         style : str | None, default=None
             Font style. Accepted values are "normal" and "italic".
         size : float | None, default=None

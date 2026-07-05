@@ -6,6 +6,8 @@ from .mapping import PvMapping
 
 from .color import Color
 
+type Auto = Literal["auto"]
+
 type ThemePaletteColor = Literal[
     "background", "foreground", "grid", "legend-border", "legend-fill"
 ]
@@ -43,7 +45,7 @@ class Stroke[ColType: Color | ThemeColor | SeriesColor](PvMapping):
 
     def __init__(
         self,
-        color: ColType = "auto",
+        color: ColType | Auto = "auto",
         *,
         width: float | None = None,
         pattern: Pattern | None = None,
@@ -54,7 +56,7 @@ class Stroke[ColType: Color | ThemeColor | SeriesColor](PvMapping):
 
         Parameters
         ----------
-        color : ColType, default="auto"
+        color : ColType | Auto, default="auto"
             Stroke color. "auto" means that the default color for the context will be used.
         width : float | None
             Stroke width in pixels. None means that the default width for the context will be used.
@@ -92,8 +94,8 @@ class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
         *,
         shape: MarkerShape = "circle",
         size: float = 8.5**2,
-        fill: None | Fill[ColType] | ColType = "auto",
-        stroke: None | Stroke[ColType] | ColType = "auto",
+        fill: None | Fill[ColType] | ColType | Auto = "auto",
+        stroke: None | Stroke[ColType] | ColType | Auto = "auto",
         color: None | ColType = None,
         fill_opacity: None | float = None,
     ):
@@ -103,8 +105,8 @@ class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
         ----------
         shape : MarkerShape
             Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
-        size : float, default=10.0
-            Marker size in pixels.
+        size : float, default=8.5**2
+            Marker size in pixels. The size is proportional to the area of the marker,
         fill : Fill | None, default="auto"
             Marker fill color.
         stroke : Stroke | Color | None, default="auto"
@@ -234,6 +236,21 @@ class Style:
         """Initialize global style settings."""
         self.theme = theme
         self.palette = palette
+
+
+type BuiltinStyle = Literal[
+    "black-white",
+    "light",
+    "dark",
+    "tol-bright",
+    "okabe-ito",
+    "catppuccin-mocha",
+    "catppuccin-macchiato",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "dracula",
+    "alucard",
+]
 
 
 def _parse_mpl_style(
