@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use numpy::PyArrayMethods;
 use plotive::data;
+use plotive::time::DateTime;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -66,6 +67,7 @@ enum NumpyColumn<'py> {
     F64(numpy::borrow::PyReadonlyArray1<'py, f64>),
     F32(numpy::borrow::PyReadonlyArray1<'py, f32>),
     I64(numpy::borrow::PyReadonlyArray1<'py, i64>),
+    Time(Vec<Option<DateTime>>),
 }
 
 struct NumpyF64Iter<'py> {
@@ -152,12 +154,32 @@ impl<'py> Iterator for NumpyI64Iter<'py> {
     }
 }
 
+struct NumpyTimeIter<'a> {
+    data: &'a [Option<DateTime>],
+    index: usize,
+}
+
+impl Iterator for NumpyTimeIter<'_> {
+    type Item = Option<DateTime>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data.len() {
+            let value = self.data[self.index];
+            self.index += 1;
+            Some(value)
+        } else {
+            None
+        }
+    }
+}
+
 impl data::Column for NumpyColumn<'_> {
     fn len(&self) -> usize {
         match self {
             NumpyColumn::F64(col) => col.len().unwrap_or(0),
             NumpyColumn::F32(col) => col.len().unwrap_or(0),
             NumpyColumn::I64(col) => col.len().unwrap_or(0),
+            NumpyColumn::Time(col) => col.len(),
         }
     }
 
@@ -166,6 +188,7 @@ impl data::Column for NumpyColumn<'_> {
             NumpyColumn::F64(col) => col.as_array().iter().filter(|v| v.is_finite()).count(),
             NumpyColumn::F32(col) => col.as_array().iter().filter(|v| v.is_finite()).count(),
             NumpyColumn::I64(col) => col.as_array().len(),
+            NumpyColumn::Time(col) => col.iter().filter(|v| v.is_some()).count(),
         }
     }
 
@@ -174,12 +197,20 @@ impl data::Column for NumpyColumn<'_> {
             NumpyColumn::F64(_) => Some(self),
             NumpyColumn::F32(_) => Some(self),
             NumpyColumn::I64(_) => Some(self),
+            NumpyColumn::Time(_) => Some(self),
         }
     }
 
     fn i64(&self) -> Option<&dyn data::I64Column> {
         match self {
             NumpyColumn::I64(_) => Some(self),
+            _ => None,
+        }
+    }
+
+    fn time(&self) -> Option<&dyn data::TimeColumn> {
+        match self {
+            NumpyColumn::Time(_) => Some(self),
             _ => None,
         }
     }
@@ -191,6 +222,7 @@ impl data::F64Column for NumpyColumn<'_> {
             NumpyColumn::F64(col) => col.len().unwrap_or(0),
             NumpyColumn::F32(col) => col.len().unwrap_or(0),
             NumpyColumn::I64(col) => col.len().unwrap_or(0),
+            NumpyColumn::Time(col) => col.len(),
         }
     }
 
@@ -208,6 +240,26 @@ impl data::F64Column for NumpyColumn<'_> {
                 array: col.clone(),
                 index: 0,
             }),
+            NumpyColumn::Time(col) => Box::new(col.iter().copied().map(|v| v.map(|dt| dt.timestamp()))),
+        }
+    }
+}
+
+impl data::TimeColumn for NumpyColumn<'_> {
+    fn len(&self) -> usize {
+        match self {
+            NumpyColumn::Time(col) => col.len(),
+            _ => 0,
+        }
+    }
+
+    fn time_iter(&self) -> Box<dyn Iterator<Item = Option<DateTime>> + '_> {
+        match self {
+            NumpyColumn::Time(col) => Box::new(NumpyTimeIter {
+                data: col.as_slice(),
+                index: 0,
+            }),
+            _ => Box::new(std::iter::empty()),
         }
     }
 }
@@ -273,6 +325,7 @@ fn extract_dict_data_source<'py>(dict: Bound<'py, PyDict>) -> PyResult<NumpyData
 }
 
 fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataSource<'py>> {
+    let pd = df.py().import("pandas")?;
     let np = df.py().import("numpy")?;
     let float64_dtype = np.getattr("float64")?;
 
@@ -284,16 +337,71 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
             columns.push(array);
             continue;
         }
+        if let Some(array) = convert_pandas_time_column(&col, &pd)? {
+            columns.push(array);
+            continue;
+        }
         if let Some(array) = convert_column(&col, &np, &float64_dtype) {
             columns.push(array);
             continue;
         }
         return Err(pyo3::exceptions::PyTypeError::new_err(format!(
-            "Column '{}' could not be converted to a numeric array.",
+            "Column '{}' could not be converted to a supported numeric or datetime array.",
             name
         )));
     }
     Ok(NumpyDataSource { names, columns })
+}
+
+fn convert_pandas_time_column<'py>(
+    col: &Bound<'py, PyAny>,
+    pd: &Bound<'py, PyAny>,
+) -> PyResult<Option<NumpyColumn<'py>>> {
+    let api_types = pd.getattr("api")?.getattr("types")?;
+    let dtype = col.getattr("dtype")?;
+
+    let is_numeric_dtype = api_types
+        .call_method1("is_numeric_dtype", (dtype.clone(),))?
+        .is_truthy()?;
+    if is_numeric_dtype {
+        return Ok(None);
+    }
+
+    let to_datetime = pd.getattr("to_datetime")?;
+    let kwargs = PyDict::new(col.py());
+    kwargs.set_item("errors", "coerce")?;
+    kwargs.set_item("utc", true)?;
+    let converted = to_datetime.call((col,), Some(&kwargs))?;
+
+    let source_not_null = col.call_method0("notna")?.call_method0("sum")?.extract::<usize>()?;
+    let parsed_not_null = converted
+        .call_method0("notna")?
+        .call_method0("sum")?
+        .extract::<usize>()?;
+
+    if source_not_null > 0 && parsed_not_null == 0 {
+        return Ok(None);
+    }
+
+    let ns_values = converted.call_method1("astype", ("int64",))?;
+    let values = if let Ok(array) = ns_values.cast::<numpy::PyArray1<i64>>() {
+        array.readonly().as_array().to_vec()
+    } else {
+        ns_values.extract::<Vec<i64>>()?
+    };
+
+    const NAT_I64: i64 = i64::MIN;
+    let mut out = Vec::with_capacity(values.len());
+    for value_us in values {
+        if value_us == NAT_I64 {
+            out.push(None);
+            continue;
+        }
+        let ts = value_us as f64 / 1_000_000.0;
+        out.push(DateTime::from_timestamp(ts));
+    }
+
+    Ok(Some(NumpyColumn::Time(out)))
 }
 
 fn extract_column<'py>(col: &Bound<'py, PyAny>) -> Option<NumpyColumn<'py>> {
