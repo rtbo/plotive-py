@@ -51,7 +51,7 @@ class Plot(mapping.PvMapping):
         fill: None | ThemeFill | ThemeColor = None,
         legend: None | PlotLegend | PlotLegendPos = None,
         colorbar: None | ColorBar | ColorBarPos = None,
-        annotations: list[Annotation] = [],
+        annotations: list[Annotation] | None = None,
     ):
         """Initialize a plot.
         By default, a plot has a single x and y axis, without any ticks, labels or grid.
@@ -103,7 +103,7 @@ class Plot(mapping.PvMapping):
 
         self.colorbar = colorbar
 
-        self.annotations = annotations
+        self.annotations = annotations if annotations is not None else []
 
         if x_axis is not None and x_axes is not None:
             raise ValueError("Cannot provide both 'x_axis' and 'x_axes'.")

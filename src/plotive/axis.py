@@ -238,16 +238,16 @@ class SharedAutoTicksFormatter(TicksFormatter):
 class DecimalTicksFormatter(TicksFormatter):
     """Decimal tick formatter with fixed precision."""
 
-    def __init__(self, precision: int = 2):
+    def __init__(self, decimals: int | None = None):
         """Initialize a decimal formatter.
 
         Parameters
         ----------
-        precision : int, default=2
-            Number of decimal digits.
+        decimals : int | None, default=None
+            Number of decimal digits (None means automatic).
         """
         self.type = "decimal"
-        self.precision = precision
+        self.decimals = decimals
 
 
 class PercentTicksFormatter(TicksFormatter):
@@ -259,7 +259,7 @@ class PercentTicksFormatter(TicksFormatter):
         Parameters
         ----------
         decimals : int | None, default=None
-            Optional number of decimal digits.
+            Optional number of decimal digits (None means automatic).
         """
         self.type = "percent"
         self.decimals = decimals
