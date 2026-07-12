@@ -27,10 +27,10 @@ fig = pv.Figure(
         ],
         x_axis=pv.Axis(ticks="auto", grid="auto"),
         y_axis=pv.Axis(ticks="auto", grid="auto"),
+        legend="in-bottom-left",
     ),
-    legend=pv.Legend("bottom"),
 )
 
 import _common
+_common.process_figure(fig, data, "scatter")
 
-_common.process_figure(fig, data)

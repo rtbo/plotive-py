@@ -15,4 +15,6 @@ fig = pv.Figure(
     ),
 )
 
-fig.show(data_source=dataframe)
+import _common
+_common.process_figure(fig, dataframe, "pandas-time-series")
+

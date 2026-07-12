@@ -102,4 +102,4 @@ if __name__ == "__main__":
 
     import _common
 
-    _common.process_figure(fig, data_src)
+    _common.process_figure(fig, data_src, "bode-rlc")

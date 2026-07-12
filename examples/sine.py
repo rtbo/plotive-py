@@ -21,5 +21,5 @@ x = np.linspace(0, 2 * np.pi, 500)
 y = np.sin(x)
 
 import _common
+_common.process_figure(fig, {"x": x, "y": y}, "sine")
 
-_common.process_figure(fig, {"x": x, "y": y})
