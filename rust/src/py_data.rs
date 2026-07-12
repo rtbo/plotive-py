@@ -4,7 +4,7 @@ use numpy::PyArrayMethods;
 use plotive::data;
 use plotive::time::DateTime;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
 
 pub fn extract_data_source<'py>(obj: &Bound<'py, PyAny>) -> PyResult<Arc<dyn data::Source + 'py>> {
     if obj.is_none() {
@@ -12,6 +12,10 @@ pub fn extract_data_source<'py>(obj: &Bound<'py, PyAny>) -> PyResult<Arc<dyn dat
     } else if obj.is_instance_of::<pyo3::types::PyDict>() {
         let dict = obj.cast::<PyDict>()?;
         let ds = extract_dict_data_source(dict.clone())?;
+        Ok(Arc::new(ds))
+    } else if obj.is_instance_of::<PyList>() {
+        let list = obj.cast::<PyList>()?;
+        let ds = extract_list_data_source(list.clone())?;
         Ok(Arc::new(ds))
     } else if is_pandas_dataframe(obj)? {
         let ds = extract_pandas_data_source(obj.clone())?;
@@ -68,6 +72,7 @@ enum NumpyColumn<'py> {
     F32(numpy::borrow::PyReadonlyArray1<'py, f32>),
     I64(numpy::borrow::PyReadonlyArray1<'py, i64>),
     Time(Vec<Option<DateTime>>),
+    Str(Vec<Option<String>>),
 }
 
 struct NumpyF64Iter<'py> {
@@ -180,6 +185,7 @@ impl data::Column for NumpyColumn<'_> {
             NumpyColumn::F32(col) => col.len().unwrap_or(0),
             NumpyColumn::I64(col) => col.len().unwrap_or(0),
             NumpyColumn::Time(col) => col.len(),
+            NumpyColumn::Str(col) => col.len(),
         }
     }
 
@@ -189,6 +195,7 @@ impl data::Column for NumpyColumn<'_> {
             NumpyColumn::F32(col) => col.as_array().iter().filter(|v| v.is_finite()).count(),
             NumpyColumn::I64(col) => col.as_array().len(),
             NumpyColumn::Time(col) => col.iter().filter(|v| v.is_some()).count(),
+            NumpyColumn::Str(col) => col.iter().filter(|v| v.is_some()).count(),
         }
     }
 
@@ -198,12 +205,20 @@ impl data::Column for NumpyColumn<'_> {
             NumpyColumn::F32(_) => Some(self),
             NumpyColumn::I64(_) => Some(self),
             NumpyColumn::Time(_) => Some(self),
+            NumpyColumn::Str(_) => None,
         }
     }
 
     fn i64(&self) -> Option<&dyn data::I64Column> {
         match self {
             NumpyColumn::I64(_) => Some(self),
+            _ => None,
+        }
+    }
+
+    fn str(&self) -> Option<&dyn data::StrColumn> {
+        match self {
+            NumpyColumn::Str(_) => Some(self),
             _ => None,
         }
     }
@@ -223,6 +238,7 @@ impl data::F64Column for NumpyColumn<'_> {
             NumpyColumn::F32(col) => col.len().unwrap_or(0),
             NumpyColumn::I64(col) => col.len().unwrap_or(0),
             NumpyColumn::Time(col) => col.len(),
+            NumpyColumn::Str(_) => 0,
         }
     }
 
@@ -240,7 +256,10 @@ impl data::F64Column for NumpyColumn<'_> {
                 array: col.clone(),
                 index: 0,
             }),
-            NumpyColumn::Time(col) => Box::new(col.iter().copied().map(|v| v.map(|dt| dt.timestamp()))),
+            NumpyColumn::Time(col) => {
+                Box::new(col.iter().copied().map(|v| v.map(|dt| dt.timestamp())))
+            }
+            _ => Box::new(std::iter::empty()),
         }
     }
 }
@@ -283,6 +302,22 @@ impl data::I64Column for NumpyColumn<'_> {
     }
 }
 
+impl data::StrColumn for NumpyColumn<'_> {
+    fn len(&self) -> usize {
+        match self {
+            NumpyColumn::Str(col) => col.len(),
+            _ => 0,
+        }
+    }
+
+    fn str_iter(&self) -> Box<dyn Iterator<Item = Option<&str>> + '_> {
+        match self {
+            NumpyColumn::Str(col) => Box::new(col.iter().map(|s| s.as_deref())),
+            _ => Box::new(std::iter::empty()),
+        }
+    }
+}
+
 #[derive(Debug)]
 struct NumpyDataSource<'py> {
     names: Vec<String>,
@@ -317,11 +352,34 @@ fn extract_dict_data_source<'py>(dict: Bound<'py, PyDict>) -> PyResult<NumpyData
             continue;
         }
         return Err(pyo3::exceptions::PyTypeError::new_err(format!(
-            "Column '{}' could not be converted to a numeric array.",
+            "Column '{}' could not be converted to a supported array/list type (numeric or string).",
             name
         )));
     }
     Ok(NumpyDataSource { names, columns })
+}
+
+fn extract_list_data_source<'py>(list: Bound<'py, PyList>) -> PyResult<NumpyDataSource<'py>> {
+    let np = list.py().import("numpy")?;
+    let float64_dtype = np.getattr("float64")?;
+    let col = list.as_any();
+
+    if let Some(array) = extract_column(col) {
+        return Ok(NumpyDataSource {
+            names: vec!["value".to_string()],
+            columns: vec![array],
+        });
+    }
+    if let Some(array) = convert_column(col, &np, &float64_dtype) {
+        return Ok(NumpyDataSource {
+            names: vec!["value".to_string()],
+            columns: vec![array],
+        });
+    }
+
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "List data source could not be converted to a supported array/list type (numeric or string).",
+    ))
 }
 
 fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataSource<'py>> {
@@ -346,7 +404,7 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
             continue;
         }
         return Err(pyo3::exceptions::PyTypeError::new_err(format!(
-            "Column '{}' could not be converted to a supported numeric or datetime array.",
+            "Column '{}' could not be converted to a supported data column.",
             name
         )));
     }
@@ -373,7 +431,10 @@ fn convert_pandas_time_column<'py>(
     kwargs.set_item("utc", true)?;
     let converted = to_datetime.call((col,), Some(&kwargs))?;
 
-    let source_not_null = col.call_method0("notna")?.call_method0("sum")?.extract::<usize>()?;
+    let source_not_null = col
+        .call_method0("notna")?
+        .call_method0("sum")?
+        .extract::<usize>()?;
     let parsed_not_null = converted
         .call_method0("notna")?
         .call_method0("sum")?
@@ -421,6 +482,21 @@ fn convert_column<'py>(
     np: &Bound<'py, PyAny>,
     float64_dtype: &Bound<'py, PyAny>,
 ) -> Option<NumpyColumn<'py>> {
+    if let Ok(list) = col.extract::<Vec<Option<String>>>() {
+        return Some(NumpyColumn::Str(list));
+    }
+    if let Ok(list) = col.extract::<Vec<String>>() {
+        return Some(NumpyColumn::Str(list.into_iter().map(Some).collect()));
+    }
+    if let Ok(list_obj) = col.call_method0("tolist") {
+        if let Ok(list) = list_obj.extract::<Vec<Option<String>>>() {
+            return Some(NumpyColumn::Str(list));
+        }
+        if let Ok(list) = list_obj.extract::<Vec<String>>() {
+            return Some(NumpyColumn::Str(list.into_iter().map(Some).collect()));
+        }
+    }
+
     if let Ok(data) = col.call_method1("astype", (float64_dtype.clone(),)) {
         if let Ok(values) = data.getattr("values") {
             if let Ok(array) = values.cast::<numpy::PyArray1<f64>>() {
