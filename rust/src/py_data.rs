@@ -387,19 +387,38 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
     let np = df.py().import("numpy")?;
     let float64_dtype = np.getattr("float64")?;
 
-    let names: Vec<String> = df.getattr("columns")?.extract()?;
-    let mut columns = Vec::with_capacity(names.len());
-    for name in &names {
-        let col = df.get_item(name)?;
-        if let Some(array) = extract_column(&col) {
-            columns.push(array);
-            continue;
+    let mut names: Vec<String> = Vec::new();
+    let mut columns: Vec<NumpyColumn<'py>> = Vec::new();
+
+    // Include named index as a regular column (e.g. Date index).
+    let index = df.getattr("index")?;
+    let index_name: Option<String> = index.getattr("name")?.extract()?;
+    if let Some(index_name) = index_name.filter(|s| !s.is_empty()) {
+        let mut has_conflict = false;
+        for col_name in df.getattr("columns")?.try_iter()? {
+            let col_name = col_name?.extract::<String>()?;
+            if col_name == index_name {
+                has_conflict = true;
+                break;
+            }
         }
-        if let Some(array) = convert_pandas_time_column(&col, &pd)? {
-            columns.push(array);
-            continue;
+        if !has_conflict {
+            if let Some(array) = extract_supported_pandas_column(&index, &pd, &np, &float64_dtype)? {
+                names.push(index_name);
+                columns.push(array);
+            } else {
+                return Err(pyo3::exceptions::PyTypeError::new_err(
+                    "Pandas index could not be converted to a supported data column.",
+                ));
+            }
         }
-        if let Some(array) = convert_column(&col, &np, &float64_dtype) {
+    }
+
+    for name in df.getattr("columns")?.try_iter()? {
+        let name = name?.extract::<String>()?;
+        let col = df.get_item(&name)?;
+        if let Some(array) = extract_supported_pandas_column(&col, &pd, &np, &float64_dtype)? {
+            names.push(name);
             columns.push(array);
             continue;
         }
@@ -409,6 +428,24 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
         )));
     }
     Ok(NumpyDataSource { names, columns })
+}
+
+fn extract_supported_pandas_column<'py>(
+    col: &Bound<'py, PyAny>,
+    pd: &Bound<'py, PyAny>,
+    np: &Bound<'py, PyAny>,
+    float64_dtype: &Bound<'py, PyAny>,
+) -> PyResult<Option<NumpyColumn<'py>>> {
+    if let Some(array) = extract_column(col) {
+        return Ok(Some(array));
+    }
+    if let Some(array) = convert_pandas_time_column(col, pd)? {
+        return Ok(Some(array));
+    }
+    if let Some(array) = convert_column(col, np, float64_dtype) {
+        return Ok(Some(array));
+    }
+    Ok(None)
 }
 
 fn convert_pandas_time_column<'py>(
@@ -444,11 +481,16 @@ fn convert_pandas_time_column<'py>(
         return Ok(None);
     }
 
-    let ns_values = converted.call_method1("astype", ("int64",))?;
-    let values = if let Ok(array) = ns_values.cast::<numpy::PyArray1<i64>>() {
+    // Normalize to microseconds explicitly for cross-platform consistency
+    // before converting datetime values to integer epoch units.
+    let kwargs = PyDict::new(col.py());
+    kwargs.set_item("dtype", "datetime64[us]")?;
+    let us_array = converted.call_method("to_numpy", (), Some(&kwargs))?;
+    let us_values = us_array.call_method1("astype", ("int64",))?;
+    let values = if let Ok(array) = us_values.cast::<numpy::PyArray1<i64>>() {
         array.readonly().as_array().to_vec()
     } else {
-        ns_values.extract::<Vec<i64>>()?
+        us_values.extract::<Vec<i64>>()?
     };
 
     const NAT_I64: i64 = i64::MIN;
