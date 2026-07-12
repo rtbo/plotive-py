@@ -80,6 +80,15 @@ class SharedScale(Scale):
         self.type = "shared"
         self.ref = ref
 
+type TicksLocatorType = Literal[
+    "auto",
+    "list",
+    "maxn",
+    "pimultiple",
+    "log",
+    "datetime",
+    "timedelta",
+]
 
 class TicksLocator(PvMapping):
     """Defines strategy to locate ticks on an axis"""
@@ -214,6 +223,14 @@ class TimeDeltaTicksLocator(TicksLocator):
         self.type = "timedelta"
         self.period = period
 
+type TicksFormatterType = Literal[
+    "auto",
+    "shared-auto",
+    "decimal",
+    "percent",
+    "datetime",
+    "timedelta",
+]
 
 class TicksFormatter(PvMapping):
     """Defines strategy to format tick labels on an axis"""
@@ -364,7 +381,7 @@ class Axis(PvMapping):
         scale: Scale | str | Range = "auto",
         side: AxisSide = "main",
         ticks: (
-            Ticks | TicksLocator | list[float] | list[int] | TicksFormatter | str | None
+            Ticks | TicksLocatorType | TicksLocator | list[float] | list[int] | TicksFormatterType | TicksFormatter | str | None
         ) = None,
         grid: Grid | Stroke | str | None = None,
         minor_ticks: TicksLocator | str | None = None,

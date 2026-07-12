@@ -252,6 +252,19 @@ type BuiltinStyle = Literal[
     "alucard",
 ]
 
+BUILTIN_STYLES = [
+    "black-white",
+    "light",
+    "dark",
+    "tol-bright",
+    "okabe-ito",
+    "catppuccin-mocha",
+    "catppuccin-macchiato",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "dracula",
+    "alucard",
+]
 
 def _parse_mpl_style(
     mpl_style: str,

@@ -34,6 +34,33 @@ STELLAR_TICKS = [
 ]
 """Predefined ticks that fits well the stellar colormap."""
 
+type PlotBorderType = Literal["box", "axis", "arrow"]
+
+class PlotBorder(ABC, mapping.PvMapping):
+    """Border configuration for a plot."""
+    def __init__(
+        self,
+        type: PlotBorderType,
+    ):
+        self.type = type
+
+class BoxPlotBorder(PlotBorder):
+    """Box border configuration for a plot."""
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="box")
+        self.stroke = stroke
+
+class AxisPlotBorder(PlotBorder):
+    """Axis border configuration for a plot."""
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="axis")
+        self.stroke = stroke
+
+class ArrowPlotBorder(PlotBorder):
+    """Arrow border configuration for a plot."""
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="arrow")
+        self.stroke = stroke
 
 class Plot(mapping.PvMapping):
     """Single subplot definition with series, axes, and annotations."""
@@ -52,6 +79,7 @@ class Plot(mapping.PvMapping):
         legend: None | PlotLegend | PlotLegendPos = None,
         colorbar: None | ColorBar | ColorBarPos = None,
         annotations: list[Annotation] | None = None,
+        border: None | PlotBorderType | PlotBorder | ThemeColor = "box",
     ):
         """Initialize a plot.
         By default, a plot has a single x and y axis, without any ticks, labels or grid.
@@ -81,6 +109,8 @@ class Plot(mapping.PvMapping):
             Subplot colorbar config.
         annotations : list[Annotation], default=[]
             Annotation objects attached to this plot.
+        border : PlotBorderType | PlotBorder | ThemeColor | None, default=None
+            Border configuration for the plot.
 
         Raises
         ------
@@ -120,6 +150,7 @@ class Plot(mapping.PvMapping):
             if y_axes is not None
             else ([y_axis] if y_axis is not None else [Axis()])
         )
+        self.border = border
 
 
 class PxlArray:
@@ -159,6 +190,7 @@ class Figure(mapping.PvMapping):
         padding: None | Padding = None,
         fill: None | ThemeFill | ThemeColor = "background",
         legend: None | FigLegend | FigLegendPos = None,
+        space: None | float = None,
     ):
         """Initialize a figure.
 
@@ -196,6 +228,7 @@ class Figure(mapping.PvMapping):
         self.padding = padding
         self.fill = fill
         self.legend = legend
+        self.space = space
 
     def render_pxl(
         self, *, data_source: None | DataSource = None, style: None | Style | BuiltinStyle = None

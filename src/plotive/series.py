@@ -68,7 +68,7 @@ class Series(ABC, mapping.PvMapping):
         y_axis : AxisRef | None, default=None
             Target y-axis reference.
         """
-        self.type = self.__class__.__name__.lower()
+        self.type = self.__class__.__name__.lower().replace("histogram", "hist")
         self.name = name
         self.x_axis = x_axis
         self.y_axis = y_axis
@@ -280,7 +280,7 @@ class Area(Series):
 class Histogram(Series):
     def __init__(
         self,
-        data: DataCol,
+        x: DataCol,
         *,
         fill: None | Fill | Color = "auto",
         stroke: None | Stroke | Color = None,
@@ -291,7 +291,7 @@ class Histogram(Series):
         y_axis: None | AxisRef = None,
     ):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.data = _normalize_data_col(data)
+        self.x = _normalize_data_col(x)
         self.fill = fill
         self.stroke = stroke
         self.bins = bins

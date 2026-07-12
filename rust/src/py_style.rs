@@ -44,7 +44,7 @@ pub fn extract_style(py_style: &Bound<'_, PyAny>) -> PyResult<plotive::Style> {
     if let Ok(py_str) = py_style.extract::<&str>() {
         return match py_str {
             "black_white" | "monochrome" | "black" | "bw" => Ok(plotive::Style::black_white()),
-            "light" => Ok(plotive::Style::light()),
+            "light" | "standard" => Ok(plotive::Style::light()),
             "dark" => Ok(plotive::Style::dark()),
             "okabe_ito" | "okabe" => Ok(plotive::Style::okabe_ito()),
             "tol_bright" | "tol" => Ok(plotive::Style::tol_bright()),
