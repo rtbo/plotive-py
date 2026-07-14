@@ -8,7 +8,7 @@ fig = pv.Figure(
             pv.series.Line(
                 x="x",
                 y="y",
-                name="sin(x)",
+                name="y=sin(x)",
             )
         ],
         x_axis=pv.Axis(title="x", ticks="pimultiple", grid="auto"),

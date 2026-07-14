@@ -14,8 +14,8 @@ data = {
 }
 
 fig = pv.Figure(
-    title="Subplots",
     space=10.0,
+    size=(800, 900),
     plots=[
         pv.Plot(
             series=[
@@ -28,7 +28,6 @@ fig = pv.Figure(
                 grid="auto",
                 scale="x2",
             ),
-            y_axis=pv.Axis(ticks="auto"),
         ),
         pv.Plot(
             series=[
@@ -42,7 +41,6 @@ fig = pv.Figure(
                 ticks="pimultiple",
                 grid="auto",
             ),
-            y_axis=pv.Axis(ticks="auto"),
         )
     ]
 )
