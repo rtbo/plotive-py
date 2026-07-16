@@ -16,6 +16,14 @@ if TYPE_CHECKING:
 
 type ZPos = Literal["above-series", "below-series"]
 
+type CoordSys = Literal["data", "plot"]
+type Coord = float | tuple[float, CoordSys];
+"""Coordinate can be a number (in data coordinates) or a tuple of [number, CoordSys] where the number is in the specified coordinate system.
+If the coordinate system is not specified, it defaults to "data" coordinates.
+In plot coordinates, the number is in points relative to the top-left corner of the plot area.
+Negative numbers are allowed and will be interpreted as offsets from the right or bottom edges of the plot area.
+"""
+
 class Annotation(ABC, PvMapping):
     """Base class for plot annotations."""
 
@@ -48,10 +56,10 @@ class Line(Annotation):
     def __init__(
         self,
         *,
-        horizontal: float | None = None,
-        vertical: float | None = None,
-        slope: None | tuple[tuple[float, float], float] = None,
-        two_points: None | tuple[tuple[float, float], tuple[float, float]] = None,
+        horizontal: Coord | None = None,
+        vertical: Coord | None = None,
+        slope: None | tuple[tuple[Coord, Coord], float] = None,
+        two_points: None | tuple[tuple[Coord, Coord], tuple[Coord, Coord]] = None,
         stroke: None | Stroke = None,
         pattern: None | Pattern = None,
         x_axis: str | None = None,
@@ -62,13 +70,13 @@ class Line(Annotation):
 
         Parameters
         ----------
-        horizontal : float | None, default=None
+        horizontal : Coord | None, default=None
             Horizontal line position ``y = constant``.
-        vertical : float | None, default=None
+        vertical : Coord | None, default=None
             Vertical line position ``x = constant``.
-        slope : tuple[tuple[float, float], float] | None, default=None
+        slope : tuple[tuple[Coord, Coord], float] | None, default=None
             Point-slope representation ``((x0, y0), m)``.
-        two_points : tuple[tuple[float, float], tuple[float, float]] | None, default=None
+        two_points : tuple[tuple[Coord, Coord], tuple[Coord, Coord]] | None, default=None
             Two-point representation of the line.
         stroke : Stroke | None, default=None
             Stroke style.
@@ -114,8 +122,8 @@ class Arrow(Annotation):
     def __init__(
         self,
         *,
-        xy: tuple[float, float],
-        delta: tuple[float, float],
+        xy: tuple[Coord, Coord],
+        dxy: tuple[float, float],
         stroke: None | Stroke = None,
         head_size: float = 10.0,
         x_axis: str | None = None,
@@ -126,9 +134,9 @@ class Arrow(Annotation):
 
         Parameters
         ----------
-        xy : tuple[float, float]
+        xy : tuple[Coord, Coord]
             Arrow origin.
-        delta : tuple[float, float]
+        dxy : tuple[float, float]
             Arrow displacement vector.
         stroke : Stroke | None, default=None
             Stroke style.
@@ -142,8 +150,8 @@ class Arrow(Annotation):
             Rendering layer relative to series.
         """
         super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
-        self.x, self.y = xy
-        self.dx, self.dy = delta
+        self.xy = xy
+        self.dxy = dxy
         if isinstance(stroke, str):
             stroke = Stroke(color=stroke)
         self.stroke = stroke
@@ -187,7 +195,7 @@ class Label(Annotation):
 
     def __init__(
         self,
-        xy: tuple[float, float],
+        xy: tuple[Coord, Coord],
         text: Text,
         *,
         anchor: str = "top-left",
@@ -201,7 +209,7 @@ class Label(Annotation):
 
         Parameters
         ----------
-        xy : tuple[float, float]
+        xy : tuple[Coord, Coord]
             Label anchor position.
         text : str
             Label content.
