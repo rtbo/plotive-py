@@ -120,29 +120,9 @@ class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
         self.size = size
         self.fill = fill
         self.stroke = stroke
+        self.color = color
+        self.fill_opacity = fill_opacity
 
-        if color is not None:
-            if fill is None:
-                self.fill = color
-            elif isinstance(fill, Fill):
-                fill.color = color
-            else:
-                self.fill = color
-
-            if stroke is None:
-                self.stroke = color
-            elif isinstance(stroke, Stroke):
-                stroke.color = color
-            else:
-                self.stroke = color
-
-        if fill_opacity is not None:
-            if self.fill is None:
-                self.fill = Fill("auto", opacity=fill_opacity)
-            elif isinstance(self.fill, Fill):
-                self.fill.opacity = fill_opacity
-            else:
-                self.fill = Fill(self.fill, opacity=fill_opacity)
 
 
 type ThemeFill = Fill[ThemeColor]
