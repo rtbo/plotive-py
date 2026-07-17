@@ -1,4 +1,3 @@
-
 def _parse_args():
     import sys
 
@@ -45,7 +44,7 @@ def _parse_args():
         elif arg == "show":
             args["show"] = True
         elif arg in BUILTIN_STYLES:
-            args["style"] =  arg
+            args["style"] = arg
         else:
             raise ValueError(f"Unknown argument: {arg}")
 
@@ -53,7 +52,6 @@ def _parse_args():
         args["show"] = True
 
     return args
-
 
 
 def process_figure(fig, data_src, default_name):
@@ -73,4 +71,3 @@ def process_figure(fig, data_src, default_name):
 
     if args["show"]:
         fig.show(data_source=data_src, style=args["style"])
-

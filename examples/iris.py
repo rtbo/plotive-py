@@ -8,10 +8,18 @@ df = pd.read_csv(csv_file, index_col="Id")
 data = {
     "setosa_sep_len": df.loc[df["Species"] == "Iris-setosa", "SepalLengthCm"].values,
     "setosa_sep_wid": df.loc[df["Species"] == "Iris-setosa", "SepalWidthCm"].values,
-    "versicolor_sep_len": df.loc[df["Species"] == "Iris-versicolor", "SepalLengthCm"].values,
-    "versicolor_sep_wid": df.loc[df["Species"] == "Iris-versicolor", "SepalWidthCm"].values,
-    "virginica_sep_len": df.loc[df["Species"] == "Iris-virginica", "SepalLengthCm"].values,
-    "virginica_sep_wid": df.loc[df["Species"] == "Iris-virginica", "SepalWidthCm"].values,
+    "versicolor_sep_len": df.loc[
+        df["Species"] == "Iris-versicolor", "SepalLengthCm"
+    ].values,
+    "versicolor_sep_wid": df.loc[
+        df["Species"] == "Iris-versicolor", "SepalWidthCm"
+    ].values,
+    "virginica_sep_len": df.loc[
+        df["Species"] == "Iris-virginica", "SepalLengthCm"
+    ].values,
+    "virginica_sep_wid": df.loc[
+        df["Species"] == "Iris-virginica", "SepalWidthCm"
+    ].values,
 }
 
 fig = pv.Figure(
@@ -41,5 +49,5 @@ fig = pv.Figure(
 )
 
 import _common
-_common.process_figure(fig, data, "iris")
 
+_common.process_figure(fig, data, "iris")

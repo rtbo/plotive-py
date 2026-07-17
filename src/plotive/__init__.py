@@ -36,31 +36,40 @@ STELLAR_TICKS = [
 
 type PlotBorderType = Literal["box", "axis", "arrow"]
 
+
 class PlotBorder(ABC, mapping.PvMapping):
     """Border configuration for a plot."""
+
     def __init__(
         self,
         type: PlotBorderType,
     ):
         self.type = type
 
+
 class BoxPlotBorder(PlotBorder):
     """Box border configuration for a plot."""
+
     def __init__(self, stroke: None | Stroke | Color = None):
         super().__init__(type="box")
         self.stroke = stroke
 
+
 class AxisPlotBorder(PlotBorder):
     """Axis border configuration for a plot."""
+
     def __init__(self, stroke: None | Stroke | Color = None):
         super().__init__(type="axis")
         self.stroke = stroke
 
+
 class ArrowPlotBorder(PlotBorder):
     """Arrow border configuration for a plot."""
+
     def __init__(self, stroke: None | Stroke | Color = None):
         super().__init__(type="arrow")
         self.stroke = stroke
+
 
 class Plot(mapping.PvMapping):
     """Single subplot definition with series, axes, and annotations."""
@@ -175,6 +184,7 @@ class PxlArray:
                 self.data[i : i + 4] = bytes([r, g, b, a])
         return self.data
 
+
 class Params:
     """Parameters for the renderer."""
 
@@ -254,9 +264,9 @@ class Figure(mapping.PvMapping):
         self.space = space
 
     def render_pxl(
-        self, 
+        self,
         *,
-        data_source: DataSource | None = None, 
+        data_source: DataSource | None = None,
         params: Params | Style | BuiltinStyle | None = None
     ) -> PxlArray:
         """Render the figure as an array of pixels
@@ -277,7 +287,7 @@ class Figure(mapping.PvMapping):
         self,
         path: str,
         *,
-        data_source: DataSource | None = None, 
+        data_source: DataSource | None = None,
         params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as PNG.
@@ -299,7 +309,7 @@ class Figure(mapping.PvMapping):
         self,
         path: str,
         *,
-        data_source: DataSource | None = None, 
+        data_source: DataSource | None = None,
         params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as SVG.
@@ -318,9 +328,9 @@ class Figure(mapping.PvMapping):
         rs_save_svg(self, path, data_source, params)
 
     def show(
-        self, 
-        *, 
-        data_source: DataSource | None = None, 
+        self,
+        *,
+        data_source: DataSource | None = None,
         params: Params | Style | BuiltinStyle | None = None
     ):
         """Display the figure in an interactive viewer.

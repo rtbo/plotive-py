@@ -4,7 +4,8 @@ type Css4Color = Literal[
     "transparent",
     "black",
     "silver",
-    "gray", "grey",
+    "gray",
+    "grey",
     "white",
     "maroon",
     "red",
@@ -17,7 +18,8 @@ type Css4Color = Literal[
     "navy",
     "blue",
     "teal",
-    "aqua", "cyan",
+    "aqua",
+    "cyan",
     "aliceblue",
     "antiquewhite",
     "aquamarine",
@@ -1102,7 +1104,9 @@ type XkcdColor = Literal[
     "purple",
 ]
 
-type Color = Css4Color | XkcdColor | str | tuple[float, float, float] | tuple[float, float, float, float]
+type Color = Css4Color | XkcdColor | str | tuple[float, float, float] | tuple[
+    float, float, float, float
+]
 """
 Named string or Hex string or RGB(A) tuple.
 Tuples are expressed in sRGB color space with components in the [0, 1] interval.

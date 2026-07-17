@@ -124,7 +124,6 @@ class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
         self.fill_opacity = fill_opacity
 
 
-
 type ThemeFill = Fill[ThemeColor]
 type ThemeStroke = Stroke[ThemeColor]
 type ThemeMarker = Marker[ThemeColor]
@@ -245,6 +244,7 @@ BUILTIN_STYLES = [
     "dracula",
     "alucard",
 ]
+
 
 def _parse_mpl_style(
     mpl_style: str,

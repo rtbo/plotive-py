@@ -38,7 +38,7 @@ fig = pv.Figure(
                 ticks="auto",
                 id="volume",
                 side="right",
-            )
+            ),
         ],
         legend="in-top-left",
     ),

@@ -18,5 +18,5 @@ data = {
 }
 
 import _common
-_common.process_figure(fig, data, "minimal")
 
+_common.process_figure(fig, data, "minimal")

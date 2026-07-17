@@ -403,7 +403,8 @@ fn extract_pandas_data_source<'py>(df: Bound<'py, PyAny>) -> PyResult<NumpyDataS
             }
         }
         if !has_conflict {
-            if let Some(array) = extract_supported_pandas_column(&index, &pd, &np, &float64_dtype)? {
+            if let Some(array) = extract_supported_pandas_column(&index, &pd, &np, &float64_dtype)?
+            {
                 names.push(index_name);
                 columns.push(array);
             } else {

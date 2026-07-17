@@ -7,6 +7,7 @@ data = {
     "2025": [70, 20, 10, 5, 15],
 }
 
+
 def make_bars_series(y_col: str, pos: tuple[float, float]) -> pv.Series:
     return pv.series.Bars(
         x="fruits",
@@ -14,6 +15,7 @@ def make_bars_series(y_col: str, pos: tuple[float, float]) -> pv.Series:
         name=y_col.capitalize(),
         position=pos,
     )
+
 
 fig = pv.Figure(
     title="Fruit Stock Levels Over Years",
@@ -30,4 +32,5 @@ fig = pv.Figure(
 )
 
 import _common
+
 _common.process_figure(fig, data, "bars")

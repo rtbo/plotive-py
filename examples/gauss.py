@@ -7,12 +7,8 @@ X_MIN = MU - 4.0 * SIGMA
 X_MAX = MU + 4.0 * SIGMA
 
 x = np.linspace(X_MIN, X_MAX, 100)
-y = 1.0 / (SIGMA * (2.0 * np.pi)**0.5) * np.exp(-0.5 * ((x - MU) / SIGMA)**2)
-data = {
-    "x": x,
-    "y": y,
-    "pop": np.random.normal(MU, SIGMA, 1000)
-}
+y = 1.0 / (SIGMA * (2.0 * np.pi) ** 0.5) * np.exp(-0.5 * ((x - MU) / SIGMA) ** 2)
+data = {"x": x, "y": y, "pop": np.random.normal(MU, SIGMA, 1000)}
 
 fig = pv.Figure(
     title=[
@@ -48,5 +44,5 @@ fig = pv.Figure(
 )
 
 import _common
-_common.process_figure(fig, data, "gauss")
 
+_common.process_figure(fig, data, "gauss")

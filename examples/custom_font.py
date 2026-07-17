@@ -1,5 +1,6 @@
 import plotive as pv
 
+
 def download_font_from_dafont(font_name):
     import requests
     import zipfile
@@ -15,6 +16,7 @@ def download_font_from_dafont(font_name):
 
     raise RuntimeError("No font file found in the downloaded zip archive.")
 
+
 font = download_font_from_dafont("modern_tokyo")
 
 fig = pv.Figure(
@@ -25,7 +27,7 @@ fig = pv.Figure(
             x=[1, 2, 3, 4, 5],
             y=[1, 4, 9, 16, 25],
         ),
-    )
+    ),
 )
 
 fig.show(params=pv.Params(fonts=font))

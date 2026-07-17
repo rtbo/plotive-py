@@ -2,16 +2,19 @@ from os import path
 import pandas as pd
 import plotive as pv
 
+
 def ra_to_deg(ra: str) -> float:
     """Convert a right ascension string in the format "h:m:s" to degrees."""
     h, m, s = map(float, ra.split(":"))
     return (h + m / 60.0 + s / 3600.0) * 15.0
+
 
 def dec_to_deg(dec: str) -> float:
     """Convert a declination string in the format "d:m:s" to degrees."""
     d, m, s = map(float, dec.split(":"))
     sign = -1.0 if d < 0 else 1.0
     return sign * (abs(d) + m / 60.0 + s / 3600.0)
+
 
 csv_file = path.join(path.dirname(path.abspath(__file__)), "stars.csv")
 df = pd.read_csv(csv_file)
@@ -22,7 +25,9 @@ AM_COL = "Apparent Magnitude"
 MIN_SIZE = 0.2
 MAX_SIZE = 20.0
 mag_bounds = (df[AM_COL].min(), df[AM_COL].max())
-mag_sizes = MAX_SIZE - (df[AM_COL] - mag_bounds[0]) / (mag_bounds[1] - mag_bounds[0]) * (MAX_SIZE - MIN_SIZE)
+mag_sizes = MAX_SIZE - (df[AM_COL] - mag_bounds[0]) / (
+    mag_bounds[1] - mag_bounds[0]
+) * (MAX_SIZE - MIN_SIZE)
 
 # Map the right ascension and declination to x and y coordinates in degrees
 x_coords = df["RA (h:m:s)"].apply(ra_to_deg)
@@ -52,9 +57,9 @@ fig = pv.Figure(
             title="Surface Temperature [K]",
             ticks=pv.STELLAR_TICKS,
         ),
-    )
+    ),
 )
 
 import _common
-_common.process_figure(fig, data, "stars")
 
+_common.process_figure(fig, data, "stars")

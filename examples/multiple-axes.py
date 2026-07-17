@@ -5,7 +5,7 @@ x = np.linspace(0.0, np.pi, 500)
 data = {
     "x": x,
     "y1": np.sin(x) - 0.8 * np.pow(np.sin(x), 2),
-    "y2": 100.0 * np.cos(x - np.pi/4),
+    "y2": 100.0 * np.cos(x - np.pi / 4),
     "y3": 1000.0 * np.sin(x),
 }
 
@@ -43,5 +43,5 @@ fig = pv.Figure(
 )
 
 import _common
-_common.process_figure(fig, data, "multiple-axes")
 
+_common.process_figure(fig, data, "multiple-axes")

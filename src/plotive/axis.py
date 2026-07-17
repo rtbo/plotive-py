@@ -80,6 +80,7 @@ class SharedScale(Scale):
         self.type = "shared"
         self.ref = ref
 
+
 type TicksLocatorType = Literal[
     "auto",
     "list",
@@ -89,6 +90,7 @@ type TicksLocatorType = Literal[
     "datetime",
     "timedelta",
 ]
+
 
 class TicksLocator(PvMapping):
     """Defines strategy to locate ticks on an axis"""
@@ -180,6 +182,7 @@ type DateTimeUnit = Literal[
     "micros",
 ]
 
+
 class DateTimeTicksLocator(TicksLocator):
     """Tick locator for date/time values."""
 
@@ -193,6 +196,7 @@ class DateTimeTicksLocator(TicksLocator):
         """
         self.type = "datetime"
         self.period = period
+
 
 type TimeDeltaUnit = Literal[
     "day",
@@ -209,6 +213,7 @@ type TimeDeltaUnit = Literal[
     "micros",
 ]
 
+
 class TimeDeltaTicksLocator(TicksLocator):
     """Tick locator for duration values."""
 
@@ -223,6 +228,7 @@ class TimeDeltaTicksLocator(TicksLocator):
         self.type = "timedelta"
         self.period = period
 
+
 type TicksFormatterType = Literal[
     "auto",
     "shared-auto",
@@ -231,6 +237,7 @@ type TicksFormatterType = Literal[
     "datetime",
     "timedelta",
 ]
+
 
 class TicksFormatter(PvMapping):
     """Defines strategy to format tick labels on an axis"""
@@ -381,7 +388,15 @@ class Axis(PvMapping):
         scale: Scale | str | Range = "auto",
         side: AxisSide = "main",
         ticks: (
-            Ticks | TicksLocatorType | TicksLocator | list[float] | list[int] | TicksFormatterType | TicksFormatter | str | None
+            Ticks
+            | TicksLocatorType
+            | TicksLocator
+            | list[float]
+            | list[int]
+            | TicksFormatterType
+            | TicksFormatter
+            | str
+            | None
         ) = None,
         grid: Grid | Stroke | str | None = None,
         minor_ticks: TicksLocator | str | None = None,

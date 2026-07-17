@@ -41,10 +41,10 @@ fig = pv.Figure(
                 ticks="pimultiple",
                 grid="auto",
             ),
-        )
-    ]
+        ),
+    ],
 )
 
 import _common
-_common.process_figure(fig, data, "subplots")
 
+_common.process_figure(fig, data, "subplots")

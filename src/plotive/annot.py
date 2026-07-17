@@ -17,12 +17,13 @@ if TYPE_CHECKING:
 type ZPos = Literal["above-series", "below-series"]
 
 type CoordSys = Literal["data", "plot"]
-type Coord = float | tuple[float, CoordSys];
+type Coord = float | tuple[float, CoordSys]
 """Coordinate can be a number (in data coordinates) or a tuple of [number, CoordSys] where the number is in the specified coordinate system.
 If the coordinate system is not specified, it defaults to "data" coordinates.
 In plot coordinates, the number is in points relative to the top-left corner of the plot area.
 Negative numbers are allowed and will be interpreted as offsets from the right or bottom edges of the plot area.
 """
+
 
 class Annotation(ABC, PvMapping):
     """Base class for plot annotations."""

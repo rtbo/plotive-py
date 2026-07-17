@@ -6,6 +6,7 @@ import plotive as pv
 START_HEIGHT = 60.0
 BOUNCE_RESTITUTION = 0.76
 
+
 def bouncing_ball(y, _t):
     # approximate parameters for a tennis ball
     # drag coefficient
@@ -72,9 +73,10 @@ def calc_data():
 
     return pd.DataFrame(data)
 
+
 data = calc_data()
 
-title = "Tennis ball thrown from 1\u02E2\u1D57 floor of Eiffel Tower"
+title = "Tennis ball thrown from 1\u02e2\u1d57 floor of Eiffel Tower"
 fig = pv.Figure(
     title=title,
     plot=pv.Plot(
@@ -96,17 +98,17 @@ fig = pv.Figure(
                 locator=pv.axis.TimeDeltaTicksLocator((2, "secs")),
                 formatter=pv.axis.TimeDeltaTicksFormatter(fmt="%M:%S"),
             ),
-            grid = "auto",
+            grid="auto",
         ),
         y_axis=pv.Axis(
             title="Height / Velocity",
             ticks="auto",
-            grid = "auto",
+            grid="auto",
         ),
         legend="in-top-right",
     ),
 )
 
 import _common
-_common.process_figure(fig, data, "bouncing-ball")
 
+_common.process_figure(fig, data, "bouncing-ball")

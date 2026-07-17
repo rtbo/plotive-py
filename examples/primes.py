@@ -38,5 +38,5 @@ fig = pv.Figure(
 )
 
 import _common
-_common.process_figure(fig, data_src, "primes")
 
+_common.process_figure(fig, data_src, "primes")

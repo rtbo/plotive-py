@@ -23,4 +23,5 @@ fig = pv.Figure(
 )
 
 import _common
+
 _common.process_figure(fig, data, "area")
