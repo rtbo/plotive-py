@@ -8,3 +8,4 @@ pytest-check
 pillow
 pixelmatch
 scipy
+requests

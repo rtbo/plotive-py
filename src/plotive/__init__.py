@@ -175,6 +175,29 @@ class PxlArray:
                 self.data[i : i + 4] = bytes([r, g, b, a])
         return self.data
 
+class Params:
+    """Parameters for the renderer."""
+
+    def __init__(
+        self,
+        *,
+        style: Style | BuiltinStyle | None = None,
+        fonts: list[bytes] | bytes | None = None,
+    ):
+        """Initialize rendering parameters.
+
+        Parameters
+        ----------
+        style : Style | BuiltinStyle | None, default=None
+            Rendering style object or style name.
+        fonts : list[bytes] | bytes | None, default=None
+            Additional font file(s) to be used during rendering
+            Each entry must be the binary content of a font file.
+            Supported font formats are TTF, OTF, AAT and WOFF2.
+        """
+        self.style = style
+        self.fonts = fonts
+
 
 class Figure(mapping.PvMapping):
     """Top-level container for one or more plots."""
@@ -231,7 +254,10 @@ class Figure(mapping.PvMapping):
         self.space = space
 
     def render_pxl(
-        self, *, data_source: None | DataSource = None, style: None | Style | BuiltinStyle = None
+        self, 
+        *,
+        data_source: DataSource | None = None, 
+        params: Params | Style | BuiltinStyle | None = None
     ) -> PxlArray:
         """Render the figure as an array of pixels
 
@@ -239,20 +265,20 @@ class Figure(mapping.PvMapping):
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | BuiltinStyle | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import render_pxl as rs_render_pxl
 
-        data, width, height = rs_render_pxl(self, data_source, style)
+        data, width, height = rs_render_pxl(self, data_source, params)
         return PxlArray(data, width, height)
 
     def save_png(
         self,
         path: str,
         *,
-        data_source: None | DataSource = None,
-        style: None | Style | BuiltinStyle = None,
+        data_source: DataSource | None = None, 
+        params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as PNG.
 
@@ -262,19 +288,19 @@ class Figure(mapping.PvMapping):
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | BuiltinStyle | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import save_png as rs_save_png
 
-        rs_save_png(self, path, data_source, style)
+        rs_save_png(self, path, data_source, params)
 
     def save_svg(
         self,
         path: str,
         *,
-        data_source: None | DataSource = None,
-        style: None | Style | BuiltinStyle = None,
+        data_source: DataSource | None = None, 
+        params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as SVG.
 
@@ -284,15 +310,18 @@ class Figure(mapping.PvMapping):
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | BuiltinStyle | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import save_svg as rs_save_svg
 
-        rs_save_svg(self, path, data_source, style)
+        rs_save_svg(self, path, data_source, params)
 
     def show(
-        self, *, data_source: None | DataSource = None, style: None | Style | BuiltinStyle = None
+        self, 
+        *, 
+        data_source: DataSource | None = None, 
+        params: Params | Style | BuiltinStyle | None = None
     ):
         """Display the figure in an interactive viewer.
 
@@ -300,9 +329,9 @@ class Figure(mapping.PvMapping):
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | BuiltinStyle | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import show as rs_show
 
-        rs_show(self, data_source, style)
+        rs_show(self, data_source, params)
