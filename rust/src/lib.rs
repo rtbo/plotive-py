@@ -24,10 +24,21 @@ fn extract_figure(obj: &Bound<'_, PyAny>) -> PyResult<plotive::des::Figure> {
     Ok(fig)
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct Params {
     style: Option<plotive::Style>,
     fontdb: Option<plotive::text::fontdb::Database>,
+    scale: f32,
+}
+
+impl Default for Params {
+    fn default() -> Self {
+        Self {
+            style: None,
+            fontdb: None,
+            scale: 1.0,
+        }
+    }
 }
 
 fn extract_fontdb(py_fonts: &Bound<'_, PyAny>) -> PyResult<plotive::text::fontdb::Database> {
@@ -66,6 +77,7 @@ fn extract_fontdb(py_fonts: &Bound<'_, PyAny>) -> PyResult<plotive::text::fontdb
 
     Ok(fontdb)
 }
+
 fn extract_params(py_params: &Bound<'_, PyAny>) -> PyResult<Params> {
     if py_params.is_none() {
         return Ok(Params::default());
@@ -83,12 +95,17 @@ fn extract_params(py_params: &Bound<'_, PyAny>) -> PyResult<Params> {
             .map(|py_fontdb| extract_fontdb(&py_fontdb))
             .transpose()?;
 
-        Ok(Params { style, fontdb })
+        let scale = getattr_not_none(py_params, "scale")?
+            .map(|py_scale| py_scale.extract::<f32>())
+            .transpose()?
+            .unwrap_or(1.0);
+
+        Ok(Params { style, fontdb, scale })
     } else {
         py_style::extract_style(py_params)
             .map(|style| Params {
                 style: Some(style),
-                fontdb: None,
+                ..Default::default()
             })
             .map_err(|_| {
                 pyo3::exceptions::PyTypeError::new_err(
@@ -137,7 +154,7 @@ mod plt_rs {
         let params = plotive_pxl::Params {
             style: params.style.unwrap_or_default(),
             fontdb: params.fontdb.as_ref(),
-            ..Default::default()
+            scale: params.scale,
         };
 
         let pixmap = fig.to_pixmap(&*data_src, params).map_err(|e| {
@@ -171,7 +188,7 @@ mod plt_rs {
         let params = plotive_pxl::Params {
             style: params.style.unwrap_or_default(),
             fontdb: params.fontdb.as_ref(),
-            ..Default::default()
+            scale: params.scale,
         };
 
         fig.save_png(path, &*data_src, params).map_err(|e| {
@@ -231,6 +248,7 @@ mod plt_rs {
         let params = plotive_iced::show::Params {
             style: params.style,
             fontdb: params.fontdb.map(Arc::new),
+            scale: params.scale,
             ..Default::default()
         };
 

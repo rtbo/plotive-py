@@ -191,6 +191,19 @@ class Marker(Annotation):
         self.marker = marker
 
 
+type Anchor = Literal[
+    "top-left",
+    "top-center",
+    "top-right",
+    "center-left",
+    "center",
+    "center-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right",
+]
+
+    
 class Label(Annotation):
     """Text label annotation placed in data space."""
 
@@ -199,7 +212,7 @@ class Label(Annotation):
         xy: tuple[Coord, Coord],
         text: Text,
         *,
-        anchor: str = "top-left",
+        anchor: Anchor = "top-left",
         frame: None | tuple[Fill | None, Stroke | Color | None] = None,
         angle: float = 0.0,
         x_axis: str | None = None,

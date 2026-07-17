@@ -193,6 +193,7 @@ class Params:
         *,
         style: Style | BuiltinStyle | None = None,
         fonts: list[bytes] | bytes | None = None,
+        scale: float = 1.0,
     ):
         """Initialize rendering parameters.
 
@@ -204,9 +205,14 @@ class Params:
             Additional font file(s) to be used during rendering
             Each entry must be the binary content of a font file.
             Supported font formats are TTF, OTF, AAT and WOFF2.
+        scale : float, default=1.0
+            Scale factor for rendering, useful for high-DPI displays.
+            Using this scale factor rather than increasing the figure size 
+            will also scale the font size and line widths.
         """
         self.style = style
         self.fonts = fonts
+        self.scale = scale
 
 
 class Figure(mapping.PvMapping):
@@ -216,14 +222,14 @@ class Figure(mapping.PvMapping):
         self,
         /,
         *,
-        size: None | Size = (800, 600),
-        title: None | Text = None,
-        plot: None | Plot = None,
-        plots: None | list[Plot] = None,
-        padding: None | Padding = None,
-        fill: None | ThemeFill | ThemeColor = "background",
-        legend: None | FigLegend | FigLegendPos = None,
-        space: None | float = None,
+        size: Size = (800, 600),
+        title: Text | None = None,
+        plot: Plot | None = None,
+        plots: list[Plot] | None = None,
+        padding: Padding | None = None,
+        fill: ThemeFill | ThemeColor | None = "background",
+        legend: FigLegend | FigLegendPos | None = None,
+        space: float | None = None,
     ):
         """Initialize a figure.
 
@@ -231,8 +237,9 @@ class Figure(mapping.PvMapping):
         ----------
         title : str | None, default=None
             Figure title.
-        size : Size | None, default=(800, 600)
+        size : Size, default=(800, 600)
             Output size in pixels.
+            Increasing the size will not scale the text sizes and line widths.
         padding : Padding | None, default=None
             Figure inner padding.
         fill : Fill | Color | None, default="background"
