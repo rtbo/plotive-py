@@ -32,7 +32,7 @@ STELLAR_TICKS = [
     12500.0,
     15000.0,
 ]
-"""Predefined ticks that fits well the stellar colormap."""
+"""Predefined ticks that fits well with the stellar colormap."""
 
 type PlotBorderType = Literal["box", "axis", "arrow"]
 
