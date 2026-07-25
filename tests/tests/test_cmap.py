@@ -69,7 +69,7 @@ def test_cmap_stellar():
     assert_fig_eq_ref(fig_small(plot), "cmap/stellar")
 
 
-def test_cmap_stellar_noscale():
+def test_cmap_stellar_autoscale():
     rnd = NotRandom(1234)
     colors = [
         1.0,
@@ -95,8 +95,8 @@ def test_cmap_stellar_noscale():
         x=x,
         y=y,
         colors=colors,
-        cmap=pv.series.ColorMap("stellar", scale=None),
+        cmap=pv.LerpColorMap("stellar", scale="auto"),
         marker=pv.Marker(size=16**2),
     )
     plot = pv.Plot(series)
-    assert_fig_eq_ref(fig_small(plot), "cmap/stellar")
+    assert_fig_eq_ref(fig_small(plot), "cmap/stellar-autoscale")

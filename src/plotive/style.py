@@ -107,9 +107,9 @@ class Marker[ColType: Color | ThemeColor | SeriesColor](PvMapping):
             Marker shape. One of "circle", "square", "diamond", "cross", "plus", "triangle-up", "triangle-down", "triangle-left", "triangle-right".
         size : float, default=8.5**2
             Marker size in pixels. The size is proportional to the area of the marker,
-        fill : Fill | None, default="auto"
+        fill : Fill | None, default=None
             Marker fill color.
-        stroke : Stroke | Color | None, default="auto"
+        stroke : Stroke | Color | None, default=None
             Marker stroke style.
         color: Color | None, default=None
             Optional shorthand to set both fill and stroke color to the same value. Overrides fill and stroke and colors

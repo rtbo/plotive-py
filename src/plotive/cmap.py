@@ -3,16 +3,17 @@ from typing import Literal
 from . import axis
 from .color import Color
 from .mapping import PvMapping
+from .style import SeriesColor
 
-type BuiltinCmap = Literal["viridis", "stellar"]
+type BuiltinLerpCmap = Literal["viridis", "stellar"]
 
 type LerpMethod = Literal["nearest", "srgb", "linear", "perceptual", "xyz"]
 
 
-class ColorMap(PvMapping):
+class LerpColorMap(PvMapping):
     def __init__(
         self,
-        cmap: BuiltinCmap | None = None,
+        cmap: BuiltinLerpCmap | None = None,
         stops: None | list[Color] = None,
         method: LerpMethod | None = None,
         scale: None | axis.Scale = None,
@@ -51,3 +52,26 @@ class ColorMap(PvMapping):
         self.stops = stops
         self.method = method
         self.scale = scale
+
+type CatColorMap = Literal["cat", "categorical"] | dict[str, SeriesColor]
+"""A colormap that maps categorical data values to colors.
+The mapping can be specified as a dictionary of {category: color} pairs,
+or by using automatic category-to-color assignment with "cat" or "categorical" (both are equivalent).
+In automatic mode, the colormap will assign colors to categories in the order of series colors.
+"""
+
+type LiteralColorMap = Literal["literal"]
+"""A colormap that interprets data values directly as colors.
+For string data, the data values are parsed as a color name, html hex code or 'rgb(...)' or rgba(...)' string.
+For numeric data, the data values are interpreted as a 32-bit integer color value in RGBA format (0xRRGGBBAA).
+"""
+
+type ColorMap = Literal["auto"] | LerpColorMap | BuiltinLerpCmap | list[Color] | CatColorMap | LiteralColorMap
+"""A colormap that can be used for mapping data values to colors.
+There are three types of colormaps:
+1. Continuous colormaps (LerpColorMap, BuiltinLerpCmap, list[Color]): These colormaps are used for continuous data and interpolate colors between specified stops.
+2. Categorical colormaps (CatColorMap): These colormaps are used for categorical data and map each category to a specific color.
+3. Literal colormaps (LiteralColorMap): These colormaps interpret data values directly as colors.
+
+The special value "auto" can be used to automatically select an appropriate colormap based on the data type (continuous or categorical).
+"""

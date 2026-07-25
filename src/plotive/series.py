@@ -8,7 +8,7 @@ import numpy as np
 if TYPE_CHECKING:
     from . import axis
 
-from .cmap import BuiltinCmap, ColorMap
+from .cmap import ColorMap
 from . import mapping
 from .style import (
     Color,
@@ -168,7 +168,7 @@ class Scatter(Series):
         marker: Marker | None = None,
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
-        cmap: None | ColorMap | list[Color] | BuiltinCmap = None,
+        cmap: None | ColorMap = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,

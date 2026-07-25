@@ -6,6 +6,7 @@ from . import mapping
 from .style import *
 from .annot import Annotation
 from .axis import *
+from .cmap import *
 from .color import Color
 from .colorbar import ColorBar, ColorBarPos
 from .geom import Padding, Size
@@ -168,12 +169,13 @@ class PxlArray:
     The data contains raw RGBA premultiplied pixel data, with 8 bits per channel.
     """
 
-    def __init__(self, data: bytearray, width: int, height: int):
+    def __init__(self, data: bytes, width: int, height: int):
         self.data = data
         self.width = width
         self.height = height
 
     def depremultiply(self) -> bytes:
+        data = bytearray(self.data)
         """Return non-premultiplied pixel data."""
         for i in range(0, len(self.data), 4):
             r, g, b, a = self.data[i : i + 4]
@@ -181,8 +183,8 @@ class PxlArray:
                 r = int(r * 255 / a)
                 g = int(g * 255 / a)
                 b = int(b * 255 / a)
-                self.data[i : i + 4] = bytes([r, g, b, a])
-        return self.data
+                data[i : i + 4] = bytes([r, g, b, a])
+        return bytes(data)
 
 
 class Params:
@@ -207,7 +209,7 @@ class Params:
             Supported font formats are TTF, OTF, AAT and WOFF2.
         scale : float, default=1.0
             Scale factor for rendering, useful for high-DPI displays.
-            Using this scale factor rather than increasing the figure size 
+            Using this scale factor rather than increasing the figure size
             will also scale the font size and line widths.
         """
         self.style = style
