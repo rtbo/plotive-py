@@ -1,6 +1,8 @@
 import numpy as np
 import plotive as pv
 
+np.random.seed(1234)
+
 data = {
     "x1": np.random.normal(loc=30, scale=5, size=300),
     "y1": np.random.normal(loc=20, scale=2, size=300),
