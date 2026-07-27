@@ -168,6 +168,7 @@ class Scatter(Series):
         marker: Marker | None = None,
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
+        color_cats_to_legend: bool = False,
         cmap: None | ColorMap = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
@@ -188,6 +189,8 @@ class Scatter(Series):
         colors : DataCol | None, default=None
             Optional marker colors specified as a data column or sequence.
             If specified, the marker color will be determined by mapping the color value for each point through the colormap specified by `cmap`.
+        color_cats_to_legend : bool, default=False
+            If True, the color categories will be added to the legend as categorical entries.
         cmap : ColorMap | list[Color] | str | None, default=None
             Colormap specification for mapping color values to marker colors.
              - If a ColorMap object is provided, it will be used directly.
@@ -210,6 +213,7 @@ class Scatter(Series):
         self.sizes = _normalize_data_col(sizes)
         self.marker = marker if marker is not None else Marker()
         self.colors = _normalize_data_col(colors)
+        self.color_cats_to_legend = color_cats_to_legend
         self.cmap = cmap
 
 
