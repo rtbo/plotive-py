@@ -1,16 +1,18 @@
 """High-level public API for building and exporting Plotive figures."""
 
-from .style import *
+from collections.abc import Mapping
 
+from . import mapping
+from .style import *
 from .annot import Annotation
 from .axis import *
+from .cmap import *
+from .color import Color
+from .colorbar import ColorBar, ColorBarPos
+from .geom import Padding, Size
+from .legend import FigLegend, FigLegendPos, Legend, PlotLegend, PlotLegendPos
 from .series import Series
-
-type Size = tuple[float, float]
-"""Figure size in pixels as ``(width, height)``."""
-
-type Padding = float | tuple[float, float] | tuple[float, float, float, float]
-"""Padding as scalar, ``(vertical, horizontal)``, or ``(top, right, bottom, left)``."""
+from .text import Text
 
 type DataSource = object
 """
@@ -18,93 +20,6 @@ User-provided data source resolved at render time.
 Accepted objects are dictionaries of numpy arrays, dictionaries of lists, pandas DataFrames
 """
 
-
-class Legend:
-    """Legend display settings."""
-
-    def __init__(
-        self,
-        pos: str,
-        *,
-        fill: Fill | Color | None = Fill("legend-fill", opacity=0.5),
-        border: Stroke | str | None = "foreground",
-        columns: None | int = None,
-        margin: float = 12,
-        padding: Padding = 8,
-        spacing: float | tuple[float, float] = (16, 10),
-    ):
-        """Initialize a legend.
-        Parameters
-        ----------
-        pos : str, default="bottom"
-            Legend position as a string. Accepted values depends whether the legend is attached to a figure or a plot.
-            Accepted figure legend positions are "top", "bottom", "left" and "right".
-            Accepted plot legend positions are "out-top", "out-bottom", "out-left", "out-right",
-            "in-top-left", "in-top-right", "in-bottom-left" and "in-bottom-right",
-            "in-top", "in-bottom", "in-left" and "in-right".
-            "auto" is also accepted for default position at the bottom.
-        fill: Fill | Color | None, default=Fill("legend-fill", opacity=0.5)
-            Legend background fill.
-        border : Stroke | str, default="foreground"
-            Stroke style of the legend border.
-        columns : int | None, default=None
-            Number of columns in the legend.
-            If None, the number of columns is determined automatically based on the position and number of entries.
-        margin : float, default=12
-            Margin between the legend and the figure/plot edges in pixels.
-        padding : Padding, default=8
-            Padding inside the legend box.
-        spacing : float or tuple[float, float], default=(16, 10)
-            Spacing between legend entries (horizontal, vertical).
-        """
-        self.pos = pos
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
-        self.columns = columns
-        self.margin = margin
-        self.padding = padding
-        self.spacing = spacing
-
-    @staticmethod
-    def _normalize(input: Legend | str, default_pos: str) -> Legend:
-        if isinstance(input, Legend):
-            return input
-        elif isinstance(input, str):
-            if input == "auto":
-                input = default_pos
-            return Legend(pos=input)
-        else:
-            raise ValueError(f"Invalid legend config: {input!r}")
-
-
-class ColorBar:
-    def __init__(
-        self,
-        pos: str = "right",
-        *,
-        width: float = 20.0,
-        title: str | None = None,
-        border: Stroke | Color | None = "foreground",
-        ticks: None | axis.TicksLocator | list[float] | list[int] = None,
-        margin: float = 12.0,
-    ):
-        if pos == "auto":
-            pos = "right"
-        self.pos = pos
-        self.width = width
-        self.title = title
-        self.border = Stroke._normalize(border, default_width=1.0) if border is not None else None
-        self.ticks = axis.TicksLocator._normalize(ticks) if ticks is not None else None
-        self.margin = margin
-
-    @staticmethod
-    def _normalize(input: str | ColorBar) -> "ColorBar":
-        if isinstance(input, ColorBar):
-            return input
-        elif isinstance(input, str):
-            return ColorBar(pos=input)
-        else:
-            raise ValueError(f"Invalid colorbar config: {input!r}")
 
 STELLAR_TICKS = [
     1000.0,
@@ -118,25 +33,63 @@ STELLAR_TICKS = [
     12500.0,
     15000.0,
 ]
-"""Predefined ticks that fits well the stellar colormap."""
+"""Predefined ticks that fits well with the stellar colormap."""
 
-class Plot:
+type PlotBorderType = Literal["box", "axis", "arrow"]
+
+
+class PlotBorder(ABC, mapping.PvMapping):
+    """Border configuration for a plot."""
+
+    def __init__(
+        self,
+        type: PlotBorderType,
+    ):
+        self.type = type
+
+
+class BoxPlotBorder(PlotBorder):
+    """Box border configuration for a plot."""
+
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="box")
+        self.stroke = stroke
+
+
+class AxisPlotBorder(PlotBorder):
+    """Axis border configuration for a plot."""
+
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="axis")
+        self.stroke = stroke
+
+
+class ArrowPlotBorder(PlotBorder):
+    """Arrow border configuration for a plot."""
+
+    def __init__(self, stroke: None | Stroke | Color = None):
+        super().__init__(type="arrow")
+        self.stroke = stroke
+
+
+class Plot(mapping.PvMapping):
     """Single subplot definition with series, axes, and annotations."""
 
     def __init__(
         self,
         series: list[Series] | Series,
         *,
+        title: None | Text = None,
         x_axis: None | Axis = None,
         y_axis: None | Axis = None,
         x_axes: None | list[Axis] = None,
         y_axes: None | list[Axis] = None,
         subplot: None | tuple[int, int] = None,
-        title: None | str = None,
-        fill: None | Fill | Color = None,
-        legend: None | Legend | str = None,
-        colorbar: None | ColorBar | str = None,
-        annotations: list[Annotation] = [],
+        fill: None | ThemeFill | ThemeColor = None,
+        legend: None | PlotLegend | PlotLegendPos = None,
+        colorbar: None | ColorBar | ColorBarPos = None,
+        annotations: list[Annotation] | None = None,
+        border: None | PlotBorderType | PlotBorder | ThemeColor = "box",
     ):
         """Initialize a plot.
         By default, a plot has a single x and y axis, without any ticks, labels or grid.
@@ -156,16 +109,18 @@ class Plot:
         subplot : tuple[int, int] | None, default=None
             Grid position of the subplot.
             Only relevant when multiple plots are defined in the same figure.
-        title : str | None, default=None
+        title : Text | None, default=None
             Subplot title.
         fill : Fill | Color | None, default=None
             Background fill for the plot area.
-        legend : Legend | str | None, default=None
+        legend : Legend | PlotLegendPos | None, default=None
             Subplot legend config or shortcut position.
-        colorbar : ColorBar | None | str, default=None
+        colorbar : ColorBar | None | ColorBarPos, default=None
             Subplot colorbar config.
         annotations : list[Annotation], default=[]
             Annotation objects attached to this plot.
+        border : PlotBorderType | PlotBorder | ThemeColor | None, default=None
+            Border configuration for the plot.
 
         Raises
         ------
@@ -180,13 +135,15 @@ class Plot:
         else:
             self.series = [series]
 
-        self.legend = Legend._normalize(legend, default_pos="out-bottom") if legend is not None else None
+        if isinstance(legend, str):
+            legend = Legend(pos=legend)
+        self.legend = legend
 
-        self.fill = Fill._normalize(fill) if fill is not None else None
+        self.fill = fill
 
-        self.colorbar = ColorBar._normalize(colorbar) if colorbar is not None else None
+        self.colorbar = colorbar
 
-        self.annotations = annotations
+        self.annotations = annotations if annotations is not None else []
 
         if x_axis is not None and x_axes is not None:
             raise ValueError("Cannot provide both 'x_axis' and 'x_axes'.")
@@ -203,14 +160,7 @@ class Plot:
             if y_axes is not None
             else ([y_axis] if y_axis is not None else [Axis()])
         )
-
-        # Sanity check
-        for ax in self.x_axes:
-            if hasattr(ax, "_side") and (ax._side == "left" or ax._side == "right"):
-                raise ValueError("X-axis cannot be on the left or right side.")
-        for ax in self.y_axes:
-            if hasattr(ax, "_side") and (ax._side == "top" or ax._side == "bottom"):
-                raise ValueError("Y-axis cannot be on the top or bottom side.")
+        self.border = border
 
 
 class PxlArray:
@@ -219,38 +169,69 @@ class PxlArray:
     The data contains raw RGBA premultiplied pixel data, with 8 bits per channel.
     """
 
-    def __init__(self, data: bytearray, width: int, height: int):
+    def __init__(self, data: bytes, width: int, height: int):
         self.data = data
         self.width = width
         self.height = height
 
     def depremultiply(self) -> bytes:
+        data = bytearray(self.data)
         """Return non-premultiplied pixel data."""
-
         for i in range(0, len(self.data), 4):
             r, g, b, a = self.data[i : i + 4]
             if a > 0 and a < 255:
                 r = int(r * 255 / a)
                 g = int(g * 255 / a)
                 b = int(b * 255 / a)
-                self.data[i : i + 4] = bytes([r, g, b, a])
-        return self.data
+                data[i : i + 4] = bytes([r, g, b, a])
+        return bytes(data)
 
 
-class Figure:
+class Params:
+    """Parameters for the renderer."""
+
+    def __init__(
+        self,
+        *,
+        style: Style | BuiltinStyle | None = None,
+        fonts: list[bytes] | bytes | None = None,
+        scale: float = 1.0,
+    ):
+        """Initialize rendering parameters.
+
+        Parameters
+        ----------
+        style : Style | BuiltinStyle | None, default=None
+            Rendering style object or style name.
+        fonts : list[bytes] | bytes | None, default=None
+            Additional font file(s) to be used during rendering
+            Each entry must be the binary content of a font file.
+            Supported font formats are TTF, OTF, AAT and WOFF2.
+        scale : float, default=1.0
+            Scale factor for rendering, useful for high-DPI displays.
+            Using this scale factor rather than increasing the figure size
+            will also scale the font size and line widths.
+        """
+        self.style = style
+        self.fonts = fonts
+        self.scale = scale
+
+
+class Figure(mapping.PvMapping):
     """Top-level container for one or more plots."""
 
     def __init__(
         self,
         /,
         *,
-        title: None | str = None,
-        size: None | Size = (800, 600),
-        padding: None | Padding = 20.0,
-        fill: None | Fill | Color = "background",
-        legend: None | Legend | str = None,
-        plot: None | Plot = None,
-        plots: None | list[Plot] = None,
+        size: Size = (800, 600),
+        title: Text | None = None,
+        plot: Plot | None = None,
+        plots: list[Plot] | None = None,
+        padding: Padding | None = None,
+        fill: ThemeFill | ThemeColor | None = "background",
+        legend: FigLegend | FigLegendPos | None = None,
+        space: float | None = None,
     ):
         """Initialize a figure.
 
@@ -258,9 +239,10 @@ class Figure:
         ----------
         title : str | None, default=None
             Figure title.
-        size : Size | None, default=(800, 600)
+        size : Size, default=(800, 600)
             Output size in pixels.
-        padding : Padding | None, default=20.0
+            Increasing the size will not scale the text sizes and line widths.
+        padding : Padding | None, default=None
             Figure inner padding.
         fill : Fill | Color | None, default="background"
             Figure background fill.
@@ -286,11 +268,15 @@ class Figure:
         self.title = title
         self.size = size
         self.padding = padding
-        self.fill = fill and Fill._normalize(fill)
-        self.legend = Legend._normalize(legend, default_pos="bottom") if legend is not None else None
+        self.fill = fill
+        self.legend = legend
+        self.space = space
 
     def render_pxl(
-        self, *, data_source: None | DataSource = None, style: None | Style | str = None
+        self,
+        *,
+        data_source: DataSource | None = None,
+        params: Params | Style | BuiltinStyle | None = None
     ) -> PxlArray:
         """Render the figure as an array of pixels
 
@@ -298,20 +284,20 @@ class Figure:
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import render_pxl as rs_render_pxl
 
-        data, width, height = rs_render_pxl(self, data_source, style)
+        data, width, height = rs_render_pxl(self, data_source, params)
         return PxlArray(data, width, height)
 
     def save_png(
         self,
         path: str,
         *,
-        data_source: None | DataSource = None,
-        style: None | Style | str = None,
+        data_source: DataSource | None = None,
+        params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as PNG.
 
@@ -321,19 +307,19 @@ class Figure:
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import save_png as rs_save_png
 
-        rs_save_png(self, path, data_source, style)
+        rs_save_png(self, path, data_source, params)
 
     def save_svg(
         self,
         path: str,
         *,
-        data_source: None | DataSource = None,
-        style: None | Style | str = None,
+        data_source: DataSource | None = None,
+        params: Params | Style | BuiltinStyle | None = None,
     ):
         """Export the figure as SVG.
 
@@ -343,15 +329,18 @@ class Figure:
             Output file path.
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import save_svg as rs_save_svg
 
-        rs_save_svg(self, path, data_source, style)
+        rs_save_svg(self, path, data_source, params)
 
     def show(
-        self, *, data_source: None | DataSource = None, style: None | Style | str = None
+        self,
+        *,
+        data_source: DataSource | None = None,
+        params: Params | Style | BuiltinStyle | None = None
     ):
         """Display the figure in an interactive viewer.
 
@@ -359,9 +348,9 @@ class Figure:
         ----------
         data_source : DataSource | None, default=None
             Runtime data source.
-        style : Style | str | None, default=None
-            Rendering style object or style name.
+        params : Params | Style | BuiltinStyle | None, default=None
+            Rendering parameters object, style object or style name.
         """
         from ._rs import show as rs_show
 
-        rs_show(self, data_source, style)
+        rs_show(self, data_source, params)

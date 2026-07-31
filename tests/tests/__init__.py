@@ -56,14 +56,15 @@ def _diff_file_path(ref_name: str) -> str:
     return os.path.join(_BASE_DIR, "failed", f"{ref_name}-diff.png")
 
 
-def _render_fig_to_img(fig: pv.Figure, style) -> pil.Image:
-    fig_pxl = fig.render_pxl(style=style)
+def _render_fig_to_img(fig: pv.Figure, params) -> pil.Image:
+    fig_pxl = fig.render_pxl(params=params)
     print(
         f"Rendered figure to pixel data: {fig_pxl.width}x{fig_pxl.height}, {len(fig_pxl.data)} bytes"
     )
     return pil.frombuffer(
         "RGBA", (fig_pxl.width, fig_pxl.height), fig_pxl.data, "raw", "RGBa", 0, 1
     )
+
 
 def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
     from pixelmatch.contrib.PIL import pixelmatch
@@ -77,7 +78,7 @@ def assert_fig_eq_ref(fig: pv.Figure, ref_name: str, style="bw"):
     err = None
 
     try:
-        fig_img = _render_fig_to_img(fig, style)
+        fig_img = _render_fig_to_img(fig, params=style)
         ref_img = pil.open(ref_path)
 
         diff_img = pil.new("RGBA", fig_img.size)

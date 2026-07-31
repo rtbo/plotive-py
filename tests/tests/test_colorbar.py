@@ -1,10 +1,12 @@
 import plotive as pv
 import numpy as np
 
+from plotive.cmap import BuiltinLerpCmap
+
 from . import *
 
 
-def _make_basic_scatter_series(cmap="viridis"):
+def _make_basic_scatter_series(cmap: BuiltinLerpCmap = "viridis"):
     rnd = NotRandom()
     x = rnd.make_col_uniform(15)
     y = rnd.make_col_uniform(15)
@@ -28,7 +30,7 @@ def _make_stellar_scatter_series():
     return pv.series.Scatter(
         x=x,
         y=y,
-        colors=colors,
+        colors=colors.tolist(),
         cmap="stellar",
         marker=pv.Marker(size=16**2),
     )

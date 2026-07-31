@@ -16,31 +16,31 @@ def test_series_line_nodata():
 
 
 def test_series_line_interp_linear():
-    series = line(interp="linear")
+    series = line(interpolation="linear")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-linear")
 
 
 def test_series_line_interp_step_early():
-    series = line(interp="step-early")
+    series = line(interpolation="step-early")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-early")
 
 
 def test_series_line_interp_step_middle():
-    series = line(interp="step-middle")
+    series = line(interpolation="step-middle")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-middle")
 
 
 def test_series_line_interp_step_late():
-    series = line(interp="step-late")
+    series = line(interpolation="step-late")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-step-late")
 
 
 def test_series_line_interp_spline():
-    series = line(interp="spline")
+    series = line(interpolation="spline")
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/line-interp-spline")
 
@@ -62,7 +62,7 @@ def test_series_scatter():
         y=y,
         marker=pv.Marker(
             size=24**2,
-            color = color,
+            color=color,
             fill_opacity=0.6,
         ),
     )
@@ -106,6 +106,7 @@ def test_series_scatter_colors():
     )
     plot = pv.Plot(series)
     assert_fig_eq_ref(fig_small(plot), "series/scatter-colors")
+
 
 def test_series_scatter_colors_stellar():
     rnd = NotRandom()

@@ -1,3 +1,4 @@
+black
 maturin
 numpy
 pandas
@@ -6,3 +7,5 @@ pytest-xdist
 pytest-check
 pillow
 pixelmatch
+scipy
+requests

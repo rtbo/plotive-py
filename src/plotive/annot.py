@@ -1,20 +1,38 @@
 """Annotation objects that can be overlaid on plots."""
 
 from abc import ABC
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
+
+from .color import Color
+
+from .text import Text
+
+from . import style
+from .mapping import PvMapping
+from .style import Pattern, Stroke
 
 if TYPE_CHECKING:
-    from .style import Fill, Color
+    from .style import Fill
 
-from .style import Pattern, Stroke
-from . import style
+type ZPos = Literal["above-series", "below-series"]
+
+type CoordSys = Literal["data", "plot"]
+type Coord = float | tuple[float, CoordSys]
+"""Coordinate can be a number (in data coordinates) or a tuple of [number, CoordSys] where the number is in the specified coordinate system.
+If the coordinate system is not specified, it defaults to "data" coordinates.
+In plot coordinates, the number is in points relative to the top-left corner of the plot area.
+Negative numbers are allowed and will be interpreted as offsets from the right or bottom edges of the plot area.
+"""
 
 
-class Annotation(ABC):
+class Annotation(ABC, PvMapping):
     """Base class for plot annotations."""
 
     def __init__(
-        self, x_axis: str | None = None, y_axis: str | None = None, zpos: str = "above-series"
+        self,
+        x_axis: str | None = None,
+        y_axis: str | None = None,
+        z_pos: ZPos = "above-series",
     ):
         """Initialize common annotation settings.
 
@@ -24,16 +42,13 @@ class Annotation(ABC):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : str, default="above-series"
             Rendering layer relative to series.
         """
+        self.type = self.__class__.__name__.lower()
         self.x_axis = x_axis
         self.y_axis = y_axis
-        self.zpos = zpos
-
-    def _get_type(self) -> str:
-        """Return the concrete annotation type name."""
-        return self.__class__.__name__
+        self.z_pos = z_pos
 
 
 class Line(Annotation):
@@ -42,27 +57,27 @@ class Line(Annotation):
     def __init__(
         self,
         *,
-        horizontal: float | None = None,
-        vertical: float | None = None,
-        slope: None | tuple[tuple[float, float], float] = None,
-        two_points: None | tuple[tuple[float, float], tuple[float, float]] = None,
+        horizontal: Coord | None = None,
+        vertical: Coord | None = None,
+        slope: None | tuple[tuple[Coord, Coord], float] = None,
+        two_points: None | tuple[tuple[Coord, Coord], tuple[Coord, Coord]] = None,
         stroke: None | Stroke = None,
         pattern: None | Pattern = None,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "below-series",
+        z_pos: ZPos = "below-series",
     ):
         """Initialize a line annotation.
 
         Parameters
         ----------
-        horizontal : float | None, default=None
+        horizontal : Coord | None, default=None
             Horizontal line position ``y = constant``.
-        vertical : float | None, default=None
+        vertical : Coord | None, default=None
             Vertical line position ``x = constant``.
-        slope : tuple[tuple[float, float], float] | None, default=None
+        slope : tuple[tuple[Coord, Coord], float] | None, default=None
             Point-slope representation ``((x0, y0), m)``.
-        two_points : tuple[tuple[float, float], tuple[float, float]] | None, default=None
+        two_points : tuple[tuple[Coord, Coord], tuple[Coord, Coord]] | None, default=None
             Two-point representation of the line.
         stroke : Stroke | None, default=None
             Stroke style.
@@ -72,7 +87,7 @@ class Line(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="below-series"
+        z_pos : ZPos, default="below-series"
             Rendering layer relative to series.
 
         Raises
@@ -80,7 +95,7 @@ class Line(Annotation):
         ValueError
             If none or more than one line definition is provided.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
         if sum(x is not None for x in [horizontal, vertical, slope, two_points]) != 1:
             raise ValueError(
                 "Exactly one of 'horizontal', 'vertical', 'slope', or 'two_points' must be provided."
@@ -108,21 +123,21 @@ class Arrow(Annotation):
     def __init__(
         self,
         *,
-        xy: tuple[float, float],
-        delta: tuple[float, float],
+        xy: tuple[Coord, Coord],
+        dxy: tuple[float, float],
         stroke: None | Stroke = None,
         head_size: float = 10.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize an arrow annotation.
 
         Parameters
         ----------
-        xy : tuple[float, float]
+        xy : tuple[Coord, Coord]
             Arrow origin.
-        delta : tuple[float, float]
+        dxy : tuple[float, float]
             Arrow displacement vector.
         stroke : Stroke | None, default=None
             Stroke style.
@@ -132,16 +147,17 @@ class Arrow(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
-        self.x, self.y = xy
-        self.dx, self.dy = delta
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
+        self.xy = xy
+        self.dxy = dxy
         if isinstance(stroke, str):
             stroke = Stroke(color=stroke)
         self.stroke = stroke
         self.head_size = head_size
+
 
 class Marker(Annotation):
     """Marker annotation placed in data space."""
@@ -153,7 +169,7 @@ class Marker(Annotation):
         marker: style.Marker = style.Marker(),
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize a marker annotation.
 
@@ -167,34 +183,47 @@ class Marker(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
-        self.x, self.y = xy
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
+        self.xy = xy
         self.marker = marker
 
+
+type Anchor = Literal[
+    "top-left",
+    "top-center",
+    "top-right",
+    "center-left",
+    "center",
+    "center-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right",
+]
+
+    
 class Label(Annotation):
     """Text label annotation placed in data space."""
 
     def __init__(
         self,
-        xy: tuple[float, float],
-        text: str,
+        xy: tuple[Coord, Coord],
+        text: Text,
         *,
-        anchor: str = "top-left",
-        color: None | Color = None,
-        frame: None | tuple[Fill | None, Stroke | str | None] = None,
+        anchor: Anchor = "top-left",
+        frame: None | tuple[Fill | None, Stroke | Color | None] = None,
         angle: float = 0.0,
         x_axis: str | None = None,
         y_axis: str | None = None,
-        zpos: str = "above-series",
+        z_pos: ZPos = "above-series",
     ):
         """Initialize a text label annotation.
 
         Parameters
         ----------
-        xy : tuple[float, float]
+        xy : tuple[Coord, Coord]
             Label anchor position.
         text : str
             Label content.
@@ -210,14 +239,13 @@ class Label(Annotation):
             Target x-axis identifier.
         y_axis : str | None, default=None
             Target y-axis identifier.
-        zpos : str, default="above-series"
+        z_pos : ZPos, default="above-series"
             Rendering layer relative to series.
         """
-        super().__init__(x_axis=x_axis, y_axis=y_axis, zpos=zpos)
-        self.x, self.y = xy
+        super().__init__(x_axis=x_axis, y_axis=y_axis, z_pos=z_pos)
+        self.xy = xy
         self.text = text
         self.anchor = anchor
-        self.color = color
         if frame is not None:
             fill, stroke = frame
             if isinstance(stroke, str):

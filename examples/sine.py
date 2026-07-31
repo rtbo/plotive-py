@@ -8,7 +8,7 @@ fig = pv.Figure(
             pv.series.Line(
                 x="x",
                 y="y",
-                name="sin(x)",
+                name="y=sin(x)",
             )
         ],
         x_axis=pv.Axis(title="x", ticks="pimultiple", grid="auto"),
@@ -20,4 +20,6 @@ fig = pv.Figure(
 x = np.linspace(0, 2 * np.pi, 500)
 y = np.sin(x)
 
-fig.show(data_source={"x": x, "y": y})
+import _common
+
+_common.process_figure(fig, {"x": x, "y": y}, "sine")

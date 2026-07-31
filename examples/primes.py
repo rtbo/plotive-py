@@ -1,6 +1,5 @@
 import plotive as pv
-import numpy as np
-import pandas as pd
+
 
 def get_n_primes(n):
     primes = []
@@ -12,31 +11,32 @@ def get_n_primes(n):
         candidate += 1
     return primes
 
-if __name__ == "__main__":
-    y = list(range(1, 1001))
-    x = get_n_primes(1000)
 
-    data_src = {
-        "x": x,
-        "y": y,
-    }
+n = 30
+primes = get_n_primes(n)
+indices = list(range(1, n + 1))
 
-    fig = pv.Figure(
-        title="Line Plot Example",
-        legend="bottom",
-        plot=pv.Plot(
-            series=[
-                pv.series.Line(
-                    x = "x",
-                    y = "y",
-                    name = "1000 Prime Numbers",
-                    interp = "step",
-                )
-            ],
-            x_axis = pv.Axis(title="Index", ticks=pv.Ticks()),
-            y_axis = pv.Axis(title="Prime Numbers", ticks=pv.Ticks()),
-        )
-    )
+data_src = {
+    "primes": primes,
+    "indices": indices,
+}
 
-    import _common
-    _common.process_figure(fig, data_src)
+fig = pv.Figure(
+    title=f"First {n} Prime Numbers",
+    plot=pv.Plot(
+        series=[
+            pv.series.Line(
+                x="primes",
+                y="indices",
+                interpolation="step-late",
+            )
+        ],
+        x_axis=pv.Axis(title="Prime", ticks="auto", grid="auto"),
+        y_axis=pv.Axis(title="Index", ticks="auto", grid="auto"),
+        legend="in-top-left",
+    ),
+)
+
+import _common
+
+_common.process_figure(fig, data_src, "primes")

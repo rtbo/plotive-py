@@ -1,23 +1,53 @@
 """Data series objects that can be rendered in a plot."""
 
 from abc import ABC
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, cast
 import numpy as np
 
 if TYPE_CHECKING:
-    from datetime import datetime
     from . import axis
 
-from .style import Color, Fill, Marker, Stroke, _parse_mpl_style
+from .cmap import ColorMap
+from . import mapping
+from .style import (
+    Color,
+    Fill,
+    Marker,
+    Pattern,
+    SeriesColor,
+    SeriesStroke,
+    Stroke,
+    _parse_mpl_style,
+)
 
 type DataCol = str | list[float] | list[int] | list[str] | list[datetime] | np.ndarray
 """Data column reference, Python sequence, or NumPy array."""
+
+
+def _normalize_data_col(
+    data: DataCol | None,
+) -> list[float] | list[int] | list[str] | str | None:
+    """Normalize a data column to a list."""
+    if data is None:
+        return None
+    if isinstance(data, str):
+        return data
+    if isinstance(data, np.ndarray):
+        return data.tolist()
+    if isinstance(data, list):
+        if data and isinstance(data[0], datetime):
+            return list(map(lambda dt: dt.isoformat(), data))  # type: ignore
+        return cast(list[float] | list[int] | list[str], data)
+    else:
+        raise TypeError(f"Unsupported data column type: {type(data)}")
+
 
 type AxisRef = str | int
 """Axis reference by string identifier or numeric index."""
 
 
-class Series(ABC):
+class Series(ABC, mapping.PvMapping):
     """Base class for plot series objects."""
 
     def __init__(
@@ -38,13 +68,10 @@ class Series(ABC):
         y_axis : AxisRef | None, default=None
             Target y-axis reference.
         """
+        self.type = self.__class__.__name__.lower().replace("histogram", "hist")
         self.name = name
         self.x_axis = x_axis
         self.y_axis = y_axis
-
-    def _get_type(self) -> str:
-        """Return the concrete series type name."""
-        return self.__class__.__name__
 
 
 class Line(Series):
@@ -55,8 +82,8 @@ class Line(Series):
         x: DataCol,
         y: DataCol,
         *,
-        stroke: Stroke | Color = "auto",
-        interp: None | str = None,
+        stroke: SeriesStroke | SeriesColor = "auto",
+        interpolation: None | str = None,
         marker: Marker | None = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
@@ -74,8 +101,8 @@ class Line(Series):
             Y values or y data source reference.
         line : Stroke | Color, default="auto"
             Line stroke style or color.
-        interp : str | None, default=None
-            interp mode for rendering.
+        interpolation : str | None, default=None
+            Interpolation mode for rendering.
         marker : Marker | None, default=None
             Marker style. If None, no marker will be rendered.
         name : str | None, default=None
@@ -91,77 +118,43 @@ class Line(Series):
             Optional shorthand to specify the line width in points.
         """
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.x = x
-        self.y = y
-        self.stroke = Stroke._normalize(stroke, default_width=1.5)
-        self.interp = interp
+        self.x = _normalize_data_col(x)
+        self.y = _normalize_data_col(y)
+        self.stroke = stroke
+        self.interpolation = interpolation
         self.marker = marker
-        self.style = style
+
         if style is not None:
-            marker_shape, line_pattern, line_color = _parse_mpl_style(style)
-            if marker_shape is not None:
+            shape, pattern, color = _parse_mpl_style(style)
+
+            if shape is not None:
                 if self.marker is None:
-                    self.marker = Marker(shape=marker_shape)
+                    self.marker = Marker(shape=shape)
                 else:
-                    self.marker.shape = marker_shape
-            if line_pattern is not None:
-                self.stroke.pattern = line_pattern
-            if line_color is not None:
-                self.stroke.color = line_color
+                    self.marker.shape = shape
+
+            if pattern is not None:
+                if isinstance(self.stroke, str):
+                    self.stroke = Stroke(color=self.stroke, pattern=pattern)
+                elif isinstance(self.stroke, Stroke):
+                    self.stroke.pattern = pattern
+
+            if color is not None:
+                if isinstance(self.stroke, str):
+                    self.stroke = Stroke(color=color)
+                elif isinstance(self.stroke, Stroke):
+                    self.stroke = Stroke(
+                        color=color,
+                        pattern=cast(Pattern | None, self.stroke.pattern),
+                    )
+
         if width is not None:
-            self.stroke.width = width
-
-
-
-class ColorMap:
-    def __init__(
-        self,
-        cmap: str | list[Color],
-        method: str | None ="auto",
-        scale: None | axis.Scale = None,
-    ):
-        """Initializes a colormap
-
-        Parameters
-        ----------
-        cmap : str | list[Color]
-            Colormap name or list of colors.
-        method : str | None, default="auto"
-            interp method for the colormap.
-            Ignored if `cmap` isn't a list of colors.
-            Accepted values are:
-                - "auto":
-                        - If the list has fewer than 256 colors, use "linear" interp.
-                        - If the list has 256 colors or more, use "nearest" interp,
-                         since the colormap is already at the maximum resolution typically used for rendering.
-                - None: using nearest neighbor
-                - "nearest: same as None
-                - "srgb" (interp in sRGB color space)
-                - "fast": same as "srgb"
-                - "linear" (interp in linear RGB color space)
-                - "perceptual" (interp in OkLab color space)
-        scale : Scale | None, default=None
-            Optional scale for mapping data values to the colormap. If None, a default linear scale will be used,
-            that maps the full data range to the full colormap.
-        """
-        self.cmap = cmap
-        if method is None:
-            method = "nearest"
-        if method == "fast":
-            method = "srgb"
-        if method == "auto" and isinstance(cmap, list):
-            method = "linear" if len(cmap) < 256 else "nearest"
-        self.method = method
-        self.scale = scale
-
-    @staticmethod
-    def _normalize(input: str | list[Color] | ColorMap) -> "ColorMap":
-        if isinstance(input, ColorMap):
-            return input
-        elif isinstance(input, str) or isinstance(input, list):
-            return ColorMap(cmap=input)
-        else:
-            raise ValueError(f"Invalid colormap specification: {input}")
+            if isinstance(self.stroke, str):
+                self.stroke = Stroke(color=self.stroke, width=width)
+            elif isinstance(self.stroke, Stroke):
+                self.stroke.width = width
+            elif self.stroke is None:
+                self.stroke = Stroke(color="auto", width=width)
 
 
 class Scatter(Series):
@@ -175,7 +168,7 @@ class Scatter(Series):
         marker: Marker | None = None,
         sizes: None | DataCol = None,
         colors: None | DataCol = None,
-        cmap: None | ColorMap | list[Color] | str = "viridis",
+        cmap: None | ColorMap = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
@@ -195,7 +188,7 @@ class Scatter(Series):
         colors : DataCol | None, default=None
             Optional marker colors specified as a data column or sequence.
             If specified, the marker color will be determined by mapping the color value for each point through the colormap specified by `cmap`.
-        cmap : ColorMap | list[Color] | str | None, default="viridis"
+        cmap : ColorMap | list[Color] | str | None, default=None
             Colormap specification for mapping color values to marker colors.
              - If a ColorMap object is provided, it will be used directly.
              - If a list of Colors is provided, it will be used to create a ColorMap with default settings.
@@ -212,14 +205,12 @@ class Scatter(Series):
             Target y-axis reference.
         """
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.x = x
-        self.y = y
-        self.sizes = sizes
+        self.x = _normalize_data_col(x)
+        self.y = _normalize_data_col(y)
+        self.sizes = _normalize_data_col(sizes)
         self.marker = marker if marker is not None else Marker()
-        self.colors = colors
-        assert not (self.colors is not None and cmap is None), "cmap must be specified if colors are provided"
-        self.cmap = ColorMap._normalize(cmap) if cmap is not None else None
-        print(f"Marker: {self.marker!r}")
+        self.colors = _normalize_data_col(colors)
+        self.cmap = cmap
 
 
 class Area(Series):
@@ -276,12 +267,12 @@ class Area(Series):
             Target y-axis reference.
         """
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.x = x
-        self.y1 = y1
-        self.y2 = y2
-        self.fill = Fill._normalize(fill)
-        self.y1_stroke = Stroke._normalize(y1_stroke, default_width=1.5) if y1_stroke is not None else None
-        self.y2_stroke = Stroke._normalize(y2_stroke, default_width=1.5) if y2_stroke is not None else None
+        self.x = _normalize_data_col(x)
+        self.y1 = _normalize_data_col(y1)
+        self.y2 = _normalize_data_col(y2) if not isinstance(y2, (int, float)) else y2
+        self.fill = fill
+        self.y1_stroke = y1_stroke
+        self.y2_stroke = y2_stroke
         self.y1_interp = y1_interp or interp
         self.y2_interp = y2_interp or interp
 
@@ -289,7 +280,7 @@ class Area(Series):
 class Histogram(Series):
     def __init__(
         self,
-        data: DataCol,
+        x: DataCol,
         *,
         fill: None | Fill | Color = "auto",
         stroke: None | Stroke | Color = None,
@@ -300,9 +291,9 @@ class Histogram(Series):
         y_axis: None | AxisRef = None,
     ):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.data = data
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
+        self.x = _normalize_data_col(x)
+        self.fill = fill
+        self.stroke = stroke
         self.bins = bins
         self.density = density
 
@@ -315,16 +306,14 @@ class Bars(Series):
         *,
         fill: None | Fill | Color = "auto",
         stroke: None | Stroke | Color = None,
-        bars_offset=0.3,
-        bars_width=0.4,
+        position: None | tuple[float, float] = None,
         name: None | str = None,
         x_axis: None | AxisRef = None,
         y_axis: None | AxisRef = None,
     ):
         super().__init__(name=name, x_axis=x_axis, y_axis=y_axis)
-        self.x = x
-        self.y = y
-        self.fill = Fill._normalize(fill) if fill is not None else None
-        self.stroke = Stroke._normalize(stroke, default_width=1.5) if stroke is not None else None
-        self.bars_offset = bars_offset
-        self.bars_width = bars_width
+        self.x = _normalize_data_col(x)
+        self.y = _normalize_data_col(y)
+        self.fill = fill
+        self.stroke = stroke
+        self.position = position
