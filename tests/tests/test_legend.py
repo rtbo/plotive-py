@@ -86,6 +86,7 @@ def test_legend_pos_in_left():
     plot = pv.Plot(series=series, legend="in-left")
     assert_fig_eq_ref(fig_small(plot), "legend/pos-in_left")
 
+
 def test_legend_color_cats():
     series = pv.series.Scatter(
         x=[1, 2, 3, 4, 5],

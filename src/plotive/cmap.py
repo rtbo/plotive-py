@@ -53,6 +53,7 @@ class LerpColorMap(PvMapping):
         self.method = method
         self.scale = scale
 
+
 type CatColorMap = Literal["cat", "categorical"] | dict[str, SeriesColor]
 """A colormap that maps categorical data values to colors.
 The mapping can be specified as a dictionary of {category: color} pairs,
@@ -66,7 +67,9 @@ For string data, the data values are parsed as a color name, html hex code or 'r
 For numeric data, the data values are interpreted as a 32-bit integer color value in RGBA format (0xRRGGBBAA).
 """
 
-type ColorMap = Literal["auto"] | LerpColorMap | BuiltinLerpCmap | list[Color] | CatColorMap | LiteralColorMap
+type ColorMap = Literal["auto"] | LerpColorMap | BuiltinLerpCmap | list[
+    Color
+] | CatColorMap | LiteralColorMap
 """A colormap that can be used for mapping data values to colors.
 There are three types of colormaps:
 1. Continuous colormaps (LerpColorMap, BuiltinLerpCmap, list[Color]): These colormaps are used for continuous data and interpolate colors between specified stops.
