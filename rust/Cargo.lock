@@ -861,18 +861,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
-name = "dark-light"
-version = "2.0.0"
-source = "git+https://github.com/rust-dark-light/dark-light?rev=0f18d2fbcaa5d1c175db8aae7d53428988d7e961#0f18d2fbcaa5d1c175db8aae7d53428988d7e961"
-dependencies = [
- "objc2 0.6.3",
- "objc2-foundation 0.3.2",
- "web-sys",
- "winreg",
- "zbus",
-]
-
-[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2858,7 +2846,9 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "plotive"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d58df9d1fce0771539f48fab1b4f024f3b9706cb52199e717e1880d1149ef27"
 dependencies = [
  "plotive-base",
  "plotive-text",
@@ -2868,7 +2858,9 @@ dependencies = [
 
 [[package]]
 name = "plotive-base"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ed86e730ab592d2f668e96e7b49785d0399d472d071edb86e5daca9086a464a"
 dependencies = [
  "serde",
  "strict-num 0.2.0",
@@ -2877,11 +2869,12 @@ dependencies = [
 
 [[package]]
 name = "plotive-iced"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68851b5179d141a92e598c31fb354ed46c584267fdb58918080247d14cbebdc3"
 dependencies = [
  "arboard",
  "bytes",
- "dark-light",
  "iced",
  "iced_font_awesome",
  "plotive",
@@ -2893,7 +2886,9 @@ dependencies = [
 
 [[package]]
 name = "plotive-pxl"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1daec94282cd6a0312f494d4c38224e48425af1171466e0ff18ed5b0a68d324f"
 dependencies = [
  "plotive",
  "png 0.17.16",
@@ -2921,7 +2916,9 @@ dependencies = [
 
 [[package]]
 name = "plotive-svg"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38d57b9beadaa9c8a272f5c06333a22a54b4de4322ed1e7b3919ff6ab792a0ec"
 dependencies = [
  "plotive",
  "rustybuzz",
@@ -2930,7 +2927,9 @@ dependencies = [
 
 [[package]]
 name = "plotive-text"
-version = "0.6.0-dev"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ea0fb22c5518f28c080f912b4beb06cb3ff0443192333a328a14ef847383b70"
 dependencies = [
  "fontconfig-parser",
  "log",
@@ -5035,16 +5034,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a5364e9d77fcdeeaa6062ced926ee3381faa2ee02d3eb83a5c27a8825540829"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "winreg"
-version = "0.55.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97"
-dependencies = [
- "cfg-if",
- "windows-sys 0.59.0",
 ]
 
 [[package]]
