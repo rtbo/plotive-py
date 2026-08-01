@@ -9,7 +9,7 @@ name = "plotive"
 crate-type = ["cdylib"]
 
 [dependencies]
-plotive = { path = "../../plotive", features = [
+plotive = { version = "0.6.0", features = [
     "data-csv",
     "noto-mono",
     "noto-sans",
@@ -20,10 +20,10 @@ plotive = { path = "../../plotive", features = [
     "serde",
     "utils",
 ] }
-plotive-iced = { path = "../../plotive/iced", features = ["clipboard", "data-csv"] }
-plotive-text = { path = "../../plotive/text" }
-plotive-pxl = { path = "../../plotive/pxl" }
-plotive-svg = { path = "../../plotive/svg" }
+plotive-iced = { version = "0.6.0", features = ["clipboard", "data-csv"] }
+plotive-text = { version = "0.6.0" }
+plotive-pxl = { version = "0.6.0" }
+plotive-svg = { version = "0.6.0" }
 numpy = "0.29.0"
 pyo3 = { version = "0.29.0", features = ["serde"] }
 pythonize = "0.29.0"

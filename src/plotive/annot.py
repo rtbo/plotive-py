@@ -203,7 +203,7 @@ type Anchor = Literal[
     "bottom-right",
 ]
 
-    
+
 class Label(Annotation):
     """Text label annotation placed in data space."""
 

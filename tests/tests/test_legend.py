@@ -85,3 +85,14 @@ def test_legend_pos_in_left():
     series = line(name="line")
     plot = pv.Plot(series=series, legend="in-left")
     assert_fig_eq_ref(fig_small(plot), "legend/pos-in_left")
+
+
+def test_legend_color_cats():
+    series = pv.series.Scatter(
+        x=[1, 2, 3, 4, 5],
+        y=[1, 4, 9, 16, 25],
+        colors=["A", "B", "A", "B", "C"],
+        color_cats_to_legend=True,
+    )
+    plot = pv.Plot(series=series, legend="auto")
+    assert_fig_eq_ref(fig_small(plot), "legend/color-cats", "light")

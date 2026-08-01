@@ -1,5 +1,6 @@
 import plotive as pv
 
+
 def _parse_args():
     import sys
 
@@ -65,10 +66,7 @@ def _parse_args():
 def process_figure(fig, data_src, default_name):
     args = _parse_args()
 
-    params = pv.Params(
-        style=args["style"],
-        scale=args["scale"]
-    )
+    params = pv.Params(style=args["style"], scale=args["scale"])
 
     if args["png"]:
         filename = default_name if args["png"] == True else args["png"]
